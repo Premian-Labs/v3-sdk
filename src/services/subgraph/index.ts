@@ -214,6 +214,36 @@ export class PremiaSubgraph {
 		) as PoolExtended[]
 	}
 
+	async getAllPools(): Promise<Pool[]> {
+		const response = await this.client.query({
+			query: PoolQuery.GetAllPools(this),
+		})
+
+		if (!response.data) {
+			throw new Error(
+				'Pools not found. If no pools have been initialized, use the `basePoolFromKey` method.'
+			)
+		}
+
+		return get(response, 'data.pools', []) as Pool[]
+	}
+
+	async getAllPoolsExtended(): Promise<PoolExtended[]> {
+		const response = await this.client.query({
+			query: PoolQuery.GetAllPoolsExtended(this),
+		})
+
+		if (!response.data) {
+			throw new Error(
+				'Pools not found. If no pools have been initialized, use the `basePoolFromKey` method.'
+			)
+		}
+
+		return get(response, 'data.pools', []).map(
+			(pool: Omit<Pool, 'contract'>) => pool as PoolExtended
+		) as PoolExtended[]
+	}
+
 	async getPoolsForToken(
 		token: Token,
 		isQuote: boolean = false
@@ -383,6 +413,20 @@ export class PremiaSubgraph {
 		return get(response, 'data.tokens') as TokenExtended[]
 	}
 
+	async getAllTokens(): Promise<Token[]> {
+		const response = await this.client.query({
+			query: TokenQuery.GetAllTokens(this),
+		})
+		return get(response, 'data.tokens') as Token[]
+	}
+
+	async getAllTokensExtended(): Promise<TokenExtended[]> {
+		const response = await this.client.query({
+			query: TokenQuery.GetAllTokensExtended(this),
+		})
+		return get(response, 'data.tokens') as TokenExtended[]
+	}
+
 	async getTokenList(tokenList: TokenInfo[]): Promise<Token[]> {
 		const response = await this.client.query({
 			query: TokenQuery.GetTokenList(this, tokenList),
@@ -476,6 +520,21 @@ export class PremiaSubgraph {
 		const _pairIds = pairs.map((pair) => this._parsePairId(pair))
 		const response = await this.client.query({
 			query: TokenPairQuery.GetPairsExtended(this, _pairIds),
+		})
+
+		return get(response, 'data.tokenPairs') as TokenPairExtended[]
+	}
+
+	async getAllPairs(): Promise<TokenPair[]> {
+		const response = await this.client.query({
+			query: TokenPairQuery.GetAllPairs(this),
+		})
+		return get(response, 'data.tokenPairs') as TokenPair[]
+	}
+
+	async getAllPairsExtended(): Promise<TokenPairExtended[]> {
+		const response = await this.client.query({
+			query: TokenPairQuery.GetAllPairsExtended(this),
 		})
 
 		return get(response, 'data.tokenPairs') as TokenPairExtended[]

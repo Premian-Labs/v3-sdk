@@ -86,4 +86,30 @@ export class TokenPairQuery {
         }
     `
 	}
+
+	@addFields
+	static GetAllPairs(subgraph: PremiaSubgraph): DocumentNode {
+		return gql`
+			${TokenPairFragment}
+
+			{
+				tokenPairs(first: 250) {
+					...TokenPair
+				}
+			}
+		`
+	}
+
+	@addFields
+	static GetAllPairsExtended(subgraph: PremiaSubgraph): DocumentNode {
+		return gql`
+			${TokenPairExtendedFragment}
+
+			{
+				tokenPairs {
+					...TokenPairExtended
+				}
+			}
+		`
+	}
 }

@@ -68,7 +68,7 @@ export class PoolQuery {
 		tokenAddress: string
 	): DocumentNode {
 		return gql`
-        ${PoolMinimalFragment}
+        ${PoolFragment}
 
         {
             pools(where: { base: "${tokenAddress.toLowerCase()}" }) {
@@ -76,6 +76,32 @@ export class PoolQuery {
             }
         }
     `
+	}
+
+	@addFields
+	static GetAllPools(subgraph: PremiaSubgraph): DocumentNode {
+		return gql`
+			${PoolFragment}
+
+			{
+				pools(first: 1000) {
+					...PoolMinimal
+				}
+			}
+		`
+	}
+
+	@addFields
+	static GetAllPoolsExtended(subgraph: PremiaSubgraph): DocumentNode {
+		return gql`
+			${PoolExtendedFragment}
+
+			{
+				pools {
+					...PoolExtended
+				}
+			}
+		`
 	}
 
 	@addFields

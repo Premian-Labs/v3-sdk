@@ -77,6 +77,32 @@ export class TokenQuery {
 	}
 
 	@addFields
+	static GetAllTokens(subgraph: PremiaSubgraph): DocumentNode {
+		return gql`
+			${TokenFragment}
+
+			{
+				tokens(first: 250) {
+					...Token
+				}
+			}
+		`
+	}
+
+	@addFields
+	static GetAllTokensExtended(subgraph: PremiaSubgraph): DocumentNode {
+		return gql`
+			${TokenExtendedFragment}
+
+			{
+				tokens {
+					...TokenExtended
+				}
+			}
+		`
+	}
+
+	@addFields
 	static GetTokenList(
 		subgraph: PremiaSubgraph,
 		tokens: TokenInfo[]
