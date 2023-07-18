@@ -1,0 +1,107 @@
+{
+	"name": "Premia v3 Default Pair List",
+	"logoURI": "ipfs://QmUSNbwUxUYNMvMksKypkgWs8unSm8dX2GjCPBVGZ7GGMr",
+	"keywords": ["audited", "verified", "quote tokens"],
+	"tags": {
+		"stablecoin": {
+			"name": "Stablecoin",
+			"description": "Tokens that are fixed to an external asset, e.g. the US dollar"
+		},
+		"native": {
+			"name": "Native",
+			"description": "Tokens that represent the native currency of a blockchain, e.g. Wrapped Ether"
+		}
+	},
+	"timestamp": "2023-03-01T00:00:00+00:00",
+	"tokens": [
+		{
+			"chainId": 421613,
+			"type": "ERC20",
+			"address": "0x671E34483Ec9f8100bdA058Cb5fEC44b0d848a90",
+			"name": "Wrapped Ether",
+			"symbol": "WETH",
+			"decimals": 18,
+			"logoURI": "https://raw.githubusercontent.com/asset-projects/token-list/main/public/eth.png",
+			"tags": ["native"]
+		},
+		{
+			"chainId": 421613,
+			"type": "ERC20",
+			"address": "0x33cABeb897eAC235c09704932BcBa6e12e3d3757",
+			"name": "Wrapped BTC",
+			"symbol": "WBTC",
+			"decimals": 8,
+			"logoURI": "https://raw.githubusercontent.com/asset-projects/token-list/main/public/wbtc.png",
+			"tags": ["native"]
+		},
+		{
+			"chainId": 421613,
+			"type": "ERC20",
+			"address": "0x9B81f026c50f31e62FB4a21Fa3D6c4ed95aaee57",
+			"name": "Arbitrum",
+			"symbol": "ARB",
+			"decimals": 18,
+			"logoURI": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xB50721BCf8d664c30412Cfbc6cf7a15145234ad1/logo.png",
+			"tags": ["native"]
+		},
+		{
+			"chainId": 421613,
+			"type": "ERC20",
+			"address": "0x743e16567929415b514Ece22bcC5F06507de513F",
+			"name": "USD Coin",
+			"symbol": "USDC",
+			"decimals": 6,
+			"logoURI": "https://raw.githubusercontent.com/asset-projects/token-list/main/public/usdc.png",
+			"tags": ["stablecoin"]
+		}
+	],
+	"pairs": [
+		{
+			"base": {
+				"$ref": "#/tokens/0"
+			},
+			"baseAdapterType": "Chainlink",
+			"quote": {
+				"$ref": "#/tokens/3"
+			},
+			"quoteAdapterType": "Chainlink",
+			"decimals": 18,
+			"priceOracleAddress": "0x4DeE5A6cAefafc8cF6698A8Afe6e30BF7D1538e2",
+			"name": "WETH Chainlink / USDC Chainlink",
+			"tags": ["native", "stablecoin"]
+		},
+		{
+			"base": {
+				"$ref": "#/tokens/1"
+			},
+			"baseAdapterType": "Chainlink",
+			"quote": {
+				"$ref": "#/tokens/3"
+			},
+			"quoteAdapterType": "Chainlink",
+			"decimals": 18,
+			"priceOracleAddress": "0x4DeE5A6cAefafc8cF6698A8Afe6e30BF7D1538e2",
+			"name": "WBTC Chainlink / USDC Chainlink",
+			"tags": ["native", "stablecoin"]
+		},
+		{
+			"base": {
+				"$ref": "#/tokens/2"
+			},
+			"baseAdapterType": "Chainlink",
+			"quote": {
+				"$ref": "#/tokens/3"
+			},
+			"quoteAdapterType": "Chainlink",
+			"decimals": 18,
+			"priceOracleAddress": "0x4DeE5A6cAefafc8cF6698A8Afe6e30BF7D1538e2",
+			"name": "ARB Chainlink / USDC Chainlink",
+			"tags": ["native", "stablecoin"]
+		}
+	],
+	"version": {
+		"major": 1,
+		"minor": 0,
+		"patch": 0
+	}
+}

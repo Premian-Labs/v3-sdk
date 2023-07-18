@@ -1,0 +1,94 @@
+{
+	"name": "Premia v3 Default Pair List",
+	"logoURI": "ipfs://QmUSNbwUxUYNMvMksKypkgWs8unSm8dX2GjCPBVGZ7GGMr",
+	"keywords": ["audited", "verified", "quote tokens"],
+	"tags": {
+		"stablecoin": {
+			"name": "Stablecoin",
+			"description": "Tokens that are fixed to an external asset, e.g. the US dollar"
+		},
+		"native": {
+			"name": "Native",
+			"description": "Tokens that represent the native currency of a blockchain, e.g. Wrapped Ether"
+		}
+	},
+	"timestamp": "2023-03-01T00:00:00+00:00",
+	"tokens": [
+		{
+			"chainId": 42161,
+			"type": "ERC20",
+			"address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+			"name": "Ether",
+			"symbol": "ETH",
+			"decimals": 18,
+			"logoURI": "https://raw.githubusercontent.com/asset-projects/token-list/main/public/eth.png",
+			"tags": ["native"]
+		},
+		{
+			"chainId": 42161,
+			"type": "ERC20",
+			"address": "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
+			"name": "Wrapped Ether",
+			"symbol": "WETH",
+			"decimals": 18,
+			"logoURI": "https://raw.githubusercontent.com/asset-projects/token-list/main/public/eth.png",
+			"tags": ["native"]
+		},
+		{
+			"chainId": 42161,
+			"type": "ERC20",
+			"address": "0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f",
+			"name": "Wrapped BTC",
+			"symbol": "WBTC",
+			"decimals": 8,
+			"logoURI": "https://raw.githubusercontent.com/asset-projects/token-list/main/public/wbtc.png",
+			"tags": ["native"]
+		},
+		{
+			"chainId": 42161,
+			"type": "ERC20",
+			"address": "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8",
+			"name": "USD Coin (Arb1)",
+			"symbol": "USDC",
+			"decimals": 6,
+			"logoURI": "https://raw.githubusercontent.com/asset-projects/token-list/main/public/usdc.png",
+			"tags": ["stablecoin"]
+		},
+		{
+			"chainId": 42161,
+			"type": "ERC20",
+			"address": "0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9",
+			"name": "Tether USD",
+			"symbol": "USDT",
+			"decimals": 6,
+			"logoURI": "https://raw.githubusercontent.com/asset-projects/token-list/main/public/usdt.png",
+			"tags": ["stablecoin"]
+		},
+		{
+			"chainId": 42161,
+			"type": "ERC20",
+			"address": "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1",
+			"name": "Dai Stablecoin",
+			"symbol": "DAI",
+			"decimals": 18,
+			"logoURI": "https://raw.githubusercontent.com/asset-projects/token-list/main/public/dai.png",
+			"tags": ["stablecoin"]
+		},
+		{
+			"chainId": 42161,
+			"type": "ERC20",
+			"address": "0x17fc002b466eec40dae837fc4be5c67993ddbd6f",
+			"name": "Frax",
+			"symbol": "FRAX",
+			"decimals": 18,
+			"logoURI": "https://raw.githubusercontent.com/asset-projects/token-list/main/public/frax.png",
+			"tags": ["stablecoin"]
+		}
+	],
+	"pairs": [],
+	"version": {
+		"major": 1,
+		"minor": 0,
+		"patch": 0
+	}
+}

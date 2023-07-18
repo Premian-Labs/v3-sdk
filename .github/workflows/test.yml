@@ -1,0 +1,57 @@
+name: test
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+env:
+  FOUNDRY_PROFILE: ci
+  API_KEY_ALCHEMY: ${{ secrets.API_KEY_ALCHEMY }}
+  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+  TESTNET_PRIVATE_KEY: ${{ secrets.TESTNET_PRIVATE_KEY }}
+  PRIVATE_KEY_NOVA: ${{ secrets.PRIVATE_KEY_NOVA }}
+  API_KEY_INFURA: ${{ secrets.API_KEY_INFURA }}
+  NOVA_RPC_URL: ${{ secrets.NOVA_RPC_URL }}
+  TEST_API_KEY: ${{ secrets.TEST_API_KEY }}
+
+jobs:
+  check:
+    strategy:
+      fail-fast: true
+      matrix:
+        node-version: [18.x]
+
+    name: Foundry project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
+      - run: yarn install
+      - run: yarn build
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Run Anvil
+        run: anvil --fork-url https://arb-goerli.g.alchemy.com/v2/NNaDMKJ64XmaH_zVzjX0GQLTFQlKLx3K --fork-block-number 30175019 &
+
+      - name: Run Unit Tests
+        run: yarn test
+        id: unit-tests
+
+      - name: Run Integration Tests
+        run: yarn it
+        id: integration-tests
+
+      - name: Run E2E Tests
+        run: yarn e2e
+        id: e2e-tests

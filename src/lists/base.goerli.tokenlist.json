@@ -1,0 +1,63 @@
+{
+	"name": "Premia v3 Base Token List",
+	"logoURI": "ipfs://QmUSNbwUxUYNMvMksKypkgWs8unSm8dX2GjCPBVGZ7GGMr",
+	"keywords": ["audited", "verified", "quote tokens"],
+	"tags": {
+		"stablecoin": {
+			"name": "Stablecoin",
+			"description": "Tokens that are fixed to an external asset, e.g. the US dollar"
+		},
+		"native": {
+			"name": "Native",
+			"description": "Tokens that represent the native currency of a blockchain, e.g. Wrapped Ether"
+		}
+	},
+	"timestamp": "2023-03-01T00:00:00+00:00",
+	"tokens": [
+		{
+			"chainId": 5,
+			"type": "ERC20",
+			"address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+			"name": "Ether",
+			"symbol": "ETH",
+			"decimals": 18,
+			"logoURI": "https://raw.githubusercontent.com/asset-projects/token-list/main/public/eth.png",
+			"tags": ["native"]
+		},
+		{
+			"chainId": 5,
+			"type": "ERC20",
+			"address": "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
+			"name": "Wrapped Ether",
+			"symbol": "WETH",
+			"decimals": 18,
+			"logoURI": "https://raw.githubusercontent.com/asset-projects/token-list/main/public/eth.png",
+			"tags": ["native"]
+		},
+		{
+			"chainId": 5,
+			"type": "ERC20",
+			"address": "0xC2ECb8563800B523426c3328EeC1F7771D433C9c",
+			"name": "(Mintable Fake) Wrapped Ether",
+			"symbol": "testWETH",
+			"decimals": 18,
+			"logoURI": "https://raw.githubusercontent.com/asset-projects/token-list/main/public/eth.png",
+			"tags": ["native"]
+		},
+		{
+			"chainId": 5,
+			"type": "ERC20",
+			"address": "0x80c79fe19E25b34a7677c9B6b1A2801caBfAC985",
+			"name": "Wrapped BTC",
+			"symbol": "WBTC",
+			"decimals": 8,
+			"logoURI": "https://raw.githubusercontent.com/asset-projects/token-list/main/public/wbtc.png",
+			"tags": ["native"]
+		}
+	],
+	"version": {
+		"major": 1,
+		"minor": 0,
+		"patch": 0
+	}
+}
