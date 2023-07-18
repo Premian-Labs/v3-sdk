@@ -28,8 +28,10 @@ export interface PoolMinimal {
 	strike: BigNumberish
 	maturity: BigNumberish
 
-	totalValueLocked?: BigNumberish
-	totalValueLockedUSD?: BigNumberish
+	longLiquidity?: BigNumberish
+	longLiquidityUSD?: BigNumberish
+	shortLiquidity?: BigNumberish
+	shortLiquidityUSD?: BigNumberish
 }
 
 export interface Pool extends PoolMinimal {
@@ -53,7 +55,6 @@ export interface Pool extends PoolMinimal {
 
 	openInterest: BigNumberish
 	openInterestUSD: BigNumberish
-
 	volume: BigNumberish
 	volumeUSD: BigNumberish
 }

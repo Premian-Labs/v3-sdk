@@ -29,8 +29,10 @@ export const PoolMinimalFragment = gql`
 		strike
 		maturity
 
-		totalValueLocked
-		totalValueLockedUSD
+		longLiquidity
+		longLiquidityUSD
+		shortLiquidity
+		shortLiquidityUSD
 	}
 `
 
@@ -75,8 +77,10 @@ export const PoolFragment = gql`
 
 		spotPrice
 
-		totalValueLocked
-		totalValueLockedUSD
+		longLiquidity
+		longLiquidityUSD
+		shortLiquidity
+		shortLiquidityUSD
 		openInterest
 		openInterestUSD
 		volume
@@ -95,6 +99,8 @@ export const PoolExtendedFragment = gql`
 			...VolatilitySurface
 		}
 
+		totalValueLocked
+		totalValueLockedUSD
 		totalValueLockedETH
 
 		txCount
