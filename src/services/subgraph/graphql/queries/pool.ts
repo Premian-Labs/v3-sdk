@@ -72,7 +72,7 @@ export class PoolQuery {
 
         {
             pools(where: { base: "${tokenAddress.toLowerCase()}" }) {
-                ...PoolMinimal
+                ...Pool
             }
         }
     `
@@ -85,7 +85,7 @@ export class PoolQuery {
 
 			{
 				pools(first: 1000) {
-					...PoolMinimal
+					...Pool
 				}
 			}
 		`
