@@ -132,7 +132,7 @@ export class PoolQuery {
         ${PoolExtendedFragment}
 
         {
-            pools(where: { base: "${tokenAddress.toLowerCase()}" }) {
+            pools(where: { base: "${tokenAddress.toLowerCase()}" }, orderBy: createdAt, orderDirection: desc, first: 1000) {
                 ...PoolExtended
             }
         }
