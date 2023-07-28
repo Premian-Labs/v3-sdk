@@ -71,7 +71,12 @@ export class PoolQuery {
         ${PoolFragment}
 
         {
-            pools(where: { base: "${tokenAddress.toLowerCase()}" }) {
+            pools(
+            	where: { base: "${tokenAddress.toLowerCase()}"}, 
+            	first: 1000, 
+            	orderBy: createdAt, 
+            	orderDirection: desc
+            ) {
                 ...Pool
             }
         }
@@ -84,7 +89,11 @@ export class PoolQuery {
 			${PoolFragment}
 
 			{
-				pools(first: 1000) {
+				pools(
+					first: 1000, 
+					orderBy: createdAt, 
+					orderDirection: desc
+				) {
 					...Pool
 				}
 			}
@@ -97,7 +106,11 @@ export class PoolQuery {
 			${PoolExtendedFragment}
 
 			{
-				pools {
+				pools(
+					first: 1000, 
+					orderBy: createdAt, 
+					orderDirection: desc
+				) {
 					...PoolExtended
 				}
 			}
@@ -116,7 +129,17 @@ export class PoolQuery {
         ${PoolMinimalFragment}
         
         {
-            pools(where: { base: "${tokenAddress.toLowerCase()}", strike: "${strike}", maturity: "${maturity}", optionType: "${optionType}" }) {
+            pools(
+            	where: { 
+            		base: "${tokenAddress.toLowerCase()}", 
+            		strike: "${strike}", 
+            		maturity: "${maturity}", 
+            		optionType: "${optionType}" 
+            	},
+            	first: 1000, 
+				orderBy: createdAt, 
+				orderDirection: desc
+            ) {
                 ...PoolMinimal
             }
         }
@@ -132,7 +155,12 @@ export class PoolQuery {
         ${PoolExtendedFragment}
 
         {
-            pools(where: { base: "${tokenAddress.toLowerCase()}" }) {
+            pools(
+            	where: { base: "${tokenAddress.toLowerCase()}" },
+            	first: 1000, 
+				orderBy: createdAt, 
+				orderDirection: desc
+            ) {
                 ...PoolExtended
             }
         }
@@ -149,9 +177,12 @@ export class PoolQuery {
         ${PoolFragment}
 
         {
-            pools(where: { ${isQuote ? 'quote' : 'base'}: "${TokenQuery.tokenId(
-			token.address
-		)}" }) {
+            pools(
+            	where: { ${isQuote ? 'quote' : 'base'}: "${TokenQuery.tokenId(token.address)}" },
+            	first: 1000, 
+				orderBy: createdAt, 
+				orderDirection: desc
+			) {
                 ...Pool
             }
         }
@@ -233,7 +264,12 @@ export class PoolQuery {
         ${PoolFragment}
 
         {
-            pools(where: { pair: "${_pairId.toLowerCase()}" }) {
+            pools(
+            	where: { pair: "${_pairId.toLowerCase()}" },
+            	first: 1000, 
+				orderBy: createdAt, 
+				orderDirection: desc
+            ) {
                 ...Pool
             }
         }
@@ -249,7 +285,12 @@ export class PoolQuery {
         ${PoolExtendedFragment}
 
         {
-            pools(where: { pair: "${_pairId.toLowerCase()}" }) {
+            pools(
+            	where: { pair: "${_pairId.toLowerCase()}" }
+            	first: 1000, 
+				orderBy: createdAt, 
+				orderDirection: desc
+            ) {
                 ...PoolExtended
             }
         }
