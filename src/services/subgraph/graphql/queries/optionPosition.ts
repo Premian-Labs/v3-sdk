@@ -63,10 +63,15 @@ export class OptionPositionQuery {
 			${OptionPositionExtendedFragment}
 
 			{
-				optionPositions(where: { 
-					owner: "${owner.toLowerCase()}"
-					${filter}
-				}) {
+				optionPositions(
+					where: { 
+						owner: "${owner.toLowerCase()}"
+						${filter}
+					},
+					first: 1000, 
+					orderBy: createdAt, 
+					orderDirection: desc
+				) {
 					...OptionPositionExtended
 				}
 			}
