@@ -10,6 +10,5 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: "18"
-      - uses: JS-DevTools/npm-publish@v2
-        with:
-          token: ${{ secrets.NPM_PUBLISH_TOKEN }}
+      - run: echo //registry.npmjs.org/:_authToken=${{ secrets.NPM_PUBLISH_TOKEN }} >> .npmrc
+      - run: npm publish
