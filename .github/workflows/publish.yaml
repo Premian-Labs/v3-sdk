@@ -10,5 +10,6 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: "18"
+      - run: yarn
       - run: echo //registry.npmjs.org/:_authToken=${{ secrets.NPM_PUBLISH_TOKEN }} >> .npmrc
       - run: npm publish
