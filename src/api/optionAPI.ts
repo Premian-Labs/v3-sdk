@@ -264,13 +264,13 @@ export class OptionAPI extends BaseAPI {
 	 */
 	@withCache(CacheTTL.SECOND)
 	async quote(options: {
-		poolAddress: string
-		size: BigNumberish
-		isBuy: boolean
-		minimumSize?: BigNumberish
-		referrer?: string
+		poolAddress: string,
+		size: BigNumberish,
+		isBuy: boolean,
+		minimumSize?: BigNumberish,
+		referrer?: string,
 		taker?: string
-	}): Promise<FillableQuote | null> {
+	}): Promise<FillableQuote> {
 		const bestRfqQuote = await this.premia.orders
 			.quote(
 				options.poolAddress,
@@ -281,6 +281,7 @@ export class OptionAPI extends BaseAPI {
 				options.taker
 			)
 			.catch()
+
 		const bestPoolQuote = await this.premia.pools
 			.quote(
 				options.poolAddress,
@@ -289,7 +290,11 @@ export class OptionAPI extends BaseAPI {
 				options.referrer,
 				options.taker
 			)
-			.catch()
+			.catch((e) => {
+				console.error('Error in getting pool quote', e)
+				return null
+			})
+
 		const bestVaultQuote = await this.premia.vaults
 			.quote(
 				options.poolAddress,
@@ -299,9 +304,10 @@ export class OptionAPI extends BaseAPI {
 				options.referrer
 			)
 			.catch()
+
 		const quotes = [bestRfqQuote, bestPoolQuote, bestVaultQuote].filter(
 			(quote) => quote !== null
-		) as FillableQuote[]
+		) as (FillableQuote | null)[]
 
 		return this.premia.pricing.best(
 			quotes,

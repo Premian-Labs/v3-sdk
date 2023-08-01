@@ -114,7 +114,22 @@ describe('PremiaSubgraph', function (this: any) {
 		)
 	})
 
-	describe('AnalyticsQuery', () => {})
+	describe('AnalyticsQuery', () => {
+		it('#getPoolsOrderbookData', async () => {
+			// WETH-USDC:CHAINLINK
+			const _pairId = subgraph._parsePairId(pair)
+
+			let pools = await subgraph.getPoolsForPairId(_pairId)
+
+			pools = pools.filter((pool) => pool.isCall === true)
+
+			const addresses = pools.map((pool) => pool.address)
+
+			const dayData = await subgraph.getPoolsOrderbookData(addresses)
+
+			expect(dayData.length).to.be.greaterThan(0)
+		})
+	})
 
 	describe('PoolQuery', () => {
 		it('#getPoolMinimal', async () => {
