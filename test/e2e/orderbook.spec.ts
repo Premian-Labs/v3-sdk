@@ -442,7 +442,7 @@ describe('OrderbookV1', () => {
 		const quoteId = publishedQuote.quoteId
 		expect(publishedQuote).to.include.all.keys('quoteId', 'poolAddress', 'chainId')
 		expect(publishedQuote.poolAddress).to.eq(poolAddress)
-		await delay(2000)
+		await delay(5000)
 
 		const quotes = (await orderbook.getQuotes(
 			poolAddress,
@@ -453,7 +453,7 @@ describe('OrderbookV1', () => {
 		expect(quotes.length).to.be.eq(1)
 
 		await cancelQuote(quoteId)
- 		await delay(2000)
+ 		await delay(5000)
 		const updatedQuotes = (await orderbook.getQuotes(
 			poolAddress,
 			parseEther('100').toString(),
@@ -515,7 +515,7 @@ describe('OrderbookV1', () => {
 		const order3 = await createQuoteWithSignature(poolAddress, '0.2')
 		const publishedOrder1 = (await orderbook.publishQuotes([order3]))[0]
 		// delay affects public quotes ordering
-		await delay(2000)
+		await delay(5000)
 
 		const order4 = await createQuoteWithSignature(poolAddress, '0.2')
 		const publishedOrder2 = (await orderbook.publishQuotes([order4]))[0]
@@ -539,7 +539,7 @@ describe('OrderbookV1', () => {
 		const order5 = await createQuoteWithSignature(poolAddress, '0.15', true)
 		await orderbook.publishQuotes([order5])
 
-		await delay(2000)
+		await delay(5000)
 		const order6 = await createQuoteWithSignature(poolAddress, '0.10', true)
 		await orderbook.publishQuotes([order6])
 
@@ -666,7 +666,7 @@ describe('OrderbookV1', () => {
 				}
 			}
 		})
-		await delay(2000)
+		await delay(5000)
 		const isConnected = orderbook.isConnected()
 		expect(isConnected).to.be.true
 		expect(infoMessage).to.eq(`Session authorized. Subscriptions enabled.`)
@@ -689,7 +689,7 @@ describe('OrderbookV1', () => {
 				}
 			}
 		})
-		await delay(2000)
+		await delay(5000)
 
 		const webSocketFilter: WSFilterMessage = {
 			type: 'FILTER',
@@ -712,7 +712,7 @@ describe('OrderbookV1', () => {
 			}
 		})
 
-		await delay(2000)
+		await delay(5000)
 		orderbook.apiKey = properApiKey
 		expect(connectionMessage).to.eq(`Invalid API key`)
 		expect(subscriptionMessage).to.eq(`Not Authorized`)
@@ -724,7 +724,7 @@ describe('OrderbookV1', () => {
 		expect(isConnected).to.be.true
 
 		orderbook.disconnect()
-		await delay(2000)
+		await delay(5000)
 		const isDisconnected = orderbook.isDisconnected()
 		expect(isDisconnected).to.be.true
 	})
@@ -748,7 +748,7 @@ describe('OrderbookV1', () => {
 			}
 		})
 
-		await delay(2000)
+		await delay(5000)
 		expect(infoMessage[0]).to.eq(`Session authorized. Subscriptions enabled.`)
 
 		// listen to public quotes AND private quotes (since we provide takerAddress)
@@ -777,7 +777,7 @@ describe('OrderbookV1', () => {
 				}
 			}
 		})
-		await delay(2000)
+		await delay(5000)
 		expect(infoMessage[1]).to.eq(
 			`Subscribed to quotes:${webSocketFilter.body.chainId}:*:*:${ZeroAddress},quotes:${webSocketFilter.body.chainId}:*:*:${webSocketFilter.body.taker} channel.`
 		)
@@ -797,7 +797,7 @@ describe('OrderbookV1', () => {
 
 		// request a quote
 		await orderbook.publishRFQ(rfqRequest)
-		await delay(2000)
+		await delay(5000)
 
 		// receive private quote
 		const rfqQuoteWithSignature = await createQuoteWithSignature(
@@ -809,14 +809,14 @@ describe('OrderbookV1', () => {
 		const publishedPrivateQuote = (
 			await orderbook.publishQuotes([rfqQuoteWithSignature])
 		)[0]
-		await delay(2000)
+		await delay(5000)
 
 		// receive generic quote
 		const publicQuoteWithSignature = await createQuoteWithSignature(poolAddress)
 		const publishedPublicQuote = (
 			await orderbook.publishQuotes([publicQuoteWithSignature])
 		)[0]
-		await delay(2000)
+		await delay(5000)
 
 		const publicOrderOccurances = quotesReceived.filter(
 			(quote) => quote.quoteId == publishedPrivateQuote.quoteId
@@ -847,7 +847,7 @@ describe('OrderbookV1', () => {
 			}
 		})
 
-		await delay(2000)
+		await delay(5000)
 		expect(infoMessage).to.eq('Unsubscribed from QUOTES channel')
 	})
 
@@ -895,9 +895,9 @@ describe('OrderbookV1', () => {
 			}
 		})
 
-		await delay(2000)
+		await delay(5000)
 		await orderbook.publishRFQ(rfqRequest)
-		await delay(2000)
+		await delay(5000)
 
 		expect(subCases.includes('PUBLISHED')).to.be.true
 		expect(subCases.includes('RFQ')).to.be.true
