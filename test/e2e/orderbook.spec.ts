@@ -31,6 +31,7 @@ import Ajv from 'ajv'
 import { omit } from 'lodash'
 import * as Dotenv from 'dotenv'
 
+// TODO: update tests to use Arb Goerli Orderbook contract (not NOVA)
 Dotenv.config()
 const {
 	API_KEY_INFURA,

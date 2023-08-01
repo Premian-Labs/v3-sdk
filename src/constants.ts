@@ -40,6 +40,7 @@ export interface AddressMap {
 	}
 }
 
+//TODO: add arbitrum goerli orderbook contract here
 export const Addresses: AddressMap = {
 	[SupportedChainId.ARBITRUM]: {
 		CHAINLINK_BTC,
