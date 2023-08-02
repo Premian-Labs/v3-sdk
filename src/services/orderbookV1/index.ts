@@ -164,6 +164,9 @@ export class OrderbookV1 {
 				headers: {
 					'x-apikey': this.apiKey,
 				},
+				validateStatus: function (status) {
+					return status < 500;
+				}
 			})
 
 			if (response.status !== 200) {
@@ -190,6 +193,9 @@ export class OrderbookV1 {
 			headers: {
 				'x-apikey': this.apiKey,
 			},
+			validateStatus: function (status) {
+				return status < 500;
+			}
 		})
 
 		if (response.status !== 200 && response.status !== 201) {
