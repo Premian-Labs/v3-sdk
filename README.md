@@ -37,4 +37,5 @@ In order to use Anvil as a local blockchain for dev purposes, Forge needs to be 
 
 ### Contract Deployments
 
+- 2023-08-02 (Arbitrum Goerli): ~32704676
 - 2023-06-09 (Arbitrum Goerli): ~25083922
