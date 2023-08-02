@@ -107,7 +107,7 @@ describe('ContractsAPI', function (this: any) {
 		expect(await base.decimals()).eq(18n)
 	})
 
-	it('should get the contract for the oracle adapter', async () => {
+	it('should get the contract for the chainlink oracle adapter', async () => {
 		const premia = await Premia.initialize({
 			privateKey: privateKey,
 			provider: 'http://127.0.0.1:8545',
@@ -115,12 +115,12 @@ describe('ContractsAPI', function (this: any) {
 		})
 
 		let oracleAdapter = premia.contracts.getOracleAdapterContract(
-			Addresses[premia.chainId].UNISWAP_CHAINLINK_ORACLE_ADAPTER,
+			Addresses[premia.chainId].CHAINLINK_ORACLE_ADAPTER,
 			premia.provider
 		)
 
 		expect(await oracleAdapter.getAddress()).eq(
-			Addresses[premia.chainId].UNISWAP_CHAINLINK_ORACLE_ADAPTER
+			Addresses[premia.chainId].CHAINLINK_ORACLE_ADAPTER
 		)
 	})
 
