@@ -36,7 +36,6 @@ Dotenv.config()
 const {
 	API_KEY_INFURA,
 	TESTNET_PRIVATE_KEY,
-	NOVA_RPC_URL,
 	PRIVATE_KEY_NOVA,
 	TEST_API_KEY,
 } = process.env
@@ -44,7 +43,6 @@ const {
 if (
 	!API_KEY_INFURA ||
 	!TESTNET_PRIVATE_KEY ||
-	!NOVA_RPC_URL ||
 	!PRIVATE_KEY_NOVA ||
 	!TEST_API_KEY
 ) {
@@ -155,10 +153,10 @@ const deployer = new Wallet(TESTNET_PRIVATE_KEY, provider)
 
 /**
  * !!!IMPORTANT!!!
- * Cloud services must be running local instances to run this
- * test.  Please launch docker containers locally before running tests.
- * GOTCHA: Tests should NOT be run within TWO MINUTES of each other (to let orders expire from redis)
- * REQUIRED: Please enser DEPLOYER has proper funds available to execute testnet transactions
+ * Cloud services must be running to run this test.
+ * GOTCHA: Tests should NOT be run within THREE MINUTES of each other (to let orders expire from redis)
+ * REQUIRED: Please ensure DEPLOYER has proper funds available to execute testnet transactions
+ * Double check that the API Key is valid
  */
 const orderbook = new OrderbookV1(
 	'https://test.orderbook.premia.finance',
