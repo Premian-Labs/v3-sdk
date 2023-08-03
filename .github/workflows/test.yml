@@ -44,7 +44,7 @@ jobs:
           version: nightly
 
       - name: Run Anvil
-        run: anvil --fork-url https://arb-goerli.g.alchemy.com/v2/${{ secrets.API_KEY_ALCHEMY }} --fork-block-number 32570428  &
+        run: anvil --fork-url https://arb-goerli.g.alchemy.com/v2/${{ secrets.API_KEY_ALCHEMY }} --fork-block-number 32704676  &
 
       - name: Run Unit Tests
         run: yarn test
