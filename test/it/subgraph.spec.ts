@@ -73,21 +73,22 @@ describe('PremiaSubgraph', function (this: any) {
 			Addresses[SupportedChainId.ARBITRUM_GOERLI].CHAINLINK_ORACLE_ADAPTER,
 		name: 'Fake WETH Chainlink / USDC Chainlink',
 	}
-	const wbtcMinimalPair: TokenPairMinimal = {
-		base: {
-			address: Addresses[SupportedChainId.ARBITRUM_GOERLI].WBTC,
-			symbol: 'WBTC',
-			decimals: 18,
-		},
-		quote: {
-			address: Addresses[SupportedChainId.ARBITRUM_GOERLI].USDC,
-			symbol: 'USDC',
-			decimals: 6,
-		},
-		priceOracleAddress:
-			Addresses[SupportedChainId.ARBITRUM_GOERLI].CHAINLINK_ORACLE_ADAPTER,
-		name: 'WETH Chainlink / USDC Chainlink',
-	}
+
+	// const wbtcMinimalPair: TokenPairMinimal = {
+	// 	base: {
+	// 		address: Addresses[SupportedChainId.ARBITRUM_GOERLI].WBTC,
+	// 		symbol: 'WBTC',
+	// 		decimals: 18,
+	// 	},
+	// 	quote: {
+	// 		address: Addresses[SupportedChainId.ARBITRUM_GOERLI].USDC,
+	// 		symbol: 'USDC',
+	// 		decimals: 6,
+	// 	},
+	// 	priceOracleAddress:
+	// 		Addresses[SupportedChainId.ARBITRUM_GOERLI].CHAINLINK_ORACLE_ADAPTER,
+	// 	name: 'WBTC Chainlink / USDC Chainlink',
+	// }
 
 	const token: Token = {
 		chainId: SupportedChainId.ARBITRUM_GOERLI,
@@ -110,7 +111,7 @@ describe('PremiaSubgraph', function (this: any) {
 
 	beforeEach(async () => {
 		subgraph = new PremiaSubgraph(
-			'https://api.thegraph.com/subgraphs/name/premiafinance/v3-trading-competition'
+			'https://api.thegraph.com/subgraphs/name/totop716/premia-v3'
 		)
 	})
 
@@ -419,6 +420,7 @@ describe('PremiaSubgraph', function (this: any) {
 				0,
 				'pool'
 			)
+			console.log(`transactions: ${transactions}`)
 			expect(transactions.length).to.be.greaterThan(0)
 		})
 
@@ -488,7 +490,7 @@ describe('PremiaSubgraph', function (this: any) {
 
 	describe('LiquidityPositionQuery', async () => {
 		it('#getLiquidityPositionsExtendedForUser', async () => {
-			let owner = '0x034d95d43752da3941c29e66e1ba5d2938c323e9'
+			let owner = '0x9e600587b9035a8c1254e8256f4e588cc33b8467'
 
 			let positions = await subgraph.getLiquidityPositionsExtendedForUser(owner)
 
