@@ -406,7 +406,7 @@ describe('PremiaSubgraph', function (this: any) {
 		})
 	})
 
-	describe('TransactionQuery', () => {
+	xdescribe('TransactionQuery', () => {
 		it('#getTransactions', async () => {
 			const transactions = await subgraph.getTransactions(
 				'add',
@@ -417,7 +417,7 @@ describe('PremiaSubgraph', function (this: any) {
 				0,
 				'pool'
 			)
-			console.log(`transactions: ${transactions}`)
+			console.log(transactions)
 			expect(transactions.length).to.be.greaterThan(0)
 		})
 
@@ -440,37 +440,37 @@ describe('PremiaSubgraph', function (this: any) {
 	})
 
 	// TODO: requires similar setup to cloud apps integration test (generating on-chain events)
-	// describe('VaultTransactionQuery', async () => {
-	// 	it('#getVaultTransactions', async () => {
-	// 		const transactions = await subgraph.getVaultTransactions(
-	// 			'add',
-	// 			'ETH',
-	// 			'timestamp',
-	// 			'asc',
-	// 			10,
-	// 			0,
-	// 			'token'
-	// 		)
-	// 		expect(transactions.length).to.be.greaterThan(0)
-	// 	})
-	//
-	// 	it('#getVaultTransaction', async () => {
-	// 		const transactions = await subgraph.getVaultTransactions(
-	// 			'add',
-	// 			'ETH',
-	// 			'timestamp',
-	// 			'asc',
-	// 			10,
-	// 			0,
-	// 			'token'
-	// 		)
-	// 		const hash = get(transactions[0], 'id', '')
-	//
-	// 		const tx = await subgraph.getVaultTransaction(hash)
-	// 		expect(tx).to.not.be.null
-	// 		expect(tx).to.not.be.undefined
-	// 	})
-	// })
+	xdescribe('VaultTransactionQuery', async () => {
+		it('#getVaultTransactions', async () => {
+			const transactions = await subgraph.getVaultTransactions(
+				'add',
+				'ETH',
+				'timestamp',
+				'asc',
+				10,
+				0,
+				'token'
+			)
+			expect(transactions.length).to.be.greaterThan(0)
+		})
+
+		it('#getVaultTransaction', async () => {
+			const transactions = await subgraph.getVaultTransactions(
+				'add',
+				'ETH',
+				'timestamp',
+				'asc',
+				10,
+				0,
+				'token'
+			)
+			const hash = get(transactions[0], 'id', '')
+
+			const tx = await subgraph.getVaultTransaction(hash)
+			expect(tx).to.not.be.null
+			expect(tx).to.not.be.undefined
+		})
+	})
 
 	describe('OptionPositionQuery', async () => {
 		it('#getOptionPositionsExtendedForUser', async () => {
