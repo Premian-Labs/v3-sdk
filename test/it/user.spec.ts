@@ -6,7 +6,7 @@ import { Premia } from '../../src'
 describe('User API', function (this: any) {
 	let sdk: Premia
 
-	const defaultUser = '0x9e600587b9035a8c1254e8256f4e588cc33b8467'
+	const defaultUser = '0x252f5ef0771ebb83a7efd51644c0dc16b1e429f6'
 
 	this.timeout(30000)
 
@@ -31,7 +31,7 @@ describe('User API', function (this: any) {
 	})
 
 	it('should load option positions for user', async () => {
-		const owner = '0x034d95d43752da3941c29e66e1ba5d2938c323e9'
+		const owner = '0x9e600587b9035a8c1254e8256f4e588cc33b8467'
 		let positions = await sdk.users.getOptionPositionsExtendedForUser(owner)
 
 		expect(positions.length).to.be.greaterThan(0)
@@ -42,9 +42,8 @@ describe('User API', function (this: any) {
 	})
 
 	it('should load liquidity positions for user', async () => {
-		let positions = await sdk.users.getLiquidityPositionsExtendedForUser(
-			defaultUser
-		)
+		const owner = '0x9e600587b9035a8c1254e8256f4e588cc33b8467'
+		let positions = await sdk.users.getLiquidityPositionsExtendedForUser(owner)
 
 		expect(positions.length).to.be.greaterThan(0)
 	})
