@@ -501,7 +501,7 @@ export class Premia {
 			disableCache: false,
 			skipSubgraph: false,
 			subgraphUri:
-				'https://api.thegraph.com/subgraphs/name/premiafinance/v3-trading-competition',
+				'https://api.thegraph.com/subgraphs/name/totop716/premia-v3',
 		}
 
 		const merged = merge(defaultConfig, config) as PremiaConfigWithDefaults

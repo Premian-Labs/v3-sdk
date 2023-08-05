@@ -31,11 +31,11 @@ import Ajv from 'ajv'
 import { omit } from 'lodash'
 import * as Dotenv from 'dotenv'
 
+// TODO: update tests to use Arb Goerli Orderbook contract (not NOVA)
 Dotenv.config()
 const {
 	API_KEY_INFURA,
 	TESTNET_PRIVATE_KEY,
-	NOVA_RPC_URL,
 	PRIVATE_KEY_NOVA,
 	TEST_API_KEY,
 } = process.env
@@ -43,7 +43,6 @@ const {
 if (
 	!API_KEY_INFURA ||
 	!TESTNET_PRIVATE_KEY ||
-	!NOVA_RPC_URL ||
 	!PRIVATE_KEY_NOVA ||
 	!TEST_API_KEY
 ) {
@@ -154,10 +153,10 @@ const deployer = new Wallet(TESTNET_PRIVATE_KEY, provider)
 
 /**
  * !!!IMPORTANT!!!
- * Cloud services must be running local instances to run this
- * test.  Please launch docker containers locally before running tests.
- * GOTCHA: Tests should NOT be run within TWO MINUTES of each other (to let orders expire from redis)
- * REQUIRED: Please enser DEPLOYER has proper funds available to execute testnet transactions
+ * Cloud services must be running to run this test.
+ * GOTCHA: Tests should NOT be run within THREE MINUTES of each other (to let orders expire from redis)
+ * REQUIRED: Please ensure DEPLOYER has proper funds available to execute testnet transactions
+ * Double check that the API Key is valid
  */
 const orderbook = new OrderbookV1(
 	'https://test.orderbook.premia.finance',
@@ -264,7 +263,7 @@ async function createQuoteWithSignature(
 	takerAddress = ZeroAddress,
 	provider = deployer.address,
 	ts = Math.trunc(new Date().getTime() / 1000),
-	TWO_MIN = 120
+	THREE_MIN = 180
 ): Promise<QuoteWithSignature> {
 	const quoteOB: QuoteOB = {
 		provider: provider.toLowerCase(),
@@ -272,7 +271,7 @@ async function createQuoteWithSignature(
 		price: parseEther(price),
 		size: parseEther('1'),
 		isBuy: isBuy,
-		deadline: toBigInt(ts + TWO_MIN),
+		deadline: toBigInt(ts + THREE_MIN),
 		salt: toBigInt(ts),
 	}
 
@@ -406,7 +405,7 @@ describe('OrderbookV1', () => {
 		const fillSize = parseEther('.1')
 		await fillQuote(quote, fillSize)
 
-		await delay(5000)
+		await delay(10000)
 		const updatedQuote = (await orderbook.getQuotes(
 			poolAddress,
 			parseEther('100').toString(),
@@ -427,7 +426,7 @@ describe('OrderbookV1', () => {
 		const fillSize = parseEther('.9')
 		await fillQuote(quote, fillSize)
 
-		await delay(5000)
+		await delay(10000)
 		const updatedQuote = (await orderbook.getQuotes(
 			poolAddress,
 			parseEther('100').toString(),
@@ -442,7 +441,7 @@ describe('OrderbookV1', () => {
 		const quoteId = publishedQuote.quoteId
 		expect(publishedQuote).to.include.all.keys('quoteId', 'poolAddress', 'chainId')
 		expect(publishedQuote.poolAddress).to.eq(poolAddress)
-		await delay(2000)
+		await delay(10000)
 
 		const quotes = (await orderbook.getQuotes(
 			poolAddress,
@@ -453,7 +452,7 @@ describe('OrderbookV1', () => {
 		expect(quotes.length).to.be.eq(1)
 
 		await cancelQuote(quoteId)
- 		await delay(2000)
+ 		await delay(10000)
 		const updatedQuotes = (await orderbook.getQuotes(
 			poolAddress,
 			parseEther('100').toString(),
@@ -515,7 +514,7 @@ describe('OrderbookV1', () => {
 		const order3 = await createQuoteWithSignature(poolAddress, '0.2')
 		const publishedOrder1 = (await orderbook.publishQuotes([order3]))[0]
 		// delay affects public quotes ordering
-		await delay(2000)
+		await delay(10000)
 
 		const order4 = await createQuoteWithSignature(poolAddress, '0.2')
 		const publishedOrder2 = (await orderbook.publishQuotes([order4]))[0]
@@ -539,7 +538,7 @@ describe('OrderbookV1', () => {
 		const order5 = await createQuoteWithSignature(poolAddress, '0.15', true)
 		await orderbook.publishQuotes([order5])
 
-		await delay(2000)
+		await delay(10000)
 		const order6 = await createQuoteWithSignature(poolAddress, '0.10', true)
 		await orderbook.publishQuotes([order6])
 
@@ -809,14 +808,14 @@ describe('OrderbookV1', () => {
 		const publishedPrivateQuote = (
 			await orderbook.publishQuotes([rfqQuoteWithSignature])
 		)[0]
-		await delay(2000)
+		await delay(10000)
 
 		// receive generic quote
 		const publicQuoteWithSignature = await createQuoteWithSignature(poolAddress)
 		const publishedPublicQuote = (
 			await orderbook.publishQuotes([publicQuoteWithSignature])
 		)[0]
-		await delay(2000)
+		await delay(10000)
 
 		const publicOrderOccurances = quotesReceived.filter(
 			(quote) => quote.quoteId == publishedPrivateQuote.quoteId

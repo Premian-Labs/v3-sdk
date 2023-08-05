@@ -17,7 +17,7 @@ describe('SDK.initialize', function (this: any) {
 		expect(premia.disableCache).eq(false)
 		expect(premia.skipSubgraph).eq(false)
 		expect(premia.subgraph.uri).eq(
-			'https://api.thegraph.com/subgraphs/name/premiafinance/v3-trading-competition'
+			'https://api.thegraph.com/subgraphs/name/totop716/premia-v3'
 		)
 		expect(premia.chainId).eq(42161)
 		expect(premia.apiBaseUri).eq('https://test.orderbook.premia.finance')
@@ -44,7 +44,7 @@ describe('SDK.initialize', function (this: any) {
 	it('should be able to be instantiated with useTestnet=true', async () => {
 		const premia = await Premia.initialize({
 			subgraphUri:
-				'https://api.thegraph.com/subgraphs/name/premiafinance/v3-goerli',
+				'https://api.thegraph.com/subgraphs/name/totop716/premia-v3',
 			provider: 'https://rpc.ankr.com/eth_goerli',
 			chainId: 5,
 		})
@@ -52,7 +52,7 @@ describe('SDK.initialize', function (this: any) {
 		expect(premia.disableCache).eq(false)
 		expect(premia.skipSubgraph).eq(false)
 		expect(premia.subgraph.uri).eq(
-			'https://api.thegraph.com/subgraphs/name/premiafinance/v3-goerli'
+			'https://api.thegraph.com/subgraphs/name/totop716/premia-v3'
 		)
 		expect(premia.chainId).eq(5)
 		expect(premia.apiBaseUri).eq('https://test.orderbook.premia.finance')
@@ -81,7 +81,7 @@ describe('SDK.initialize', function (this: any) {
 	it('should be able to be instantiated with only a privateKey for both arbitrum and argitrum nova', async () => {
 		const premia = await Premia.initialize({
 			subgraphUri:
-				'https://api.thegraph.com/subgraphs/name/premiafinance/v3-goerli',
+				'https://api.thegraph.com/subgraphs/name/totop716/premia-v3',
 			provider: 'https://rpc.ankr.com/eth_goerli',
 			chainId: 5,
 			privateKey: privateKey,
@@ -94,7 +94,7 @@ describe('SDK.initialize', function (this: any) {
 		expect(premia.disableCache).eq(false)
 		expect(premia.skipSubgraph).eq(false)
 		expect(premia.subgraph.uri).eq(
-			'https://api.thegraph.com/subgraphs/name/premiafinance/v3-goerli'
+			'https://api.thegraph.com/subgraphs/name/totop716/premia-v3'
 		)
 		expect(premia.chainId).eq(5)
 		expect(premia.apiBaseUri).eq('https://test.orderbook.premia.finance')
@@ -132,7 +132,7 @@ describe('SDK.initialize', function (this: any) {
 		expect(premia.disableCache).eq(false)
 		expect(premia.skipSubgraph).eq(false)
 		expect(premia.subgraph.uri).eq(
-			'https://api.thegraph.com/subgraphs/name/premiafinance/v3-trading-competition'
+			'https://api.thegraph.com/subgraphs/name/totop716/premia-v3'
 		)
 		expect(premia.chainId).eq(42161)
 		expect(premia.apiBaseUri).eq('https://test.orderbook.premia.finance')
@@ -171,7 +171,7 @@ describe('SDK.initialize', function (this: any) {
 		expect(premia.disableCache).eq(false)
 		expect(premia.skipSubgraph).eq(false)
 		expect(premia.subgraph.uri).eq(
-			'https://api.thegraph.com/subgraphs/name/premiafinance/v3-trading-competition'
+			'https://api.thegraph.com/subgraphs/name/totop716/premia-v3'
 		)
 		expect(premia.chainId).eq(421613)
 		expect(premia.apiBaseUri).eq('https://test.orderbook.premia.finance')

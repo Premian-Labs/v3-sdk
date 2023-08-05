@@ -82,7 +82,7 @@ describe('Pool API', async function (this: any) {
 		basePool = await sdk.pools.getPoolMinimalFromKey(poolKey)
 
 		expect(basePool).to.not.be.undefined
-		expect(basePool?.pair.base.symbol).to.equal('WETH')
+		expect(basePool?.pair.base.symbol).to.equal('testWETH')
 		expect(basePool?.pair.quote.symbol).to.equal('USDC')
 		expect(basePool?.pair.priceOracleAddress).to.equal(
 			Addresses[sdk.chainId].CHAINLINK_ORACLE_ADAPTER
