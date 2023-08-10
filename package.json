@@ -1,6 +1,6 @@
 {
 	"name": "@premia/v3-sdk-public",
-	"version": "0.2.8",
+	"version": "0.2.9",
 	"description": "The official SDK for building applications on Premia V3",
 	"main": "dist/index.js",
 	"typings": "dist/index.d.ts",
