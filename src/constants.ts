@@ -79,7 +79,7 @@ export const Addresses: AddressMap = {
 		POOL_FACTORY: arbitrumGoerliJson.PoolFactoryProxy.address,
 		ORDERBOOK: arbitrumGoerliJson.OrderbookStream.address,
 		CHAINLINK_ORACLE_ADAPTER: arbitrumGoerliJson.ChainlinkAdapterProxy.address,
-		DEFAULT_REFERRER: '0x589155f2F38B877D7Ac3C1AcAa2E42Ec8a9bb709',
+		DEFAULT_REFERRER: '0x3e4906976Cd967c99FbF0B32823e59aB96DDBE3F',
 		ERC20_ROUTER: arbitrumGoerliJson.ERC20Router.address,
 		USER_SETTINGS: arbitrumGoerliJson.UserSettingsProxy.address,
 		VAULT_REGISTRY: arbitrumGoerliJson.VaultRegistryProxy.address,
