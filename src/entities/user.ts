@@ -44,6 +44,9 @@ export interface User {
 	vaultProfitLossUSD: BigNumberish
 	vaultProfitLossETHPercent: BigNumberish
 	vaultProfitLossUSDPercent: BigNumberish
+
+	primaryReferrer: string
+	secondaryReferrer: string
 }
 
 export interface UserExtended extends User {
