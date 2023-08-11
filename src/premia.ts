@@ -17,6 +17,7 @@ import {
 	UserAPI,
 	VaultAPI,
 	VxPremiaAPI,
+	ReferralAPI,
 } from './api'
 import { Addresses, SupportedChainId } from './constants'
 import { Coingecko, OrderbookV1 } from './services'
@@ -382,6 +383,13 @@ export class Premia {
 	vxPremia: VxPremiaAPI = new VxPremiaAPI(this)
 
 	/**
+	 * The API used to interact with referrals for Premia V3.
+	 *
+	 * @defaultValue {@link ReferralAPI}
+	 */
+	referral: ReferralAPI = new ReferralAPI(this)
+
+	/**
 	 * The static types used to interact with the Premia V3 protocol.
 	 *
 	 * @defaultValue {@link _entities}
@@ -500,8 +508,7 @@ export class Premia {
 			coingeckoBaseUri: 'https://api.coingecko.com/api/v3',
 			disableCache: false,
 			skipSubgraph: false,
-			subgraphUri:
-				'https://api.thegraph.com/subgraphs/name/totop716/premia-v3',
+			subgraphUri: 'https://api.thegraph.com/subgraphs/name/totop716/premia-v3',
 		}
 
 		const merged = merge(defaultConfig, config) as PremiaConfigWithDefaults
