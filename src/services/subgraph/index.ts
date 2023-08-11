@@ -16,6 +16,7 @@ import {
 	PoolDayData,
 	PoolExtended,
 	PoolMinimal,
+	Referral,
 	StakeHistory,
 	Tick,
 	Token,
@@ -57,6 +58,7 @@ import {
 	VaultQuery,
 	VaultTransactionQuery,
 	VxPremiaQuery,
+	ReferralQuery,
 } from './graphql'
 
 import { BigNumberish, toBigInt } from 'ethers'
@@ -964,6 +966,17 @@ export class PremiaSubgraph {
 			response,
 			'data.liquidityPositions'
 		) as LiquidityPositionExtended[]
+	}
+
+	async getUserReferrals(
+		user: string,
+		first: number = 1000,
+		skip: number = 0
+	): Promise<Referral[]> {
+		const response = await this.client.query({
+			query: ReferralQuery.GetUserReferrals(this, user, first, skip),
+		})
+		return get(response, 'data.referrals', []) as Referral[]
 	}
 }
 
