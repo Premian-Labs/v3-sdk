@@ -535,6 +535,13 @@ export class Premia {
 		cache.disabled = this.disableCache
 	}
 
+	/**
+	 * @param uri - A uri associated with the PremiaSubgraph.
+	 */
+	set subgraphUri(uri: string) {
+		this.subgraph = new PremiaSubgraph(uri)
+	}
+
 	get apiKey(): string {
 		return this.orderbook.apiKey
 	}

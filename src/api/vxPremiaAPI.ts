@@ -462,12 +462,7 @@ export class VxPremiaAPI extends BaseAPI {
 	 */
 	async encodeCastVotes(votes: Vote[]): Promise<ContractTransaction> {
 		const vxPremiaContract = this.premia.contracts.getVxPremiaContract()
-		const _votes = votes.map((v) => ({
-			amount: v.amount,
-			version: v.version,
-			target: AbiCoder.defaultAbiCoder().encode(['address'], [v.target]),
-		}))
-		return vxPremiaContract.castVotes.populateTransaction(_votes)
+		return vxPremiaContract.castVotes.populateTransaction(votes)
 	}
 
 	/**
