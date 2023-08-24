@@ -1,6 +1,5 @@
 import { BigNumberish } from 'ethers'
 
-import { TokenPair } from './tokenPair'
 import { Vault } from './vault'
 import { User } from './user'
 
@@ -16,19 +15,9 @@ export interface Vote {
 }
 
 export interface VaultVote {
-	voter: string
+	voter: User
 	vaultName: string
 	vault: Vault
-	amount: BigNumberish
-	timestamp: BigNumberish
-	isLast: boolean
-	version: BigNumberish
-}
-
-export interface PairVote {
-	voter: string
-	pairName: string
-	pair: TokenPair
 	amount: BigNumberish
 	timestamp: BigNumberish
 	isLast: boolean

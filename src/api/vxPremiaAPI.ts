@@ -210,13 +210,15 @@ export class VxPremiaAPI extends BaseAPI {
 	/**
 	 * Retrieves the total amount of available rewards.
 	 *
-	 * @returns {Promise<{rewards: bigint, unstakeRewards: bigint}>} - A promise that resolves to the amount of
+	 * @returns {Promise<[bigint, bigint] & {rewards: bigint, unstakeRewards: bigint}>} - A promise that resolves to the amount of
 	 * available rewards and unstake rewards respectively.
 	 */
-	async getAvailableRewards(): Promise<{
-		rewards: bigint
-		unstakeRewards: bigint
-	}> {
+	async getAvailableRewards(): Promise<
+		[bigint, bigint] & {
+			rewards: bigint
+			unstakeRewards: bigint
+		}
+	> {
 		const contract = this.premia.contracts.getVxPremiaContract()
 		return contract.getAvailableRewards()
 	}
@@ -233,12 +235,12 @@ export class VxPremiaAPI extends BaseAPI {
 	/**
 	 * Retrieves the amount of rewards that are pending for a specific user.
 	 * @param {string} user - The address of the user.
-	 * @returns {Promise<{reward: bigint, unstakeReward: bigint}>} - A promise that resolves to the amount of rewards
+	 * @returns {Promise<[bigint, bigint] & {reward: bigint, unstakeReward: bigint}>} - A promise that resolves to the amount of rewards
 	 * and unstake rewards that are pending for the user respectively.
 	 */
 	async getPendingUserRewards(
 		user: string
-	): Promise<{ reward: bigint; unstakeReward: bigint }> {
+	): Promise<[bigint, bigint] & { reward: bigint; unstakeReward: bigint }> {
 		const contract = this.premia.contracts.getVxPremiaContract()
 		return contract.getPendingUserRewards(user)
 	}
@@ -312,12 +314,16 @@ export class VxPremiaAPI extends BaseAPI {
 	 * Retrieves the information of a pending withdrawal of a user.
 	 *
 	 * @param {string} user - The address of the user.
-	 * @returns {Promise<{amount: bigint, startDate: bigint, unlockDate: bigint}>} - A promise that resolves to the
+	 * @returns {Promise<[bigint, bigint, bigint] & {amount: bigint, startDate: bigint, unlockDate: bigint}>} - A promise that resolves to the
 	 * amount, start date, and unlock date of the user's pending withdrawal respectively.
 	 */
-	async getPendingWithdrawal(
-		user: string
-	): Promise<{ amount: bigint; startDate: bigint; unlockDate: bigint }> {
+	async getPendingWithdrawal(user: string): Promise<
+		[bigint, bigint, bigint] & {
+			amount: bigint
+			startDate: bigint
+			unlockDate: bigint
+		}
+	> {
 		const contract = this.premia.contracts.getVxPremiaContract()
 		return contract.getPendingWithdrawal(user)
 	}
