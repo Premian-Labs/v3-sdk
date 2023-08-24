@@ -87,7 +87,7 @@ export class VxPremiaQuery {
       ${VoteHistoryFragment}
 
       query VoteHistory {
-        voteHistory(id: ${id}) {
+        voteHistory(id: "${id}") {
           ...VoteHistory
         }
       }
