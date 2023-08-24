@@ -70,7 +70,7 @@ export class VxPremiaQuery {
           skip: ${skip}
           orderBy: ${orderBy}
           orderDirection: ${order}
-          where: { isLast: true, size_gt: 0 }
+          where: { isLast: true, amount_gt: 0 }
         ) {
           ...VaultVote
         }
