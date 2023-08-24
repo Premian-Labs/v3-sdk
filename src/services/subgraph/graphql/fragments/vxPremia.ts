@@ -47,6 +47,7 @@ export const UserStakeFragment = gql`
 		}
 		votingPower
 		voteAmount
+		isLast
 	}
 `
 
