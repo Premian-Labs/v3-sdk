@@ -1,35 +1,20 @@
 import { gql } from '@apollo/client/core'
 
-import { TokenPairFragment } from './tokenPair'
 import { VaultFragment } from './vault'
 import { UserFragment } from './user'
 
 export const VaultVoteFragment = gql`
 	${VaultFragment}
+	${UserFragment}
 
 	fragment VaultVote on VaultVote {
 		id
-		voter
+		voter {
+			...User
+		}
 		vaultName
 		vault {
 			...Vault
-		}
-		amount
-		timestamp
-		isLast
-		version
-	}
-`
-
-export const PairVoteFragment = gql`
-	${TokenPairFragment}
-
-	fragment PairVote on PairVote {
-		id
-		voter
-		pairName
-		pair {
-			...TokenPair
 		}
 		amount
 		timestamp
