@@ -188,10 +188,7 @@ export class VxPremiaAPI extends BaseAPI {
 	async getVotesForVault(vaultAddress: string): Promise<bigint> {
 		const vxPremiaContract = this.premia.contracts.getVxPremiaContract()
 		// @dev: 1 = VoteVersion.VaultV3
-		return vxPremiaContract.getPoolVotes(
-			VoteVersion.VaultV3,
-			AbiCoder.defaultAbiCoder().encode(['address'], [vaultAddress])
-		)
+		return vxPremiaContract.getPoolVotes(VoteVersion.VaultV3, vaultAddress)
 	}
 
 	/**
