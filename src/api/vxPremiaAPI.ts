@@ -2,6 +2,7 @@ import { withCache } from '../cache'
 import { CacheTTL } from '../constants'
 import { BaseAPI } from './baseAPI'
 import {
+	Signature,
 	StakeHistory,
 	UserStake,
 	VaultVote,
@@ -513,6 +514,56 @@ export class VxPremiaAPI extends BaseAPI {
 			this.premia.contracts.getVxPremiaContract(),
 			this.encodeStake(amount, period),
 			'encodeStake'
+		)
+	}
+
+	/**
+	 * Encodes a transaction to stake using IERC2612 permit.
+	 *
+	 * @param {BigNumberish} amount - The amount of xPremia to stake.
+	 * @param {BigNumberish} period - The lockup period (in seconds).
+	 * @param {BigNumberish} deadline - The deadline after which permit will fail.
+	 * @param {Signature} signature - The signature for the transaction.
+	 * @returns {Promise<ContractTransaction>} - A promise that resolves to a ContractTransaction instance representing
+	 * the encoded transaction.
+	 */
+	async encodeStakeWithPermit(
+		amount: BigNumberish,
+		period: BigNumberish,
+		deadline: BigNumberish,
+		signature: Signature
+	): Promise<ContractTransaction> {
+		const contract = this.premia.contracts.getVxPremiaContract()
+		return contract.stakeWithPermit.populateTransaction(
+			amount,
+			period,
+			deadline,
+			signature.v,
+			signature.r,
+			signature.s
+		)
+	}
+
+	/**
+	 * Stake using IERC2612 permit.
+	 *
+	 * @param {BigNumberish} amount - The amount of xPremia to stake.
+	 * @param {BigNumberish} period - The lockup period (in seconds).
+	 * @param {BigNumberish} deadline - The deadline after which permit will fail.
+	 * @param {Signature} signature - The signature for the transaction.
+	 * @returns {Promise<ContractTransactionResponse>} - A promise that resolves to a ContractTransactionResponse
+	 * instance representing the result of the transaction.
+	 */
+	async stakeWithPermit(
+		amount: BigNumberish,
+		period: BigNumberish,
+		deadline: BigNumberish,
+		signature: Signature
+	): Promise<ContractTransactionResponse> {
+		return sendTransaction(
+			this.premia.contracts.getVxPremiaContract(),
+			this.encodeStakeWithPermit(amount, period, deadline, signature),
+			'encodeStakeWithPermit'
 		)
 	}
 
