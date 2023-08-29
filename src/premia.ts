@@ -23,6 +23,7 @@ import { Addresses, SupportedChainId } from './constants'
 import { Coingecko, OrderbookV1 } from './services'
 import cache from './cache'
 import PremiaSubgraph from './services/subgraph'
+import {MiningAPI} from "./api/miningAPI";
 
 export interface SetProviderParams {
 	/**
@@ -196,6 +197,13 @@ export interface PremiaConfig
 	 * @defaultValue {@link Premia.vxPremiaAddress}
 	 */
 	vxPremiaAddress?: string
+
+	/**
+	 * The address of the VaultMining contract (on Arbitrum).
+	 *
+	 * @defaultValue {@link Premia.vaultMiningAddress}
+	 */
+	vaultMiningAddress?: string
 }
 
 export interface PremiaConfigWithDefaults extends Required<PremiaConfig> {}
@@ -348,7 +356,7 @@ export class Premia {
 	/**
 	 * The API used to interact with the RFQ Messaging Network for Premia V3.
 	 *
-	 * @defaultValue {@link OrderbookAPI}
+	 * @defaultValue {@link OrdersAPI}
 	 */
 	orders: OrdersAPI = new OrdersAPI(this)
 	/**
@@ -388,6 +396,13 @@ export class Premia {
 	 * @defaultValue {@link ReferralAPI}
 	 */
 	referral: ReferralAPI = new ReferralAPI(this)
+
+	/**
+	 * The API used to interact with liquidity mining for Premia V3.
+	 *
+	 * @defaultValue {@link MiningAPI}
+	 */
+	mining: MiningAPI = new MiningAPI(this);
 
 	/**
 	 * The static types used to interact with the Premia V3 protocol.
@@ -446,6 +461,7 @@ export class Premia {
 			this.contracts.setVaultRegistryAddress(config.vaultRegistryAddress!)
 			this.contracts.setUserSettingsAddress(config.userSettingsAddress!)
 			this.contracts.setVxPremiaAddress(config.vxPremiaAddress!)
+			this.contracts.setVaultMiningAddress(config.vaultMiningAddress!)
 		}
 	}
 
@@ -523,6 +539,8 @@ export class Premia {
 			Addresses[merged.chainId as keyof typeof Addresses].USER_SETTINGS
 		merged.vxPremiaAddress =
 			Addresses[merged.chainId as keyof typeof Addresses].VX_PREMIA
+		merged.vaultMiningAddress =
+			Addresses[merged.chainId as keyof typeof Addresses].VAULT_MINING
 
 		return merged
 	}

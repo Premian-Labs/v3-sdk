@@ -15,7 +15,8 @@ import {
 	IUserSettings,
 	IUserSettings__factory,
 	IVault,
-	IVault__factory,
+	IVault__factory, IVaultMining,
+	IVaultMining__factory,
 	IVaultRegistry,
 	IVaultRegistry__factory,
 	IVxPremia,
@@ -73,6 +74,11 @@ export class ContractAPI extends BaseAPI {
 	 * The address of the `VxPremia` contract.
 	 */
 	vxPremiaAddress: string = Addresses[SupportedChainId.ARBITRUM].VX_PREMIA
+
+	/**
+	 * The address of the `VaultMining` contract.
+	 */
+	vaultMiningAddress: string = Addresses[SupportedChainId.ARBITRUM].VAULT_MINING
 
 	/**
 	 * Connects to a pool contract at a given address using a provider.
@@ -271,6 +277,23 @@ export class ContractAPI extends BaseAPI {
 	}
 
 	/**
+	 * Connects to the VxPremia contract using a provider.
+	 *
+	 * This function leverages the `VxPremia __factory` to connect to the VxPremia contract.
+	 * If no provider is specified, it will default to using the signer or provider from the `premia` object.
+	 *
+	 * @param {Provider} [provider] - The provider to use for the connection. If not provided, the function defaults to using `this.premia.signer` or `this.premia.provider`.
+	 * @return {IVxPremia} The connected VxPremia contract instance.
+	 * @throws Will throw an error if the connection to the contract fails.
+	 */
+	getVaultMiningContract(provider?: Provider): IVaultMining {
+		return IVaultMining__factory.connect(
+			this.vaultMiningAddress,
+			provider ?? (this.premia.signer || this.premia.provider)
+		)
+	}
+
+	/**
 	 * Sets the orderbook contract address used for this instance.
 	 *
 	 * @param {string} orderbookAddress - The address of the OrderbookStream contract.
@@ -313,6 +336,15 @@ export class ContractAPI extends BaseAPI {
 	 */
 	setVxPremiaAddress(vxPremiaAddress: string): void {
 		this.vxPremiaAddress = vxPremiaAddress
+	}
+
+	/**
+	 * Sets the VaultMining contract address used for this instance.
+	 *
+	 * @param {string} vaultMiningAddress - The address of the VaultMining contract.
+	 */
+	setVaultMiningAddress(vaultMiningAddress: string): void {
+		this.vaultMiningAddress = vaultMiningAddress
 	}
 }
 
