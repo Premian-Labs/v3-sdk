@@ -81,6 +81,7 @@ export interface FillableQuote extends QuoteSaltOptional {
 	approvalAmount: BigNumberish
 	to: string
 	data: BytesLike
+	takerFee?: BigNumberish
 }
 
 export interface Domain {

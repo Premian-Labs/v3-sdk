@@ -126,13 +126,9 @@ export class OptionAPI extends BaseAPI {
 		decimals: number = Number(WAD_DECIMALS)
 	): bigint {
 		const price = parseNumber(spotPrice, decimals)
-		const logged = Math.floor(Math.log10(price))
-		return parseBigInt(
-			(price * 10) ** (-logged - 1) < 0.5
-				? 10 ** (logged - 1)
-				: (5 * 10) ** (logged - 1),
-			decimals
-		)
+		const exponent = Math.floor(Math.log10(price))
+		const multiplier = (price >= 5 * 10**exponent) ? 5 : 1
+		return parseBigInt(multiplier * 10**(exponent - 1), decimals)
 	}
 
 	/**
