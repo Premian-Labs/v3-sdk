@@ -2,6 +2,7 @@ import 'mock-local-storage'
 import { expect } from 'chai'
 
 import {FillableQuote, parseBigInt, Premia} from '../../src'
+import {toBigInt} from "ethers";
 
 
 describe('Option API', function (this: any) {
@@ -14,10 +15,20 @@ describe('Option API', function (this: any) {
 	})
 
 	it('should get the correct strike increment', async () => {
-		const strikeIncrement = sdk.options.getStrikeIncrement(
+		let strikeIncrement = sdk.options.getStrikeIncrement(
 			parseBigInt('2000')
 		)
 		expect(strikeIncrement).to.equal(parseBigInt('100'))
+
+		strikeIncrement = sdk.options.getStrikeIncrement(
+			parseBigInt('100')
+		)
+		expect(strikeIncrement).to.equal(parseBigInt('10'))
+
+		strikeIncrement = sdk.options.getStrikeIncrement(
+			parseBigInt('15')
+		)
+		expect(strikeIncrement).to.equal(parseBigInt('1'))
 	})
 
 	it('should suggest strikes for a spot price', async () => {
