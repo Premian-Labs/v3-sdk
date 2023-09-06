@@ -5,7 +5,8 @@ import {
 	QuoteSaltOptionalT,
 	QuoteWithSignatureT,
 	SerializedQuoteSaltOptional,
-	OrderbookQuote
+	OrderbookQuote,
+	PublishQuoteResponse
 } from '../../entities'
 import {
 	AuthMessage,
@@ -185,7 +186,7 @@ export class OrderbookV1 {
 		}
 	}
 
-	async publishQuotes(quotes: QuoteWithSignatureT[]): Promise<OrderbookQuote[]> {
+	async publishQuotes(quotes: QuoteWithSignatureT[]): Promise<PublishQuoteResponse> {
 		const _quotes = this.serializeQuotesWithSignature(quotes)
 
 		const url = `${this.uri}/quotes`

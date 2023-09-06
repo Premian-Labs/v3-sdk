@@ -49,6 +49,16 @@ export interface OrderbookQuote extends SerializedQuote {
 	ts: number
 }
 
+export interface PublishQuoteResponse {
+	created: OrderbookQuote[]
+	failed: {
+		reason: any,
+		failedQuote: SerializedQuote[]
+	}[]
+	exist: Omit<OrderbookQuote, 'fillableSize' & 'ts'>[]
+}
+
+
 export interface SerializedQuote {
 	poolKey: PoolKey
 	provider: string
