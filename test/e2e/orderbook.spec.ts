@@ -587,7 +587,7 @@ describe('OrderbookV1', () => {
 		// expect duplicate order to return 'created':[]
 		expect(publishedDupeOrder1.created).to.be.lengthOf(0)
 		// expect duplicate order to be the same as original order
-		expect(publishedDupeOrder1.exist[0]).to.be.eq(omit(publishedOrder1, ['ts', 'fillableSize']))
+		expect(publishedDupeOrder1.exists[0]).to.be.eq(omit(publishedOrder1, ['ts', 'fillableSize']))
 		// ensure order is only placed once
 		expect(orderOccurances).to.eq(1)
 	})
