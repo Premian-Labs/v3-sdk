@@ -53,9 +53,9 @@ export interface PublishQuoteResponse {
 	created: OrderbookQuote[]
 	failed: {
 		reason: any,
-		failedQuote: SerializedQuote[]
+		invalidQuote: SerializedQuote
 	}[]
-	exist: Omit<OrderbookQuote, 'fillableSize' & 'ts'>[]
+	exists: Omit<OrderbookQuote, 'fillableSize' & 'ts'>[]
 }
 
 
