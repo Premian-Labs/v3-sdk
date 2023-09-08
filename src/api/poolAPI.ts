@@ -457,7 +457,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param {string} options.poolAddress - The address of the pool.
 	 * @param {BigNumberish} options.size - The size of the quote.
 	 * @param {boolean} options.isBuy - Whether it's a buy or sell.
-	 * @param {(quote: FillableQuote) => void} callback - The callback function to handle each new quote.
+	 * @param {(quote: FillableQuote | null) => void} callback - The callback function to handle each new quote.
 	 * @returns {Promise<void>}
 	 */
 	async streamQuotes(
@@ -466,7 +466,7 @@ export class PoolAPI extends BaseAPI {
 			size: BigNumberish
 			isBuy: boolean
 		},
-		callback: (quote: FillableQuote) => void
+		callback: (quote: FillableQuote | null) => void
 	): Promise<void> {
 		const pool = this.premia.contracts.getPoolContract(options.poolAddress)
 
@@ -479,6 +479,7 @@ export class PoolAPI extends BaseAPI {
 			callback(bestQuote)
 		} catch (e) {
 			console.error('Error getting quote from pool: ', e)
+			callback(null)
 		}
 
 		pool.on(pool.filters.Trade, async () => {
@@ -487,10 +488,11 @@ export class PoolAPI extends BaseAPI {
 					options.poolAddress,
 					options.size,
 					options.isBuy
-				)
+				).catch()
 				callback(quote)
 			} catch (e) {
 				console.error('Error getting quote from pool: ', e)
+				callback(null)
 			}
 		})
 	}

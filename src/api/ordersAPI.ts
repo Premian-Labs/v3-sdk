@@ -209,7 +209,7 @@ export class OrdersAPI extends BaseAPI {
 	 * @param {boolean} options.isBuy - Whether it's a buy or a sell.
 	 * @param {BigNumberish} [options.minimumSize] - The minimum size of the trade (optional).
 	 * @param {string} [options.referrer] - The address of the referrer (optional).
-	 * @param {(quote: FillableQuote) => void} callback - The callback to execute for the best quote.
+	 * @param {(quote: FillableQuote | null) => void} callback - The callback to execute for the best quote.
 	 * @returns {Promise<void>}
 	 */
 	async streamQuotes(
@@ -221,7 +221,7 @@ export class OrdersAPI extends BaseAPI {
 			referrer?: string
 			taker?: string
 		},
-		callback: (quote: FillableQuote) => void
+		callback: (quote: FillableQuote | null) => void
 	): Promise<void> {
 		let bestQuote: FillableQuote | null = null
 
@@ -234,11 +234,10 @@ export class OrdersAPI extends BaseAPI {
 				options.referrer
 			)
 
-			if (bestQuote) {
-				callback(bestQuote)
-			}
+			callback(bestQuote)
 		} catch (error) {
 			console.error('Error streaming OB quote: ', error)
+			callback(null)
 		}
 
 		await this.premia.orderbook.publishRFQ({
@@ -344,7 +343,9 @@ export class OrdersAPI extends BaseAPI {
 	async publishQuotesWithApiKey(
 		quotes: QuoteWithSignatureT[]
 	): Promise<OrderbookQuote[]> {
-		return this.premia.orderbook.publishQuotes(quotes).then(res => res.created)
+		return this.premia.orderbook
+			.publishQuotes(quotes)
+			.then((res) => res.created)
 	}
 
 	/**
@@ -375,7 +376,9 @@ export class OrdersAPI extends BaseAPI {
 		const _quotes = await Promise.all(
 			quotes.map((quote) => this.signQuote(poolAddress, quote))
 		)
-		return this.premia.orderbook.publishQuotes(_quotes).then(res => res.created)
+		return this.premia.orderbook
+			.publishQuotes(_quotes)
+			.then((res) => res.created)
 	}
 
 	/**

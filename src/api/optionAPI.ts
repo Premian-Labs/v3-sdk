@@ -1,14 +1,14 @@
 import { BigNumberish, toBigInt } from 'ethers'
-import { PairList, TokenInfo } from '@premia/pair-lists/src/types'
 import { get, isEqual } from 'lodash'
 
 import { withCache } from '../cache'
 import { CacheTTL, WAD_DECIMALS, ZERO_BI } from '../constants'
-import { FillableQuote, PoolMinimal, Token} from '../entities'
+import { FillableQuote, PoolMinimal, Token } from '../entities'
 import { BaseAPI } from './baseAPI'
 import { TokenOrAddress } from './tokenAPI'
 import { roundToNearest } from '../utils/round'
 import { parseBigInt, parseNumber } from '../utils'
+import { ONE_YEAR_MS, blackScholes } from '../'
 
 /**
  * This class provides an API for interacting with options in the Premia system.
@@ -18,7 +18,6 @@ import { parseBigInt, parseNumber } from '../utils'
  * @extends {BaseAPI}
  */
 export class OptionAPI extends BaseAPI {
-
 	/**
 	 * Parses a token input to return a token address string.
 	 *
@@ -127,8 +126,8 @@ export class OptionAPI extends BaseAPI {
 	): bigint {
 		const price = parseNumber(spotPrice, decimals)
 		const exponent = Math.floor(Math.log10(price))
-		const multiplier = (price >= 5 * 10**exponent) ? 5 : 1
-		return parseBigInt(multiplier * 10**(exponent - 1), decimals)
+		const multiplier = price >= 5 * 10 ** exponent ? 5 : 1
+		return parseBigInt(multiplier * 10 ** (exponent - 1), decimals)
 	}
 
 	/**
@@ -178,6 +177,34 @@ export class OptionAPI extends BaseAPI {
 	}
 
 	/**
+	 * Gets the implied volatility for a given pool, price, and spot price.
+	 * The implied volatility is calculated using the Black-Scholes model.
+	 *
+	 * @param pool {PoolMinimal} The pool object.
+	 * @param price {BigNumberish} The price of the option.
+	 * @param spotPrice {BigNumberish} The spot price of the underlying asset.
+	 * @returns {number} The implied volatility of the option.
+	 */
+	getImpliedVolatility(
+		pool: PoolMinimal,
+		price: BigNumberish,
+		spotPrice: BigNumberish
+	) {
+		const iv = blackScholes.sigma({
+			price: pool.isCall
+				? parseNumber(price) * parseNumber(spotPrice)
+				: parseNumber(price) * parseNumber(pool.strike),
+			rate: 0,
+			strike: parseNumber(pool.strike),
+			time: (Number(pool.maturity) * 1000 - Date.now()) / ONE_YEAR_MS,
+			type: pool.isCall ? 'call' : 'put',
+			underlying: parseNumber(spotPrice),
+		})
+
+		return Math.abs(iv)
+	}
+
+	/**
 	 * Provides the best quote available from different sources (RFQ, Pool, Vault) based on the provided options.
 	 * The method is cached for a second to improve performance.
 	 *
@@ -192,46 +219,48 @@ export class OptionAPI extends BaseAPI {
 	 */
 	@withCache(CacheTTL.SECOND)
 	async quote(options: {
-		poolAddress: string,
-		size: BigNumberish,
-		isBuy: boolean,
-		minimumSize?: BigNumberish,
-		referrer?: string,
+		poolAddress: string
+		size: BigNumberish
+		isBuy: boolean
+		minimumSize?: BigNumberish
+		referrer?: string
 		taker?: string
 	}): Promise<FillableQuote> {
-		const bestRfqQuote = await this.premia.orders
-			.quote(
-				options.poolAddress,
-				options.size,
-				options.isBuy,
-				options.minimumSize,
-				options.referrer,
-				options.taker
-			)
-			.catch()
+		const [bestRfqQuote, bestPoolQuote, bestVaultQuote] = await Promise.all([
+			this.premia.orders
+				.quote(
+					options.poolAddress,
+					options.size,
+					options.isBuy,
+					options.minimumSize,
+					options.referrer,
+					options.taker
+				)
+				.catch(),
 
-		const bestPoolQuote = await this.premia.pools
-			.quote(
-				options.poolAddress,
-				options.size,
-				options.isBuy,
-				options.referrer,
-				options.taker
-			)
-			.catch((e) => {
-				console.error('Error in getting pool quote', e)
-				return null
-			})
+			this.premia.pools
+				.quote(
+					options.poolAddress,
+					options.size,
+					options.isBuy,
+					options.referrer,
+					options.taker
+				)
+				.catch((e) => {
+					console.error('Error in getting pool quote', e)
+					return null
+				}),
 
-		const bestVaultQuote = await this.premia.vaults
-			.quote(
-				options.poolAddress,
-				options.size,
-				options.isBuy,
-				options.minimumSize,
-				options.referrer
-			)
-			.catch()
+			this.premia.vaults
+				.quote(
+					options.poolAddress,
+					options.size,
+					options.isBuy,
+					options.minimumSize,
+					options.referrer
+				)
+				.catch(),
+		])
 
 		const quotes = [bestRfqQuote, bestPoolQuote, bestVaultQuote].filter(
 			(quote) => quote !== null
@@ -349,48 +378,50 @@ export class OptionAPI extends BaseAPI {
 
 		pools = this._filterPools(pools, options)
 
-		const poolQuotes = await Promise.all(
-			pools.map(async (pool) =>
-				this.premia.pools
-					.quote(
-						pool.address,
-						options.size,
-						options.isBuy,
-						options.referrer,
-						options.taker
-					)
-					.catch()
-			)
-		)
+		const [poolQuotes, orderbookQuotes, vaultQuotes] = await Promise.all([
+			await Promise.all(
+				pools.map(async (pool) =>
+					this.premia.pools
+						.quote(
+							pool.address,
+							options.size,
+							options.isBuy,
+							options.referrer,
+							options.taker
+						)
+						.catch()
+				)
+			),
 
-		const orderbookQuotes = await Promise.all(
-			pools.map(async (pool) =>
-				this.premia.orders
-					.quote(
-						pool.address,
-						options.size,
-						options.isBuy,
-						options.minimumSize,
-						options.referrer,
-						options.taker
-					)
-					.catch()
-			)
-		)
+			await Promise.all(
+				pools.map(async (pool) =>
+					this.premia.orders
+						.quote(
+							pool.address,
+							options.size,
+							options.isBuy,
+							options.minimumSize,
+							options.referrer,
+							options.taker
+						)
+						.catch()
+				)
+			),
 
-		const vaultQuotes = await Promise.all(
-			pools.map(async (pool) =>
-				this.premia.vaults
-					.quote(
-						pool.address,
-						options.size,
-						options.isBuy,
-						options.minimumSize,
-						options.referrer
-					)
-					.catch()
-			)
-		)
+			await Promise.all(
+				pools.map(async (pool) =>
+					this.premia.vaults
+						.quote(
+							pool.address,
+							options.size,
+							options.isBuy,
+							options.minimumSize,
+							options.referrer
+						)
+						.catch()
+				)
+			),
+		])
 
 		poolQuotes.sort((a, b) => {
 			const aIsBetter = this.premia.pricing.better(
@@ -455,47 +486,49 @@ export class OptionAPI extends BaseAPI {
 	): Promise<void> {
 		const bestQuotes: { [type: string]: FillableQuote | null } = {}
 
-		this.premia.orders.streamQuotes(options, (quote) => {
-			bestQuotes['orderbook'] = quote
+		await Promise.all([
+			this.premia.orders.streamQuotes(options, (quote) => {
+				bestQuotes['orderbook'] = quote
 
-			if (
-				this.premia.pricing.best(
-					[quote, bestQuotes['pool'], bestQuotes['vault']],
-					options.size,
-					options.minimumSize
-				) === quote
-			) {
-				callback(quote)
-			}
-		})
+				if (
+					this.premia.pricing.best(
+						[quote, bestQuotes['pool'], bestQuotes['vault']],
+						options.size,
+						options.minimumSize
+					) === quote
+				) {
+					callback(quote)
+				}
+			}),
 
-		await this.premia.pools.streamQuotes(options, (quote) => {
-			bestQuotes['pool'] = quote
+			this.premia.pools.streamQuotes(options, (quote) => {
+				bestQuotes['pool'] = quote
 
-			if (
-				this.premia.pricing.best(
-					[quote, bestQuotes['orderbook'], bestQuotes['vault']],
-					options.size,
-					options.minimumSize
-				) === quote
-			) {
-				callback(quote)
-			}
-		})
+				if (
+					this.premia.pricing.best(
+						[quote, bestQuotes['orderbook'], bestQuotes['vault']],
+						options.size,
+						options.minimumSize
+					) === quote
+				) {
+					callback(quote)
+				}
+			}),
 
-		await this.premia.vaults.streamQuotes(options, (quote) => {
-			bestQuotes['vault'] = quote
+			this.premia.vaults.streamQuotes(options, (quote) => {
+				bestQuotes['vault'] = quote
 
-			if (
-				this.premia.pricing.best(
-					[quote, bestQuotes['orderbook'], bestQuotes['pool']],
-					options.size,
-					options.minimumSize
-				) === quote
-			) {
-				callback(quote)
-			}
-		})
+				if (
+					this.premia.pricing.best(
+						[quote, bestQuotes['orderbook'], bestQuotes['pool']],
+						options.size,
+						options.minimumSize
+					) === quote
+				) {
+					callback(quote)
+				}
+			}),
+		])
 	}
 
 	/**
@@ -660,20 +693,22 @@ export class OptionAPI extends BaseAPI {
 					quotesByPool[pool.address] = {}
 				}
 
-				await this.premia.pools.streamQuotes(_options, (quote) => {
-					quotesByPool[pool.address]['pool'] = quote
-					callback(toQuotesByProvider(quotesByPool))
-				})
+				await Promise.all([
+					this.premia.pools.streamQuotes(_options, (quote) => {
+						quotesByPool[pool.address]['pool'] = quote
+						callback(toQuotesByProvider(quotesByPool))
+					}),
 
-				await this.premia.orders.streamQuotes(_options, (quote) => {
-					quotesByPool[pool.address]['orderbook'] = quote
-					callback(toQuotesByProvider(quotesByPool))
-				})
+					this.premia.orders.streamQuotes(_options, (quote) => {
+						quotesByPool[pool.address]['orderbook'] = quote
+						callback(toQuotesByProvider(quotesByPool))
+					}),
 
-				await this.premia.vaults.streamQuotes(_options, (quote) => {
-					quotesByPool[pool.address]['vault'] = quote
-					callback(toQuotesByProvider(quotesByPool))
-				})
+					this.premia.vaults.streamQuotes(_options, (quote) => {
+						quotesByPool[pool.address]['vault'] = quote
+						callback(toQuotesByProvider(quotesByPool))
+					}),
+				])
 			})
 		)
 	}
