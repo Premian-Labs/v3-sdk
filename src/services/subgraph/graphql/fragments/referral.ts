@@ -11,16 +11,19 @@ export const ReferralFragment = gql`
 		user {
 			...User
 		}
-		timestamp
-		token {
-			...Token
+		primaryReferrer {
+			...User
 		}
-		tier
-		primaryRebate
-		primaryRebateETH
-		primaryRebateUSD
-		secondaryRebate
-		secondaryRebateETH
-		secondaryRebateUSD
+		secondaryReferrer {
+			...User
+		}
+		volumeETH
+		volumeUSD
+		premiumsETH
+		premiumsUSD
+		primaryRebatesEarnedETH
+		primaryRebatesEarnedUSD
+		secondaryRebatesEarnedETH
+		secondaryRebatesEarnedUSD
 	}
 `
