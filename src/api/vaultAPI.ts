@@ -223,6 +223,7 @@ export class VaultAPI extends BaseAPI {
 			callback(bestQuote)
 		} catch (err) {
 			console.error('Error streaming vault quote: ', err)
+			callback(null)
 		}
 
 		for (const _vault of vaults) {
@@ -238,6 +239,7 @@ export class VaultAPI extends BaseAPI {
 					callback(quote)
 				} catch (err) {
 					console.error('Error streaming vault quote: ', err)
+					callback(null)
 				}
 			})
 		}
