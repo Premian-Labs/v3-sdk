@@ -220,13 +220,13 @@ export class PricingAPI extends BaseAPI {
 	 * @param {BigNumberish} maxSlippagePercent - The maximum slippage percentage to calculate the offset.
 	 * @param {boolean} isBuy - A flag indicating whether the operation is a 'buy' or 'sell'.
 	 *
-	 * @returns {BigNumberish} The calculated limit for the premium considering the slippage.
+	 * @returns {bigint} The calculated limit for the premium considering the slippage.
 	 */
 	premiumLimit(
 		premium: BigNumberish,
 		maxSlippagePercent: BigNumberish,
 		isBuy: boolean
-	): BigNumberish {
+	): bigint {
 		const _premium = FixedNumber.fromValue(premium, 18)
 		const _slippagePercent = FixedNumber.fromValue(maxSlippagePercent, 18)
 		const offset = _premium.mul(_slippagePercent)

@@ -52,12 +52,11 @@ export interface OrderbookQuote extends SerializedQuote {
 export interface PublishQuoteResponse {
 	created: OrderbookQuote[]
 	failed: {
-		reason: any,
+		reason: any
 		invalidQuote: SerializedQuote
 	}[]
 	exists: Omit<OrderbookQuote, 'fillableSize' & 'ts'>[]
 }
-
 
 export interface SerializedQuote {
 	poolKey: PoolKey
@@ -86,12 +85,12 @@ export interface SerializedIndexedQuote extends SerializedQuoteWithSignature {
 
 export interface FillableQuote extends QuoteSaltOptional {
 	createdAt?: number
+	takerFee: BigNumberish
 	poolAddress: string
 	approvalTarget: string
 	approvalAmount: BigNumberish
 	to: string
 	data: BytesLike
-	takerFee?: BigNumberish
 }
 
 export interface Domain {
