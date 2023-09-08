@@ -1,12 +1,10 @@
 import { gql } from '@apollo/client/core'
 
 import { PoolFragment } from './pool'
-import { UserFragment } from './user'
 import { VaultFragment } from './vault'
 
 export const LiquidityPositionFragment = gql`
 	${PoolFragment}
-	${UserFragment}
 
 	fragment LiquidityPosition on LiquidityPosition {
 		id
@@ -14,7 +12,7 @@ export const LiquidityPositionFragment = gql`
 			...Pool
 		}
 		owner {
-			...User
+			address
 		}
 		operator
 		orderType
