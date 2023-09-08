@@ -47,6 +47,9 @@ export const UserFragment = gql`
 		vaultProfitLossUSD
 		vaultProfitLossETHPercent
 		vaultProfitLossUSDPercent
+
+		primaryReferrer
+		secondaryReferrer
 	}
 `
 

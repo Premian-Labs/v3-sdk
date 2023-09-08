@@ -344,7 +344,7 @@ export class OrdersAPI extends BaseAPI {
 	async publishQuotesWithApiKey(
 		quotes: QuoteWithSignatureT[]
 	): Promise<OrderbookQuote[]> {
-		return this.premia.orderbook.publishQuotes(quotes)
+		return this.premia.orderbook.publishQuotes(quotes).then(res => res.created)
 	}
 
 	/**
@@ -375,7 +375,7 @@ export class OrdersAPI extends BaseAPI {
 		const _quotes = await Promise.all(
 			quotes.map((quote) => this.signQuote(poolAddress, quote))
 		)
-		return this.premia.orderbook.publishQuotes(_quotes)
+		return this.premia.orderbook.publishQuotes(_quotes).then(res => res.created)
 	}
 
 	/**

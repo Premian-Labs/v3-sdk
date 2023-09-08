@@ -5,7 +5,8 @@ import {
 	QuoteSaltOptionalT,
 	QuoteWithSignatureT,
 	SerializedQuoteSaltOptional,
-	OrderbookQuote
+	OrderbookQuote,
+	PublishQuoteResponse
 } from '../../entities'
 import {
 	AuthMessage,
@@ -20,6 +21,8 @@ import {
 	WSUnsubscribeMessage,
 } from './types'
 
+// TODO: migrate testnet implmentation to use Arb Goerli orderbook contract
+// TODO: throw clear error messages for unAuthorized 401 errors
 export class OrderbookV1 {
 	/**
 	 * The API key to use for fetching data from the Premia API.
@@ -162,6 +165,9 @@ export class OrderbookV1 {
 				headers: {
 					'x-apikey': this.apiKey,
 				},
+				validateStatus: function (status) {
+					return status < 500;
+				}
 			})
 
 			if (response.status !== 200) {
@@ -180,7 +186,7 @@ export class OrderbookV1 {
 		}
 	}
 
-	async publishQuotes(quotes: QuoteWithSignatureT[]): Promise<OrderbookQuote[]> {
+	async publishQuotes(quotes: QuoteWithSignatureT[]): Promise<PublishQuoteResponse> {
 		const _quotes = this.serializeQuotesWithSignature(quotes)
 
 		const url = `${this.uri}/quotes`
@@ -188,6 +194,9 @@ export class OrderbookV1 {
 			headers: {
 				'x-apikey': this.apiKey,
 			},
+			validateStatus: function (status) {
+				return status < 500;
+			}
 		})
 
 		if (response.status !== 200 && response.status !== 201) {

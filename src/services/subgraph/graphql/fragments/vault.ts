@@ -1,15 +1,19 @@
 import { gql } from '@apollo/client/core'
 
 import { TokenFragment, TokenMinimalFragment } from './token'
+import { VaultRegistryFragment } from './vaultRegistry'
 
 export const VaultFragment = gql`
 	${TokenFragment}
+	${VaultRegistryFragment}
 
 	fragment Vault on Vault {
 		id
 		chainId
 		address
-		registry
+		registry {
+			...VaultRegistry
+		}
 		name
 		asset {
 			...Token

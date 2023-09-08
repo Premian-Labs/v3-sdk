@@ -49,6 +49,16 @@ export interface OrderbookQuote extends SerializedQuote {
 	ts: number
 }
 
+export interface PublishQuoteResponse {
+	created: OrderbookQuote[]
+	failed: {
+		reason: any,
+		invalidQuote: SerializedQuote
+	}[]
+	exists: Omit<OrderbookQuote, 'fillableSize' & 'ts'>[]
+}
+
+
 export interface SerializedQuote {
 	poolKey: PoolKey
 	provider: string
@@ -81,6 +91,7 @@ export interface FillableQuote extends QuoteSaltOptional {
 	approvalAmount: BigNumberish
 	to: string
 	data: BytesLike
+	takerFee?: BigNumberish
 }
 
 export interface Domain {

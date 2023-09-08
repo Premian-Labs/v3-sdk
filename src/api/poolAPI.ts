@@ -511,7 +511,6 @@ export class PoolAPI extends BaseAPI {
 	 * @param poolAddress {string} The contract address of the relevant pool.
 	 * @returns {Promise<PoolKey>}
 	 */
-	@withCache(CacheTTL.DAILY)
 	async getPoolKeyFromAddress(poolAddress: string): Promise<PoolKey> {
 		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
 		const poolSettings = await poolContract.getPoolSettings()

@@ -4,81 +4,20 @@ import { get, isEqual } from 'lodash'
 
 import { withCache } from '../cache'
 import { CacheTTL, WAD_DECIMALS, ZERO_BI } from '../constants'
-import { FillableQuote, PoolMinimal, Token, TokenPair } from '../entities'
+import { FillableQuote, PoolMinimal, Token} from '../entities'
 import { BaseAPI } from './baseAPI'
 import { TokenOrAddress } from './tokenAPI'
-import { baseTokens, defaultPairs, quoteTokens } from '../lists'
 import { roundToNearest } from '../utils/round'
 import { parseBigInt, parseNumber } from '../utils'
 
 /**
  * This class provides an API for interacting with options in the Premia system.
- * It includes methods for fetching default base and quote tokens, as well as
- * default token pairs. All methods are asynchronous and return promises.
+ * All methods are asynchronous and return promises.
  *
  * @class OptionAPI
  * @extends {BaseAPI}
  */
 export class OptionAPI extends BaseAPI {
-	/**
-	 * Returns an array of default base token information based on the chain ID.
-	 *
-	 * @returns {TokenInfo[]} An array of TokenInfo objects.
-	 */
-	getDefaultBaseTokenInfo(): TokenInfo[] {
-		return baseTokens[this.premia.chainId as keyof typeof baseTokens] ?? []
-	}
-
-	/**
-	 * Fetches an array of default base tokens based on the chain ID.
-	 *
-	 * @returns {Promise<Token[]>} A promise that resolves to an array of Token objects.
-	 */
-	async getDefaultBaseTokens(): Promise<Token[]> {
-		const tokens = this.getDefaultBaseTokenInfo()
-		if (!tokens.length) return Promise.resolve([])
-		return this.premia.tokens.getTokenList(tokens)
-	}
-
-	/**
-	 * Returns an array of default quote token information based on the chain ID.
-	 *
-	 * @returns {TokenInfo[]} An array of TokenInfo objects.
-	 */
-	getDefaultQuoteTokenInfo(): TokenInfo[] {
-		return quoteTokens[this.premia.chainId as keyof typeof quoteTokens] ?? []
-	}
-
-	/**
-	 * Fetches an array of default quote tokens based on the chain ID.
-	 *
-	 * @returns {Promise<Token[]>} A promise that resolves to an array of Token objects.
-	 */
-	async getDefaultQuoteTokens(): Promise<Token[]> {
-		const tokens = this.getDefaultQuoteTokenInfo()
-		if (!tokens.length) return Promise.resolve([])
-		return this.premia.tokens.getTokenList(tokens)
-	}
-
-	/**
-	 * Returns the default pairs of tokens based on the chain ID.
-	 *
-	 * @returns {PairList | undefined} A PairList object or undefined if there are no default pairs for the given chain ID.
-	 */
-	getDefaultPairs(): PairList | undefined {
-		return defaultPairs[this.premia.chainId as keyof typeof defaultPairs]
-	}
-
-	/**
-	 * Fetches an array of default token pairs based on the chain ID.
-	 *
-	 * @returns {Promise<TokenPair[]>} A promise that resolves to an array of TokenPair objects.
-	 */
-	async getDefaultTokenPairs(): Promise<TokenPair[]> {
-		const pairlist = this.getDefaultPairs()
-		if (!pairlist) return Promise.resolve([])
-		return this.premia.pairs.getPairs(pairlist.pairs)
-	}
 
 	/**
 	 * Parses a token input to return a token address string.
@@ -142,13 +81,6 @@ export class OptionAPI extends BaseAPI {
 					?.map((token) => token.toLowerCase())
 					.includes(pool.pair.quote.address.toLowerCase())
 			)
-		} else {
-			const defaultQuoteTokens = this.getDefaultQuoteTokenInfo().map((token) =>
-				token.address.toLowerCase()
-			)
-			pools = pools.filter((pool) =>
-				defaultQuoteTokens.includes(pool.pair.quote.address.toLowerCase())
-			)
 		}
 
 		return pools
@@ -194,13 +126,9 @@ export class OptionAPI extends BaseAPI {
 		decimals: number = Number(WAD_DECIMALS)
 	): bigint {
 		const price = parseNumber(spotPrice, decimals)
-		const logged = Math.floor(Math.log10(price))
-		return parseBigInt(
-			(price * 10) ** (-logged - 1) < 0.5
-				? 10 ** (logged - 1)
-				: (5 * 10) ** (logged - 1),
-			decimals
-		)
+		const exponent = Math.floor(Math.log10(price))
+		const multiplier = (price >= 5 * 10**exponent) ? 5 : 1
+		return parseBigInt(multiplier * 10**(exponent - 1), decimals)
 	}
 
 	/**
@@ -264,13 +192,13 @@ export class OptionAPI extends BaseAPI {
 	 */
 	@withCache(CacheTTL.SECOND)
 	async quote(options: {
-		poolAddress: string
-		size: BigNumberish
-		isBuy: boolean
-		minimumSize?: BigNumberish
-		referrer?: string
+		poolAddress: string,
+		size: BigNumberish,
+		isBuy: boolean,
+		minimumSize?: BigNumberish,
+		referrer?: string,
 		taker?: string
-	}): Promise<FillableQuote | null> {
+	}): Promise<FillableQuote> {
 		const bestRfqQuote = await this.premia.orders
 			.quote(
 				options.poolAddress,
@@ -281,6 +209,7 @@ export class OptionAPI extends BaseAPI {
 				options.taker
 			)
 			.catch()
+
 		const bestPoolQuote = await this.premia.pools
 			.quote(
 				options.poolAddress,
@@ -289,7 +218,11 @@ export class OptionAPI extends BaseAPI {
 				options.referrer,
 				options.taker
 			)
-			.catch()
+			.catch((e) => {
+				console.error('Error in getting pool quote', e)
+				return null
+			})
+
 		const bestVaultQuote = await this.premia.vaults
 			.quote(
 				options.poolAddress,
@@ -299,9 +232,10 @@ export class OptionAPI extends BaseAPI {
 				options.referrer
 			)
 			.catch()
+
 		const quotes = [bestRfqQuote, bestPoolQuote, bestVaultQuote].filter(
 			(quote) => quote !== null
-		) as FillableQuote[]
+		) as (FillableQuote | null)[]
 
 		return this.premia.pricing.best(
 			quotes,

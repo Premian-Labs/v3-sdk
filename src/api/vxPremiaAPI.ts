@@ -2,6 +2,7 @@ import { withCache } from '../cache'
 import { CacheTTL } from '../constants'
 import { BaseAPI } from './baseAPI'
 import {
+	Signature,
 	StakeHistory,
 	UserStake,
 	VaultVote,
@@ -188,10 +189,7 @@ export class VxPremiaAPI extends BaseAPI {
 	async getVotesForVault(vaultAddress: string): Promise<bigint> {
 		const vxPremiaContract = this.premia.contracts.getVxPremiaContract()
 		// @dev: 1 = VoteVersion.VaultV3
-		return vxPremiaContract.getPoolVotes(
-			VoteVersion.VaultV3,
-			AbiCoder.defaultAbiCoder().encode(['address'], [vaultAddress])
-		)
+		return vxPremiaContract.getPoolVotes(VoteVersion.VaultV3, vaultAddress)
 	}
 
 	/**
@@ -210,13 +208,15 @@ export class VxPremiaAPI extends BaseAPI {
 	/**
 	 * Retrieves the total amount of available rewards.
 	 *
-	 * @returns {Promise<{rewards: bigint, unstakeRewards: bigint}>} - A promise that resolves to the amount of
+	 * @returns {Promise<[bigint, bigint] & {rewards: bigint, unstakeRewards: bigint}>} - A promise that resolves to the amount of
 	 * available rewards and unstake rewards respectively.
 	 */
-	async getAvailableRewards(): Promise<{
-		rewards: bigint
-		unstakeRewards: bigint
-	}> {
+	async getAvailableRewards(): Promise<
+		[bigint, bigint] & {
+			rewards: bigint
+			unstakeRewards: bigint
+		}
+	> {
 		const contract = this.premia.contracts.getVxPremiaContract()
 		return contract.getAvailableRewards()
 	}
@@ -233,12 +233,12 @@ export class VxPremiaAPI extends BaseAPI {
 	/**
 	 * Retrieves the amount of rewards that are pending for a specific user.
 	 * @param {string} user - The address of the user.
-	 * @returns {Promise<{reward: bigint, unstakeReward: bigint}>} - A promise that resolves to the amount of rewards
+	 * @returns {Promise<[bigint, bigint] & {reward: bigint, unstakeReward: bigint}>} - A promise that resolves to the amount of rewards
 	 * and unstake rewards that are pending for the user respectively.
 	 */
 	async getPendingUserRewards(
 		user: string
-	): Promise<{ reward: bigint; unstakeReward: bigint }> {
+	): Promise<[bigint, bigint] & { reward: bigint; unstakeReward: bigint }> {
 		const contract = this.premia.contracts.getVxPremiaContract()
 		return contract.getPendingUserRewards(user)
 	}
@@ -312,12 +312,16 @@ export class VxPremiaAPI extends BaseAPI {
 	 * Retrieves the information of a pending withdrawal of a user.
 	 *
 	 * @param {string} user - The address of the user.
-	 * @returns {Promise<{amount: bigint, startDate: bigint, unlockDate: bigint}>} - A promise that resolves to the
+	 * @returns {Promise<[bigint, bigint, bigint] & {amount: bigint, startDate: bigint, unlockDate: bigint}>} - A promise that resolves to the
 	 * amount, start date, and unlock date of the user's pending withdrawal respectively.
 	 */
-	async getPendingWithdrawal(
-		user: string
-	): Promise<{ amount: bigint; startDate: bigint; unlockDate: bigint }> {
+	async getPendingWithdrawal(user: string): Promise<
+		[bigint, bigint, bigint] & {
+			amount: bigint
+			startDate: bigint
+			unlockDate: bigint
+		}
+	> {
 		const contract = this.premia.contracts.getVxPremiaContract()
 		return contract.getPendingWithdrawal(user)
 	}
@@ -462,12 +466,7 @@ export class VxPremiaAPI extends BaseAPI {
 	 */
 	async encodeCastVotes(votes: Vote[]): Promise<ContractTransaction> {
 		const vxPremiaContract = this.premia.contracts.getVxPremiaContract()
-		const _votes = votes.map((v) => ({
-			amount: v.amount,
-			version: v.version,
-			target: AbiCoder.defaultAbiCoder().encode(['address'], [v.target]),
-		}))
-		return vxPremiaContract.castVotes.populateTransaction(_votes)
+		return vxPremiaContract.castVotes.populateTransaction(votes)
 	}
 
 	/**
@@ -518,6 +517,56 @@ export class VxPremiaAPI extends BaseAPI {
 			this.premia.contracts.getVxPremiaContract(),
 			this.encodeStake(amount, period),
 			'encodeStake'
+		)
+	}
+
+	/**
+	 * Encodes a transaction to stake using IERC2612 permit.
+	 *
+	 * @param {BigNumberish} amount - The amount of xPremia to stake.
+	 * @param {BigNumberish} period - The lockup period (in seconds).
+	 * @param {BigNumberish} deadline - The deadline after which permit will fail.
+	 * @param {Signature} signature - The signature for the transaction.
+	 * @returns {Promise<ContractTransaction>} - A promise that resolves to a ContractTransaction instance representing
+	 * the encoded transaction.
+	 */
+	async encodeStakeWithPermit(
+		amount: BigNumberish,
+		period: BigNumberish,
+		deadline: BigNumberish,
+		signature: Signature
+	): Promise<ContractTransaction> {
+		const contract = this.premia.contracts.getVxPremiaContract()
+		return contract.stakeWithPermit.populateTransaction(
+			amount,
+			period,
+			deadline,
+			signature.v,
+			signature.r,
+			signature.s
+		)
+	}
+
+	/**
+	 * Stake using IERC2612 permit.
+	 *
+	 * @param {BigNumberish} amount - The amount of xPremia to stake.
+	 * @param {BigNumberish} period - The lockup period (in seconds).
+	 * @param {BigNumberish} deadline - The deadline after which permit will fail.
+	 * @param {Signature} signature - The signature for the transaction.
+	 * @returns {Promise<ContractTransactionResponse>} - A promise that resolves to a ContractTransactionResponse
+	 * instance representing the result of the transaction.
+	 */
+	async stakeWithPermit(
+		amount: BigNumberish,
+		period: BigNumberish,
+		deadline: BigNumberish,
+		signature: Signature
+	): Promise<ContractTransactionResponse> {
+		return sendTransaction(
+			this.premia.contracts.getVxPremiaContract(),
+			this.encodeStakeWithPermit(amount, period, deadline, signature),
+			'encodeStakeWithPermit'
 		)
 	}
 

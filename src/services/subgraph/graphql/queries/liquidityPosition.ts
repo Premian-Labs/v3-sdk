@@ -90,10 +90,15 @@ export class LiquidityPositionQuery {
 			${LiquidityPositionExtendedFragment}
 
 			{
-				liquidityPositions(where: {
-					owner: "${owner.toLowerCase()}",
-					${filter}
-				}) {
+				liquidityPositions(
+					where: {
+						owner: "${owner.toLowerCase()}",
+						${filter}
+					},
+					first: 1000, 
+					orderBy: createdAt, 
+					orderDirection: desc
+				) {
 					...LiquidityPositionExtended
 				}
 			}
