@@ -422,24 +422,28 @@ export class PoolAPI extends BaseAPI {
 			this.getPoolKeyFromAddress(poolAddress),
 			pool.getQuoteAMM(taker ?? ZeroAddress, _size, isBuy),
 		])
-		const premium = isBuy
-			? quote.premiumNet + quote.takerFee
-			: quote.premiumNet - quote.takerFee
 		const premiumLimit = maxSlippagePercent
-			? this.premia.pricing.premiumLimit(premium, maxSlippagePercent, isBuy)
-			: premium
+			? this.premia.pricing.premiumLimit(
+					quote.premiumNet,
+					maxSlippagePercent,
+					isBuy
+			  )
+			: quote.premiumNet
 
 		return {
 			poolKey,
 			poolAddress,
 			provider: poolAddress,
 			taker: ZeroAddress,
-			price: (premium * WAD_BI) / _size,
+			price: (quote.premiumNet * WAD_BI) / _size,
 			size: _size,
 			isBuy,
 			deadline: toBigInt(Math.floor(new Date().getTime() / 1000 + 60 * 60)),
+			takerFee: quote.takerFee,
 			approvalTarget: Addresses[this.premia.chainId].ERC20_ROUTER,
-			approvalAmount: premiumLimit,
+			approvalAmount: isBuy
+				? premiumLimit
+				: _size - premiumLimit + quote.takerFee,
 			to: poolAddress,
 			data: pool.interface.encodeFunctionData('trade', [
 				_size,

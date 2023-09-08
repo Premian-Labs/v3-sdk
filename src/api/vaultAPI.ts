@@ -136,27 +136,30 @@ export class VaultAPI extends BaseAPI {
 
 				if (!quote) return null
 
+				/// @dev quote already includes the taker fee
 				const premiumLimit = maxSlippagePercent
 					? this.premia.pricing.premiumLimit(quote, maxSlippagePercent, isBuy)
 					: quote
 
-				console.log('Vault quote', [
-					poolKey,
-					size,
-					isBuy,
-					premiumLimit,
-					this.premia.pools.toReferrer(referrer),
-				])
+				const takerFee = await this.premia.pools.takerFee(
+					poolAddress,
+					_size,
+					quote,
+					false,
+					taker
+				)
 
 				return {
 					poolKey,
 					poolAddress,
 					provider: _vault.vault,
 					taker,
-					price: (quote * WAD_BI) / _size,
+					/// @dev remove the taker fee from the price, to be consistent with the other quotes
+					price: (quote * WAD_BI) / _size - takerFee,
 					size: _size,
 					isBuy,
 					deadline: toBigInt(Math.floor(new Date().getTime() / 1000) + 60 * 60),
+					takerFee,
 					to: _vault.vault,
 					approvalTarget: _vault.vault,
 					approvalAmount: premiumLimit,

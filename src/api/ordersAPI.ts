@@ -92,6 +92,15 @@ export class OrdersAPI extends BaseAPI {
 			toBigInt(size) > toBigInt(quote.size)
 				? toBigInt(quote.size)
 				: toBigInt(size)
+		const premium = (_size * toBigInt(quote.price)) / BigInt(10 ** 18)
+
+		const takerFee = await this.premia.pools.takerFee(
+			poolAddress,
+			_size,
+			premium,
+			false,
+			quote.taker
+		)
 
 		return {
 			...quote,
@@ -100,9 +109,12 @@ export class OrdersAPI extends BaseAPI {
 			price: toBigInt(quote.price),
 			salt: toBigInt(quote.salt),
 			size: _size,
+			takerFee,
 			poolAddress,
 			approvalTarget: Addresses[this.premia.chainId].ERC20_ROUTER,
-			approvalAmount: (_size * toBigInt(quote.price)) / BigInt(10 ** 18),
+			approvalAmount: quote.isBuy
+				? premium + takerFee
+				: _size - premium + takerFee,
 			to: poolAddress,
 			data: poolContract.interface.encodeFunctionData('fillQuoteOB', [
 				quote,
