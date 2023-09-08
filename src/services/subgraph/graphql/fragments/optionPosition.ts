@@ -1,12 +1,10 @@
 import { gql } from '@apollo/client/core'
 
 import { PoolFragment } from './pool'
-import { UserFragment } from './user'
 import { VaultFragment } from './vault'
 
 export const OptionPositionFragment = gql`
 	${PoolFragment}
-	${UserFragment}
 
 	fragment OptionPosition on OptionPosition {
 		id
@@ -14,7 +12,7 @@ export const OptionPositionFragment = gql`
 			...Pool
 		}
 		owner {
-			...User
+			address
 		}
 		isBuy
 		tokenType
