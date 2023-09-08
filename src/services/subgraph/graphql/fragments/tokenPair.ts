@@ -6,6 +6,7 @@ import {
 	TokenPriceNodeFragment,
 } from './token'
 import { VolatilitySurfaceFragment } from './volatilitySurface'
+import { FactoryFragment } from './factory'
 
 export const TokenPairMinimalFragment = gql`
 	${TokenMinimalFragment}
@@ -25,10 +26,13 @@ export const TokenPairMinimalFragment = gql`
 
 export const TokenPairFragment = gql`
 	${TokenFragment}
+	${FactoryFragment}
 
 	fragment TokenPair on TokenPair {
 		id
-		factory
+		factory {
+			...Factory
+		}
 		name
 		quote {
 			...Token
