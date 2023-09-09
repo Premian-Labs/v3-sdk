@@ -61,8 +61,14 @@ export class OrdersAPI extends BaseAPI {
 
 		/// @dev: return the first valid quote in order of sorting
 		for (const quote of bestQuotes) {
-			if (await this.isQuoteValid(quote, size)) {
-				return quote
+			try {
+				if (await this.isQuoteValid(quote, quote.fillableSize, true)) {
+					return quote
+				} else {
+					console.log('Invalid quote: ', quote)
+				}
+			} catch (err) {
+				console.error('Quote validation error: ', err)
 			}
 		}
 
@@ -194,11 +200,16 @@ export class OrdersAPI extends BaseAPI {
 			return null
 		}
 
+		console.log('OB Quotes: ', quotes)
+
 		const bestQuote: SerializedIndexedQuote | null = (await this.bestQuote(
 			quotes,
 			size,
 			minimumSize
 		)) as SerializedIndexedQuote | null
+
+		console.log('Best OB Quote: ', bestQuote)
+
 		if (bestQuote === null) {
 			return null
 		}

@@ -329,15 +329,28 @@ export class PoolAPI extends BaseAPI {
 		isPremiumNormalized: boolean = false,
 		taker?: string
 	): Promise<bigint> {
-		const poolContract = await this.premia.contracts.getPoolContract(
-			poolAddress
-		)
-		return poolContract.takerFee(
-			taker ?? ZeroAddress,
-			size,
-			premium,
-			isPremiumNormalized
-		)
+		try {
+			const poolContract = await this.premia.contracts.getPoolContract(
+				poolAddress
+			)
+
+			/// @dev: default to calls to chain, but if the pool is not deployed
+			/// 	  yet, use a local calculation (which is subject to potential
+			///       change inaccuracies).
+			if (await poolContract.deployed()) {
+				return poolContract.takerFee(
+					taker ?? ZeroAddress,
+					size,
+					premium,
+					isPremiumNormalized
+				)
+			}
+		} catch (error) {}
+
+		const sizeBased = (size * 3n) / 100n // 0.3% of notional
+		const premiumBased = (premium * 3n) / 10n // 3% of premium
+
+		return sizeBased > premiumBased ? sizeBased : premiumBased
 	}
 
 	/**
