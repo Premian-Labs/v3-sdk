@@ -8,6 +8,7 @@ import { OptionPosition, OptionPositionExtended } from './optionPosition'
 import { VaultPosition, VaultPositionExtended } from './vaultPosition'
 import { Transaction } from './transaction'
 import { VaultTransaction } from './vaultTransaction'
+import { Referral } from './referral'
 
 export interface ActionAuthorization {
 	actions: bigint[]
@@ -44,9 +45,6 @@ export interface User {
 	vaultProfitLossUSD: BigNumberish
 	vaultProfitLossETHPercent: BigNumberish
 	vaultProfitLossUSDPercent: BigNumberish
-
-	primaryReferrer: string
-	secondaryReferrer: string
 }
 
 export interface UserExtended extends User {
@@ -76,6 +74,15 @@ export interface UserExtended extends User {
 	feeRevenueUSD: BigNumberish
 	feesPaidETH: BigNumberish
 	feesPaidUSD: BigNumberish
+
+	primaryReferrer?: User
+	secondaryReferrer?: User
+	totalReferrals: number
+	totalSecondaryReferrals: number
+	referralRebatesEarnedETH: BigNumberish
+	referralRebatesEarnedUSD: BigNumberish
+	referrals: Referral[]
+	secondaryReferrals: Referral[]
 }
 
 export interface UserPortfolio extends UserExtended {
