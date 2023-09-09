@@ -1,26 +1,27 @@
 import { gql } from '@apollo/client/core'
 import { TokenFragment } from './token'
-import { UserFragment } from './user'
 
 export const ReferralFragment = gql`
-	${UserFragment}
 	${TokenFragment}
 
 	fragment Referral on Referral {
 		id
 		user {
-			...User
+			address
 		}
-		timestamp
-		token {
-			...Token
+		primaryReferrer {
+			address
 		}
-		tier
-		primaryRebate
-		primaryRebateETH
-		primaryRebateUSD
-		secondaryRebate
-		secondaryRebateETH
-		secondaryRebateUSD
+		secondaryReferrer {
+			address
+		}
+		volumeETH
+		volumeUSD
+		premiumsETH
+		premiumsUSD
+		primaryRebatesEarnedETH
+		primaryRebatesEarnedUSD
+		secondaryRebatesEarnedETH
+		secondaryRebatesEarnedUSD
 	}
 `

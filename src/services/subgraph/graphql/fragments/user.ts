@@ -14,6 +14,7 @@ import {
 } from './vaultPosition'
 import { TransactionFragment } from './transaction'
 import { VaultTransactionFragment } from './vaultTransaction'
+import { ReferralFragment } from './referral'
 
 export const UserFragment = gql`
 	fragment User on User {
@@ -47,14 +48,12 @@ export const UserFragment = gql`
 		vaultProfitLossUSD
 		vaultProfitLossETHPercent
 		vaultProfitLossUSDPercent
-
-		primaryReferrer
-		secondaryReferrer
 	}
 `
 
 export const UserExtendedFragment = gql`
 	${UserFragment}
+	${ReferralFragment}
 
 	fragment UserExtended on User {
 		...User
@@ -85,6 +84,23 @@ export const UserExtendedFragment = gql`
 		feeRevenueUSD
 		feesPaidETH
 		feesPaidUSD
+
+		primaryReferrer {
+			...User
+		}
+		secondaryReferrer {
+			...User
+		}
+		totalReferrals
+		totalSecondaryReferrals
+		referralRebatesEarnedETH
+		referralRebatesEarnedUSD
+		referrals {
+			...Referral
+		}
+		secondaryReferrals {
+			...Referral
+		}
 	}
 `
 

@@ -12,6 +12,8 @@ import {
 	IPool__factory,
 	IPoolFactory,
 	IPoolFactory__factory,
+	IReferral,
+	IReferral__factory,
 	IUserSettings,
 	IUserSettings__factory,
 	IVault,
@@ -80,6 +82,11 @@ export class ContractAPI extends BaseAPI {
 	 * The address of the `VaultMining` contract.
 	 */
 	vaultMiningAddress: string = Addresses[SupportedChainId.ARBITRUM].VAULT_MINING
+
+	/**
+	 * The address of the `Referral` contract.
+	 */
+	referralAddress: string = Addresses[SupportedChainId.ARBITRUM].REFERRAL
 
 	/**
 	 * Connects to a pool contract at a given address using a provider.
@@ -273,6 +280,23 @@ export class ContractAPI extends BaseAPI {
 	getVxPremiaContract(provider?: Provider): IVxPremia {
 		return IVxPremia__factory.connect(
 			this.vxPremiaAddress,
+			provider ?? (this.premia.signer || this.premia.provider)
+		)
+	}
+
+	/**
+	 * Connects to the Referral contract using a provider.
+	 *
+	 * This function leverages the `VxPremia __factory` to connect to the VxPremia contract.
+	 * If no provider is specified, it will default to using the signer or provider from the `premia` object.
+	 *
+	 * @param {Provider} [provider] - The provider to use for the connection. If not provided, the function defaults to using `this.premia.signer` or `this.premia.provider`.
+	 * @return {IReferral} The connected VxPremia contract instance.
+	 * @throws Will throw an error if the connection to the contract fails.
+	 */
+	getReferralContract(provider?: Provider): IReferral {
+		return IReferral__factory.connect(
+			this.referralAddress,
 			provider ?? (this.premia.signer || this.premia.provider)
 		)
 	}
