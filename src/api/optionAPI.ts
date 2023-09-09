@@ -231,7 +231,7 @@ export class OptionAPI extends BaseAPI {
 				.quote(
 					options.poolAddress,
 					options.size,
-					!options.isBuy,
+					options.isBuy,
 					options.minimumSize,
 					options.referrer,
 					options.taker
@@ -261,10 +261,6 @@ export class OptionAPI extends BaseAPI {
 				)
 				.catch(),
 		])
-
-		console.log('bestRfqQuote', bestRfqQuote)
-		console.log('bestPoolQuote', bestPoolQuote)
-		console.log('bestVaultQuote', bestVaultQuote)
 
 		const quotes = [bestRfqQuote, bestPoolQuote, bestVaultQuote].filter(
 			(quote) => quote !== null

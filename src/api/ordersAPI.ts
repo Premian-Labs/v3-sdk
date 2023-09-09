@@ -200,15 +200,11 @@ export class OrdersAPI extends BaseAPI {
 			return null
 		}
 
-		console.log('OB Quotes: ', quotes)
-
 		const bestQuote: SerializedIndexedQuote | null = (await this.bestQuote(
 			quotes,
 			size,
 			minimumSize
 		)) as SerializedIndexedQuote | null
-
-		console.log('Best OB Quote: ', bestQuote)
 
 		if (bestQuote === null) {
 			return null
