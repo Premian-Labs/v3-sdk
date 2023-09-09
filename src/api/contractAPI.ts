@@ -15,7 +15,8 @@ import {
 	IUserSettings,
 	IUserSettings__factory,
 	IVault,
-	IVault__factory, IVaultMining,
+	IVault__factory,
+	IVaultMining,
 	IVaultMining__factory,
 	IVaultRegistry,
 	IVaultRegistry__factory,
@@ -229,16 +230,16 @@ export class ContractAPI extends BaseAPI {
 	 * Connects to the Orderbook contract using a provider.
 	 *
 	 * This function leverages the `OrderbookStream__factory` to connect to the Orderbook contract.
-	 * If no provider is specified, it will default to using the novaSigner or novaProvider from the `premia` object.
+	 * If no provider is specified, it will default to using the orderbookSigner or orderbookProvider from the `premia` object.
 	 *
-	 * @param {Provider} [provider] - The provider to use for the connection. If not provided, the function defaults to using `this.premia.novaSigner` or `this.premia.novaProvider`.
+	 * @param {Provider} [provider] - The provider to use for the connection. If not provided, the function defaults to using `this.premia.orderbookSigner` or `this.premia.orderbookProvider`.
 	 * @return {OrderbookStream} The connected Orderbook contract instance.
 	 * @throws Will throw an error if the connection to the contract fails.
 	 */
 	getOrderbookContract(provider?: Provider): OrderbookStream {
 		return OrderbookStream__factory.connect(
 			this.orderbookAddress,
-			provider ?? (this.premia.novaSigner || this.premia.novaProvider)
+			provider ?? (this.premia.orderbookSigner || this.premia.orderbookProvider)
 		)
 	}
 

@@ -145,7 +145,9 @@ describe('ContractsAPI', function (this: any) {
 			chainId: SupportedChainId.ARBITRUM_GOERLI,
 		})
 
-		let orderboook = premia.contracts.getOrderbookContract(premia.novaProvider)
+		let orderboook = premia.contracts.getOrderbookContract(
+			premia.orderbookProvider
+		)
 
 		expect(await orderboook.getAddress()).eq(
 			Addresses[SupportedChainId.ARBITRUM_NOVA].ORDERBOOK
