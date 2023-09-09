@@ -17,7 +17,7 @@ describe('SDK.initialize', function (this: any) {
 		expect(premia.disableCache).eq(false)
 		expect(premia.skipSubgraph).eq(false)
 		expect(premia.subgraph.uri).eq(
-			'https://api.thegraph.com/subgraphs/name/totop716/premia-v3'
+			'https://api.thegraph.com/subgraphs/name/premian-labs/premia-blue'
 		)
 		expect(premia.chainId).eq(42161)
 		expect(premia.apiBaseUri).eq('https://test.orderbook.premia.finance')
@@ -26,33 +26,30 @@ describe('SDK.initialize', function (this: any) {
 		expect(premia.coingeckoProApiKey).eq(undefined)
 		expect(premia.providerCredentials.rpcUrl).eq('https://arb1.arbitrum.io/rpc')
 		expect(premia.signerCredentials).eq(undefined)
-		expect(premia.novaProviderCredentials!.rpcUrl).eq(
+		expect(premia.orderbookProviderCredentials!.rpcUrl).eq(
 			'https://nova.arbitrum.io/rpc'
 		)
-		expect(premia.novaSignerCredentials).eq(undefined)
+		expect(premia.orderbookSignerCredentials).eq(undefined)
 
 		expect(premia.provider).instanceOf(JsonRpcProvider)
-		expect(premia.novaProvider).instanceOf(JsonRpcProvider)
+		expect(premia.orderbookProvider).instanceOf(JsonRpcProvider)
 
 		const network = await premia.provider.getNetwork()
 		expect(network.chainId).to.be.equal(42161n)
 
-		const novaNetwork = await premia.novaProvider!.getNetwork()
+		const novaNetwork = await premia.orderbookProvider!.getNetwork()
 		expect(novaNetwork.chainId).to.be.equal(42170n)
 	})
 
 	it('should be able to be instantiated with useTestnet=true', async () => {
 		const premia = await Premia.initialize({
-			subgraphUri:
-				'https://api.thegraph.com/subgraphs/name/totop716/premia-v3',
-			provider: 'https://goerli-rollup.arbitrum.io/rpc',
-			chainId: 421613,
+			useTestnet: true,
 		})
 
 		expect(premia.disableCache).eq(false)
 		expect(premia.skipSubgraph).eq(false)
 		expect(premia.subgraph.uri).eq(
-			'https://api.thegraph.com/subgraphs/name/totop716/premia-v3'
+			'https://api.thegraph.com/subgraphs/name/premian-labs/premia-blue-arbitrum-goerli'
 		)
 		expect(premia.chainId).eq(421613)
 		expect(premia.apiBaseUri).eq('https://test.orderbook.premia.finance')
@@ -63,32 +60,31 @@ describe('SDK.initialize', function (this: any) {
 			'https://goerli-rollup.arbitrum.io/rpc'
 		)
 		expect(premia.signerCredentials).eq(undefined)
-		expect(premia.novaProviderCredentials!.rpcUrl).eq(
-			'https://nova.arbitrum.io/rpc'
+		expect(premia.orderbookProviderCredentials!.rpcUrl).eq(
+			'https://goerli-rollup.arbitrum.io/rpc'
 		)
-		expect(premia.novaSignerCredentials).eq(undefined)
+		expect(premia.orderbookSignerCredentials).eq(undefined)
 
 		expect(premia.provider).instanceOf(JsonRpcProvider)
-		expect(premia.novaProvider).instanceOf(JsonRpcProvider)
+		expect(premia.orderbookProvider).instanceOf(JsonRpcProvider)
 
 		const network = await premia.provider.getNetwork()
 		expect(network.chainId).to.be.equal(421613n)
 
-		const novaNetwork = await premia.novaProvider!.getNetwork()
-		expect(novaNetwork.chainId).to.be.equal(42170n)
+		const novaNetwork = await premia.orderbookProvider!.getNetwork()
+		expect(novaNetwork.chainId).to.be.equal(421613n)
 	})
 
 	it('should be able to be instantiated with only a privateKey for both arbitrum and argitrum nova', async () => {
 		const premia = await Premia.initialize({
-			subgraphUri:
-				'https://api.thegraph.com/subgraphs/name/totop716/premia-v3',
+			subgraphUri: 'https://api.thegraph.com/subgraphs/name/totop716/premia-v3',
 			provider: 'https://goerli-rollup.arbitrum.io/rpc',
 			chainId: 421613,
 			privateKey: privateKey,
 		})
 
 		expect(premia.provider).instanceOf(JsonRpcProvider)
-		expect(premia.novaProvider).instanceOf(JsonRpcProvider)
+		expect(premia.orderbookProvider).instanceOf(JsonRpcProvider)
 		expect(premia.signer).instanceOf(Wallet)
 
 		expect(premia.disableCache).eq(false)
@@ -105,34 +101,34 @@ describe('SDK.initialize', function (this: any) {
 			'https://goerli-rollup.arbitrum.io/rpc'
 		)
 		expect(premia.signerCredentials!.privateKey).eq(privateKey)
-		expect(premia.novaProviderCredentials!.rpcUrl).eq(
+		expect(premia.orderbookProviderCredentials!.rpcUrl).eq(
 			'https://nova.arbitrum.io/rpc'
 		)
-		expect(premia.novaSignerCredentials).eq(undefined)
+		expect(premia.orderbookSignerCredentials).eq(undefined)
 
 		expect(premia.provider).instanceOf(JsonRpcProvider)
-		expect(premia.novaProvider).instanceOf(JsonRpcProvider)
+		expect(premia.orderbookProvider).instanceOf(JsonRpcProvider)
 
 		const network = await premia.provider.getNetwork()
 		expect(network.chainId).to.be.equal(421613n)
 
-		const novaNetwork = await premia.novaProvider!.getNetwork()
+		const novaNetwork = await premia.orderbookProvider!.getNetwork()
 		expect(novaNetwork.chainId).to.be.equal(42170n)
 	})
 
 	it('should be able to be instantiated with only a privateKey', async () => {
 		const premia = await Premia.initialize({
 			privateKey: privateKey,
-			novaPrivateKey: privateKey,
+			orderbookPrivateKey: privateKey,
 		})
 		expect(premia.provider).instanceOf(JsonRpcProvider)
-		expect(premia.novaProvider).instanceOf(JsonRpcProvider)
+		expect(premia.orderbookProvider).instanceOf(JsonRpcProvider)
 		expect(premia.signer).instanceOf(Wallet)
 
 		expect(premia.disableCache).eq(false)
 		expect(premia.skipSubgraph).eq(false)
 		expect(premia.subgraph.uri).eq(
-			'https://api.thegraph.com/subgraphs/name/totop716/premia-v3'
+			'https://api.thegraph.com/subgraphs/name/premian-labs/premia-blue'
 		)
 		expect(premia.chainId).eq(42161)
 		expect(premia.apiBaseUri).eq('https://test.orderbook.premia.finance')
@@ -141,18 +137,18 @@ describe('SDK.initialize', function (this: any) {
 		expect(premia.coingeckoProApiKey).eq(undefined)
 		expect(premia.providerCredentials.rpcUrl).eq('https://arb1.arbitrum.io/rpc')
 		expect(premia.signerCredentials!.privateKey).eq(privateKey)
-		expect(premia.novaProviderCredentials!.rpcUrl).eq(
+		expect(premia.orderbookProviderCredentials!.rpcUrl).eq(
 			'https://nova.arbitrum.io/rpc'
 		)
-		expect(premia.novaSignerCredentials!.privateKey).eq(privateKey)
+		expect(premia.orderbookSignerCredentials!.privateKey).eq(privateKey)
 
 		expect(premia.provider).instanceOf(JsonRpcProvider)
-		expect(premia.novaProvider).instanceOf(JsonRpcProvider)
+		expect(premia.orderbookProvider).instanceOf(JsonRpcProvider)
 
 		const network = await premia.provider.getNetwork()
 		expect(network.chainId).to.be.equal(42161n)
 
-		const novaNetwork = await premia.novaProvider!.getNetwork()
+		const novaNetwork = await premia.orderbookProvider!.getNetwork()
 		expect(novaNetwork.chainId).to.be.equal(42170n)
 	})
 
@@ -161,17 +157,17 @@ describe('SDK.initialize', function (this: any) {
 			useTestnet: true,
 			provider: 'http://127.0.0.1:8545',
 			privateKey: privateKey,
-			novaPrivateKey: privateKey,
+			orderbookPrivateKey: privateKey,
 		})
 
 		expect(premia.provider).instanceOf(JsonRpcProvider)
-		expect(premia.novaProvider).instanceOf(JsonRpcProvider)
+		expect(premia.orderbookProvider).instanceOf(JsonRpcProvider)
 		expect(premia.signer).instanceOf(Wallet)
 
 		expect(premia.disableCache).eq(false)
 		expect(premia.skipSubgraph).eq(false)
 		expect(premia.subgraph.uri).eq(
-			'https://api.thegraph.com/subgraphs/name/totop716/premia-v3'
+			'https://api.thegraph.com/subgraphs/name/premian-labs/premia-blue-arbitrum-goerli'
 		)
 		expect(premia.chainId).eq(421613)
 		expect(premia.apiBaseUri).eq('https://test.orderbook.premia.finance')
@@ -180,18 +176,18 @@ describe('SDK.initialize', function (this: any) {
 		expect(premia.coingeckoProApiKey).eq(undefined)
 		expect(premia.providerCredentials.rpcUrl).eq('http://127.0.0.1:8545')
 		expect(premia.signerCredentials!.privateKey).eq(privateKey)
-		expect(premia.novaProviderCredentials!.rpcUrl).eq(
-			'https://nova.arbitrum.io/rpc'
+		expect(premia.orderbookProviderCredentials!.rpcUrl).eq(
+			'https://goerli-rollup.arbitrum.io/rpc'
 		)
-		expect(premia.novaSignerCredentials!.privateKey).eq(privateKey)
+		expect(premia.orderbookSignerCredentials!.privateKey).eq(privateKey)
 
 		expect(premia.provider).instanceOf(JsonRpcProvider)
-		expect(premia.novaProvider).instanceOf(JsonRpcProvider)
+		expect(premia.orderbookProvider).instanceOf(JsonRpcProvider)
 
 		const network = await premia.provider.getNetwork()
 		expect(network.chainId).to.be.equal(421613n)
 
-		const novaNetwork = await premia.novaProvider!.getNetwork()
-		expect(novaNetwork.chainId).to.be.equal(42170n)
+		const novaNetwork = await premia.orderbookProvider!.getNetwork()
+		expect(novaNetwork.chainId).to.be.equal(421613n)
 	})
 })
