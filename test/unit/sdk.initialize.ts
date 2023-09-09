@@ -43,15 +43,13 @@ describe('SDK.initialize', function (this: any) {
 
 	it('should be able to be instantiated with useTestnet=true', async () => {
 		const premia = await Premia.initialize({
-			subgraphUri: 'https://api.thegraph.com/subgraphs/name/totop716/premia-v3',
-			provider: 'https://goerli-rollup.arbitrum.io/rpc',
-			chainId: 421613,
+			useTestnet: true,
 		})
 
 		expect(premia.disableCache).eq(false)
 		expect(premia.skipSubgraph).eq(false)
 		expect(premia.subgraph.uri).eq(
-			'https://api.thegraph.com/subgraphs/name/totop716/premia-v3'
+			'https://api.thegraph.com/subgraphs/name/premian-labs/premia-blue'
 		)
 		expect(premia.chainId).eq(421613)
 		expect(premia.apiBaseUri).eq('https://test.orderbook.premia.finance')
@@ -130,7 +128,7 @@ describe('SDK.initialize', function (this: any) {
 		expect(premia.disableCache).eq(false)
 		expect(premia.skipSubgraph).eq(false)
 		expect(premia.subgraph.uri).eq(
-			'https://api.thegraph.com/subgraphs/name/totop716/premia-v3'
+			'https://api.thegraph.com/subgraphs/name/premian-labs/premia-blue'
 		)
 		expect(premia.chainId).eq(42161)
 		expect(premia.apiBaseUri).eq('https://test.orderbook.premia.finance')
@@ -169,7 +167,7 @@ describe('SDK.initialize', function (this: any) {
 		expect(premia.disableCache).eq(false)
 		expect(premia.skipSubgraph).eq(false)
 		expect(premia.subgraph.uri).eq(
-			'https://api.thegraph.com/subgraphs/name/totop716/premia-v3'
+			'https://api.thegraph.com/subgraphs/name/premian-labs/premia-blue-arbitrum-goerli'
 		)
 		expect(premia.chainId).eq(421613)
 		expect(premia.apiBaseUri).eq('https://test.orderbook.premia.finance')
