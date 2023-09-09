@@ -514,10 +514,10 @@ export class Premia {
 	): PremiaConfigWithDefaults {
 		const defaultConfig: PremiaConfig = {
 			provider: config.useTestnet
-				? 'https://goerli-rollup.arbitrum.io/rpc	'
+				? 'https://goerli-rollup.arbitrum.io/rpc'
 				: 'https://arb1.arbitrum.io/rpc',
 			orderbookProvider: config.useTestnet
-				? 'https://goerli-rollup.arbitrum.io/rpc	'
+				? 'https://goerli-rollup.arbitrum.io/rpc'
 				: 'https://nova.arbitrum.io/rpc',
 			useTestnet: config.useTestnet ?? true,
 			chainId: config.useTestnet
