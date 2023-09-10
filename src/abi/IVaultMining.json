@@ -1,318 +1,366 @@
 [
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "caller",
-        "type": "address"
-      }
-    ],
-    "name": "VaultMining__NotVault",
-    "type": "error"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "vault",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "UD60x18",
-        "name": "rewardAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "Claim",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "UD60x18",
-        "name": "rewardsPerYear",
-        "type": "uint256"
-      }
-    ],
-    "name": "SetRewardsPerYear",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "vault",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "UD60x18",
-        "name": "votes",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "UD60x18",
-        "name": "vaultUtilisationRate",
-        "type": "uint256"
-      }
-    ],
-    "name": "UpdateVaultVotes",
-    "type": "event"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "UD60x18",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "addRewards",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address[]",
-        "name": "vaults",
-        "type": "address[]"
-      }
-    ],
-    "name": "claim",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "vault",
-        "type": "address"
-      }
-    ],
-    "name": "getPendingUserRewards",
-    "outputs": [
-      {
-        "internalType": "UD60x18",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getRewardsAvailable",
-    "outputs": [
-      {
-        "internalType": "UD60x18",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getRewardsPerYear",
-    "outputs": [
-      {
-        "internalType": "UD60x18",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getTotalVotes",
-    "outputs": [
-      {
-        "internalType": "UD60x18",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "vault",
-        "type": "address"
-      }
-    ],
-    "name": "getUserInfo",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "UD60x18",
-            "name": "shares",
-            "type": "uint256"
-          },
-          {
-            "internalType": "UD60x18",
-            "name": "reward",
-            "type": "uint256"
-          },
-          {
-            "internalType": "UD60x18",
-            "name": "rewardDebt",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct IVaultMining.UserInfo",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "vault",
-        "type": "address"
-      }
-    ],
-    "name": "getVaultInfo",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "UD60x18",
-            "name": "totalShares",
-            "type": "uint256"
-          },
-          {
-            "internalType": "UD60x18",
-            "name": "votes",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "lastRewardTimestamp",
-            "type": "uint256"
-          },
-          {
-            "internalType": "UD60x18",
-            "name": "accRewardsPerShare",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct IVaultMining.VaultInfo",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "vault",
-        "type": "address"
-      }
-    ],
-    "name": "updateUser",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "vault",
-        "type": "address"
-      },
-      {
-        "internalType": "UD60x18",
-        "name": "newUserShares",
-        "type": "uint256"
-      },
-      {
-        "internalType": "UD60x18",
-        "name": "newTotalShares",
-        "type": "uint256"
-      },
-      {
-        "internalType": "UD60x18",
-        "name": "utilisationRate",
-        "type": "uint256"
-      }
-    ],
-    "name": "updateUser",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "vault",
-        "type": "address"
-      }
-    ],
-    "name": "updateVault",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "updateVaults",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"internalType": "UD60x18",
+				"name": "rewardsAvailable",
+				"type": "uint256"
+			},
+			{
+				"internalType": "UD60x18",
+				"name": "rewardsRequested",
+				"type": "uint256"
+			}
+		],
+		"name": "VaultMining__InsufficientRewards",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "caller",
+				"type": "address"
+			}
+		],
+		"name": "VaultMining__NotVault",
+		"type": "error"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "vault",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "UD60x18",
+				"name": "rewardAmount",
+				"type": "uint256"
+			}
+		],
+		"name": "AllocateRewards",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "UD60x18",
+				"name": "rewardAmount",
+				"type": "uint256"
+			}
+		],
+		"name": "Claim",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "UD60x18",
+				"name": "rewardsPerYear",
+				"type": "uint256"
+			}
+		],
+		"name": "SetRewardsPerYear",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "vault",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "UD60x18",
+				"name": "votes",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "UD60x18",
+				"name": "vaultUtilisationRate",
+				"type": "uint256"
+			}
+		],
+		"name": "UpdateVaultVotes",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "UD60x18",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "addRewards",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address[]",
+				"name": "vaults",
+				"type": "address[]"
+			},
+			{
+				"internalType": "UD60x18",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "claim",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address[]",
+				"name": "vaults",
+				"type": "address[]"
+			}
+		],
+		"name": "claimAll",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"internalType": "address[]",
+				"name": "vaults",
+				"type": "address[]"
+			}
+		],
+		"name": "getPendingUserRewards",
+		"outputs": [
+			{
+				"internalType": "UD60x18",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getRewardsAvailable",
+		"outputs": [
+			{
+				"internalType": "UD60x18",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getRewardsPerYear",
+		"outputs": [
+			{
+				"internalType": "UD60x18",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getTotalVotes",
+		"outputs": [
+			{
+				"internalType": "UD60x18",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "vault",
+				"type": "address"
+			}
+		],
+		"name": "getUserInfo",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "UD60x18",
+						"name": "shares",
+						"type": "uint256"
+					},
+					{
+						"internalType": "UD60x18",
+						"name": "rewardDebt",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct IVaultMining.UserInfo",
+				"name": "",
+				"type": "tuple"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "vault",
+				"type": "address"
+			}
+		],
+		"name": "getVaultInfo",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "UD60x18",
+						"name": "totalShares",
+						"type": "uint256"
+					},
+					{
+						"internalType": "UD60x18",
+						"name": "votes",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "lastRewardTimestamp",
+						"type": "uint256"
+					},
+					{
+						"internalType": "UD60x18",
+						"name": "accRewardsPerShare",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct IVaultMining.VaultInfo",
+				"name": "",
+				"type": "tuple"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "vault",
+				"type": "address"
+			}
+		],
+		"name": "updateUser",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"internalType": "UD60x18",
+				"name": "newUserShares",
+				"type": "uint256"
+			},
+			{
+				"internalType": "UD60x18",
+				"name": "newTotalShares",
+				"type": "uint256"
+			},
+			{
+				"internalType": "UD60x18",
+				"name": "utilisationRate",
+				"type": "uint256"
+			}
+		],
+		"name": "updateUser",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "vault",
+				"type": "address"
+			}
+		],
+		"name": "updateVault",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "updateVaults",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
 ]
