@@ -482,6 +482,9 @@ export class PoolAPI extends BaseAPI {
 			poolAddress: string
 			size: BigNumberish
 			isBuy: boolean
+			minimumSize?: BigNumberish
+			referrer?: string
+			taker?: string
 		},
 		callback: (quote: FillableQuote | null) => void
 	): Promise<void> {
@@ -491,7 +494,9 @@ export class PoolAPI extends BaseAPI {
 			const bestQuote = await this.quote(
 				options.poolAddress,
 				options.size,
-				options.isBuy
+				options.isBuy,
+				options.referrer,
+				options.taker
 			).catch()
 			callback(bestQuote)
 		} catch (e) {
@@ -504,7 +509,9 @@ export class PoolAPI extends BaseAPI {
 				const quote = await this.quote(
 					options.poolAddress,
 					options.size,
-					options.isBuy
+					options.isBuy,
+					options.referrer,
+					options.taker
 				).catch()
 				callback(quote)
 			} catch (e) {
