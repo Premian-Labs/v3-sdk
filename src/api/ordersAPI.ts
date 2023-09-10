@@ -178,23 +178,23 @@ export class OrdersAPI extends BaseAPI {
 		referrer?: string,
 		taker?: string
 	): Promise<FillableQuote | null> {
-		const side = isBuy ? 'bid' : 'ask'
 		await this.premia.orderbook.publishRFQ({
 			type: 'RFQ',
 			body: {
 				poolAddress: poolAddress,
-				side: side,
+				side: isBuy ? 'bid' : 'ask',
 				chainId: this.premia.chainId.toString(),
 				size: size.toString(),
 				taker: taker ?? ZeroAddress,
 			},
 		})
 
-		const quoteSide = isBuy ? 'ask' : 'bid'
 		const quotes = await this.premia.orderbook.getQuotes(
 			poolAddress,
 			size.toString(),
-			quoteSide
+			isBuy ? 'ask' : 'bid',
+			undefined,
+			taker
 		)
 		if (quotes.length === 0) {
 			return null
@@ -259,17 +259,6 @@ export class OrdersAPI extends BaseAPI {
 			console.error('Error streaming OB quote: ', error)
 			callback(null)
 		}
-
-		await this.premia.orderbook.publishRFQ({
-			type: 'RFQ',
-			body: {
-				poolAddress: options.poolAddress,
-				side: options.isBuy ? 'bid' : 'ask',
-				chainId: this.premia.chainId.toString(),
-				size: options.size.toString(),
-				taker: options.taker ?? ZeroAddress,
-			},
-		})
 
 		await this.premia.orderbook.subscribe(
 			{
