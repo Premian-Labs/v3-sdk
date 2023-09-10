@@ -95,6 +95,7 @@ export class VaultAPI extends BaseAPI {
 		isBuy: boolean,
 		minimumSize?: BigNumberish,
 		referrer?: string,
+		taker?: string,
 		maxSlippagePercent?: BigNumberish
 	): Promise<FillableQuote | null> {
 		const _size = toBigInt(size)
@@ -102,8 +103,8 @@ export class VaultAPI extends BaseAPI {
 		const vaultRegistry = this.premia.contracts.getVaultRegistryContract()
 
 		const poolKey = await this.premia.pools.getPoolKeyFromAddress(poolAddress)
-		const [taker, vaults] = await Promise.all([
-			this.premia.signer?.getAddress() ?? ZeroAddress,
+		const [_taker, vaults] = await Promise.all([
+			taker ?? this.premia.signer?.getAddress() ?? ZeroAddress,
 			vaultRegistry.getVaultsByFilter(
 				[poolKey.isCallPool ? poolKey.base : poolKey.quote],
 				this.tradeSide(!isBuy),
@@ -128,7 +129,7 @@ export class VaultAPI extends BaseAPI {
 				if (!isSupported) return null
 
 				const quote = await vault
-					.getQuote(poolKey, _size, isBuy, taker)
+					.getQuote(poolKey, _size, isBuy, _taker)
 					.catch((err) => {
 						console.error('Error getting vault quote', err)
 						return null
@@ -146,14 +147,14 @@ export class VaultAPI extends BaseAPI {
 					_size,
 					quote,
 					false,
-					taker
+					_taker
 				)
 
 				return {
 					poolKey,
 					poolAddress,
 					provider: _vault.vault,
-					taker,
+					taker: _taker,
 					/// @dev remove the taker fee from the price, to be consistent with the other quotes
 					price: (quote * WAD_BI) / _size - takerFee,
 					size: _size,
@@ -202,6 +203,8 @@ export class VaultAPI extends BaseAPI {
 			size: BigNumberish
 			isBuy: boolean
 			minimumSize?: BigNumberish
+			referrer?: string
+			taker?: string
 		},
 		callback: (quote: FillableQuote | null) => void
 	): Promise<void> {
@@ -220,7 +223,10 @@ export class VaultAPI extends BaseAPI {
 			const bestQuote = await this.quote(
 				options.poolAddress,
 				options.size,
-				options.isBuy
+				options.isBuy,
+				options.minimumSize,
+				options.referrer,
+				options.taker
 			)
 
 			callback(bestQuote)
@@ -237,7 +243,10 @@ export class VaultAPI extends BaseAPI {
 					const quote = await this.quote(
 						options.poolAddress,
 						options.size,
-						options.isBuy
+						options.isBuy,
+						options.minimumSize,
+						options.referrer,
+						options.taker
 					)
 					callback(quote)
 				} catch (err) {

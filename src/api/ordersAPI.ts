@@ -250,7 +250,8 @@ export class OrdersAPI extends BaseAPI {
 				options.size,
 				options.isBuy,
 				options.minimumSize,
-				options.referrer
+				options.referrer,
+				options.taker
 			)
 
 			callback(bestQuote)

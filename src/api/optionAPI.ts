@@ -257,7 +257,8 @@ export class OptionAPI extends BaseAPI {
 					options.size,
 					options.isBuy,
 					options.minimumSize,
-					options.referrer
+					options.referrer,
+					options.taker
 				)
 				.catch(),
 		])
@@ -416,7 +417,8 @@ export class OptionAPI extends BaseAPI {
 							options.size,
 							options.isBuy,
 							options.minimumSize,
-							options.referrer
+							options.referrer,
+							options.taker
 						)
 						.catch()
 				)
