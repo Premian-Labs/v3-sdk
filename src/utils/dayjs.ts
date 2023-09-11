@@ -1,72 +1,55 @@
-import dayjs from 'dayjs'
-import utc from 'dayjs/plugin/utc'
+import dayjs, { Dayjs } from "dayjs";
+import utc from "dayjs/plugin/utc";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import isoWeek from "dayjs/plugin/isoWeek";
+import duration from "dayjs/plugin/duration";
 
-dayjs.extend(utc)
+dayjs.extend(utc);
+dayjs.extend(isSameOrBefore);
+dayjs.extend(isoWeek);
+dayjs.extend(duration);
 
-export const FRIDAY = 5
+function isFriday(ts: Dayjs): boolean {
+	return ts.day() === 5;
+}
 
-export function nextYearOfMaturities(): dayjs.Dayjs[] {
-	const maturities: dayjs.Dayjs[] = []
-	const now = dayjs().utc()
+function isLastFriday(ts: Dayjs): boolean {
+	const next = ts.add(7, "day");
+	return isFriday(ts) && ts.month() !== next.month();
+}
 
-	// Dailies
-	let today = now.clone().startOf('day').hour(8)
-	let tomorrow = today.clone().add(1, 'day')
-	let twoDays = today.clone().add(2, 'day')
+export function nextYearOfMaturities(): Dayjs[] {
+	const maturities: Dayjs[] = [];
+	const now = dayjs().utc();
+	let maturity = now.clone().startOf("day").add(8, "hour");
 
-	// Weeklies
-	let friday = now.clone().startOf('day').hour(8).day(FRIDAY)
-	if (now.day() >= FRIDAY) {
-		friday = friday.add(1, 'week')
-	}
-	const secondFriday = friday.clone().add(1, 'week')
-	const thirdFriday = friday.clone().add(2, 'week')
-	const fourthFriday = friday.clone().add(3, 'week')
-	const fifthFriday = friday.clone().add(4, 'week')
-
-	// Monthlies
-	const currentMonth = now.month()
-	const months = []
-	for (let i = 1; i <= 12; ++i) {
-		let monthly = now
-			.clone()
-			.month(currentMonth + i)
-			.startOf('month')
-			.hour(8)
-			.day(FRIDAY)
-		if (monthly.date() > 7) {
-			monthly = monthly.subtract(1, 'week')
-		}
-		while (monthly.month() === currentMonth + i) {
-			monthly = monthly.add(1, 'week')
-		}
-		monthly = monthly.subtract(1, 'week')
-		months.push(monthly)
+	if (maturity.isSameOrBefore(now)) {
+		maturity = maturity.add(1, "day");
 	}
 
-	// Check and push to maturities
-	if (today.isAfter(now)) {
-		maturities.push(today)
-	}
-	if (tomorrow.isAfter(now)) {
-		maturities.push(tomorrow)
-	}
-	maturities.push(twoDays)
+	while (maturity.diff(now, "day") < 365) {
+		const ttm = dayjs.duration(maturity.diff(now));
 
-	const fridays = [friday, secondFriday, thirdFriday, fourthFriday, fifthFriday]
-	fridays.forEach((fri: dayjs.Dayjs) => {
-		if (!maturities.find((maturity) => maturity.isSame(fri))) {
-			maturities.push(fri)
-		}
-	})
+		if (ttm.asDays() < 3) {
+			maturities.push(maturity);
+			maturity = maturity.add(1, "day");
+		} else if (ttm.asDays() >= 3 && ttm.asDays() <= 35) {
+			while (!isFriday(maturity)) {
+				maturity = maturity.add(1, "day");
+			}
 
-	for (let monthly of months) {
-		if (!maturities.find((maturity) => maturity.isSame(monthly))) {
-			maturities.push(monthly)
+			maturities.push(maturity);
+			maturity = maturity.add(7, "day");
+		} else {
+			if (isLastFriday(maturity)) {
+				maturities.push(maturity);
+			}
+
+			maturity = maturity.add(7, "day");
 		}
 	}
 
-	return maturities
+	return maturities;
 }
 
 export default dayjs
