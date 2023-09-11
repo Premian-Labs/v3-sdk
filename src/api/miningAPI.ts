@@ -29,7 +29,6 @@ export class MiningAPI extends BaseAPI {
 	 * Encodes the claimAll parameters into a transaction that can be broadcasted to the provider network.
 	 *
 	 * @param {string[]} vaults - array of addresses of vaults to claim all rewards.
-	 *
 	 * @returns {Promise<ContractTransaction>} A promise that resolves to a contract transaction for the claimAll operation.
 	 */
 	async encodeClaimAll(vaults: string[]): Promise<ContractTransaction> {
@@ -41,7 +40,7 @@ export class MiningAPI extends BaseAPI {
 	 * Encodes the claim parameters into a transaction that can be broadcasted to the provider network.
 	 *
 	 * @param {string[]} vaults - array of addresses of vaults to claim partial amount.
-	 *
+	 * @param {BigNumberish} amount - amount of rewards to claim.
 	 * @returns {Promise<ContractTransaction>} A promise that resolves to a contract transaction for the claim operation.
 	 */
 	async encodeClaim(
