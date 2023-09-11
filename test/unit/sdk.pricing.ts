@@ -76,7 +76,7 @@ describe('PricingAPI', function (this: any) {
 
 		const maturity = moment()
 			.utcOffset(0)
-			.add(7, 'd')
+			.add(14, 'd')
 			.day(5)
 			.set({ hour: 8, minute: 0, second: 0, millisecond: 0 })
 		const maturitySec = maturity.valueOf() / 1000
