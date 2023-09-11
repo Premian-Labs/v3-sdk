@@ -329,15 +329,28 @@ export class PoolAPI extends BaseAPI {
 		isPremiumNormalized: boolean = false,
 		taker?: string
 	): Promise<bigint> {
-		const poolContract = await this.premia.contracts.getPoolContract(
-			poolAddress
-		)
-		return poolContract.takerFee(
-			taker ?? ZeroAddress,
-			size,
-			premium,
-			isPremiumNormalized
-		)
+		try {
+			const poolContract = await this.premia.contracts.getPoolContract(
+				poolAddress
+			)
+
+			/// @dev: default to calls to chain, but if the pool is not deployed
+			/// 	  yet, use a local calculation (which is subject to potential
+			///       change inaccuracies).
+			if (await poolContract.deployed()) {
+				return poolContract.takerFee(
+					taker ?? ZeroAddress,
+					size,
+					premium,
+					isPremiumNormalized
+				)
+			}
+		} catch (error) {}
+
+		const sizeBased = (size * 3n) / 100n // 0.3% of notional
+		const premiumBased = (premium * 3n) / 10n // 3% of premium
+
+		return sizeBased > premiumBased ? sizeBased : premiumBased
 	}
 
 	/**
@@ -422,24 +435,28 @@ export class PoolAPI extends BaseAPI {
 			this.getPoolKeyFromAddress(poolAddress),
 			pool.getQuoteAMM(taker ?? ZeroAddress, _size, isBuy),
 		])
-		const premium = isBuy
-			? quote.premiumNet + quote.takerFee
-			: quote.premiumNet - quote.takerFee
 		const premiumLimit = maxSlippagePercent
-			? this.premia.pricing.premiumLimit(premium, maxSlippagePercent, isBuy)
-			: premium
+			? this.premia.pricing.premiumLimit(
+					quote.premiumNet,
+					maxSlippagePercent,
+					isBuy
+			  )
+			: quote.premiumNet
 
 		return {
 			poolKey,
 			poolAddress,
 			provider: poolAddress,
 			taker: ZeroAddress,
-			price: (premium * WAD_BI) / _size,
+			price: (quote.premiumNet * WAD_BI) / _size,
 			size: _size,
-			isBuy,
+			isBuy: !isBuy,
 			deadline: toBigInt(Math.floor(new Date().getTime() / 1000 + 60 * 60)),
+			takerFee: quote.takerFee,
 			approvalTarget: Addresses[this.premia.chainId].ERC20_ROUTER,
-			approvalAmount: premiumLimit,
+			approvalAmount: isBuy
+				? premiumLimit
+				: _size - premiumLimit + quote.takerFee,
 			to: poolAddress,
 			data: pool.interface.encodeFunctionData('trade', [
 				_size,
@@ -465,6 +482,9 @@ export class PoolAPI extends BaseAPI {
 			poolAddress: string
 			size: BigNumberish
 			isBuy: boolean
+			minimumSize?: BigNumberish
+			referrer?: string
+			taker?: string
 		},
 		callback: (quote: FillableQuote | null) => void
 	): Promise<void> {
@@ -474,7 +494,9 @@ export class PoolAPI extends BaseAPI {
 			const bestQuote = await this.quote(
 				options.poolAddress,
 				options.size,
-				options.isBuy
+				options.isBuy,
+				options.referrer,
+				options.taker
 			).catch()
 			callback(bestQuote)
 		} catch (e) {
@@ -487,7 +509,9 @@ export class PoolAPI extends BaseAPI {
 				const quote = await this.quote(
 					options.poolAddress,
 					options.size,
-					options.isBuy
+					options.isBuy,
+					options.referrer,
+					options.taker
 				).catch()
 				callback(quote)
 			} catch (e) {

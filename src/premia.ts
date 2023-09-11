@@ -23,7 +23,7 @@ import { Addresses, SupportedChainId } from './constants'
 import { Coingecko, OrderbookV1 } from './services'
 import cache from './cache'
 import PremiaSubgraph from './services/subgraph'
-import {MiningAPI} from "./api/miningAPI";
+import { MiningAPI } from './api/miningAPI'
 
 export interface SetProviderParams {
 	/**
@@ -39,9 +39,9 @@ export interface SetProviderParams {
 	 * This provider is used for interacting with the orderbook contract.
 	 * If not provided, a default connection string will be used.
 	 *
-	 * @defaultValue {@link Premia.novaProvider}
+	 * @defaultValue {@link Premia.orderbookProvider}
 	 */
-	novaProvider?: Provider | string
+	orderbookProvider?: Provider | string
 }
 
 export interface SetSignerParams {
@@ -63,22 +63,22 @@ export interface SetSignerParams {
 	 */
 	signer?: Signer
 	/**
-	 * A string representing a wallet's private key for use with the `novaProvider`,
-	 * to instantiate the `novaSigner`. Ignored if `novaSigner` is provided.
+	 * A string representing a wallet's private key for use with the `orderbookProvider`,
+	 * to instantiate the `orderbookSigner`. Ignored if `orderbookSigner` is provided.
 	 */
-	novaPrivateKey?: string
+	orderbookPrivateKey?: string
 	/**
-	 * A string representing a wallet's secret phrase for use with the `novaProvider`,
-	 * to instantiate the `novaSigner`. Ignored if `novaPrivateKey` or `novaSigner` is provided.
+	 * A string representing a wallet's secret phrase for use with the `orderbookProvider`,
+	 * to instantiate the `orderbookSigner`. Ignored if `orderbookPrivateKey` or `orderbookSigner` is provided.
 	 */
-	novaPhrase?: string
+	orderbookPhrase?: string
 	/**
-	 * An ethers.js signer instance for transacting with the orderbook contract. If no `novaSigner`,
-	 * `novaPrivateKey`, or `novaPhrase` is provided, the `novaProvider`'s default signer will be used.
+	 * An ethers.js signer instance for transacting with the orderbook contract. If no `orderbookSigner`,
+	 * `orderbookPrivateKey`, or `orderbookPhrase` is provided, the `orderbookProvider`'s default signer will be used.
 	 *
-	 * @defaultValue {@link Premia.novaProvider.getSigner}
+	 * @defaultValue {@link Premia.orderbookProvider.getSigner}
 	 */
-	novaSigner?: Signer
+	orderbookSigner?: Signer
 }
 
 export interface SubgraphParams {
@@ -108,6 +108,13 @@ export interface PremiaConfig
 	 * @defaultValue {@link Premia.chainId}
 	 */
 	chainId?: number
+
+	/**
+	 * The chain ID to use for interacting with the auxiliary orderbook contract.
+	 *
+	 * @defaultValue {@link Premia.chainId}
+	 */
+	orderbookChainId?: number
 
 	/**
 	 * The API key to use for fetching data from the Premia API.
@@ -239,12 +246,12 @@ export class Premia {
 	 * @defaultValue {@link JsonRpcProvider}
 	 * @see https://docs.ethers.org/v6/api/providers/#Provider
 	 */
-	novaProvider?: Provider
+	orderbookProvider?: Provider
 
 	/**
 	 * The `SetProviderParams` field used to instantiate the SDK.
 	 */
-	novaProviderCredentials?: { rpcUrl?: string; provider?: Provider }
+	orderbookProviderCredentials?: { rpcUrl?: string; provider?: Provider }
 
 	/**
 	 * The ethers.js multicall provider instance used for batched contract calls.
@@ -271,11 +278,11 @@ export class Premia {
 	 * @defaultValue {@link Wallet}
 	 * @see https://docs.ethers.org/v6/api/providers/#Signer
 	 */
-	novaSigner?: Signer
+	orderbookSigner?: Signer
 	/**
 	 * The `SetSignerParams` field used to instantiate the SDK.
 	 */
-	novaSignerCredentials?: { phrase?: string; privateKey?: string }
+	orderbookSignerCredentials?: { phrase?: string; privateKey?: string }
 
 	/**
 	 * @inheritdoc {@link PremiaConfig.useTestnet}
@@ -402,7 +409,7 @@ export class Premia {
 	 *
 	 * @defaultValue {@link MiningAPI}
 	 */
-	mining: MiningAPI = new MiningAPI(this);
+	mining: MiningAPI = new MiningAPI(this)
 
 	/**
 	 * The static types used to interact with the Premia V3 protocol.
@@ -507,13 +514,18 @@ export class Premia {
 	): PremiaConfigWithDefaults {
 		const defaultConfig: PremiaConfig = {
 			provider: config.useTestnet
-				? 'https://goerli-rollup.arbitrum.io/rpc	'
+				? 'https://goerli-rollup.arbitrum.io/rpc'
 				: 'https://arb1.arbitrum.io/rpc',
-			novaProvider: 'https://nova.arbitrum.io/rpc',
+			orderbookProvider: config.useTestnet
+				? 'https://goerli-rollup.arbitrum.io/rpc'
+				: 'https://nova.arbitrum.io/rpc',
 			useTestnet: config.useTestnet ?? true,
 			chainId: config.useTestnet
 				? SupportedChainId.ARBITRUM_GOERLI
 				: SupportedChainId.ARBITRUM,
+			orderbookChainId: config.useTestnet
+				? SupportedChainId.ARBITRUM_GOERLI
+				: SupportedChainId.ARBITRUM_NOVA,
 			apiKey: '[email dev@premia.finance to get a key]',
 			apiBaseUri: `https://${
 				config.useTestnet === false ? '' : 'test.'
@@ -524,13 +536,15 @@ export class Premia {
 			coingeckoBaseUri: 'https://api.coingecko.com/api/v3',
 			disableCache: false,
 			skipSubgraph: false,
-			subgraphUri: 'https://api.thegraph.com/subgraphs/name/totop716/premia-v3',
+			subgraphUri: config.useTestnet
+				? 'https://api.thegraph.com/subgraphs/name/premian-labs/premia-blue-arbitrum-goerli'
+				: 'https://api.thegraph.com/subgraphs/name/premian-labs/premia-blue',
 		}
 
 		const merged = merge(defaultConfig, config) as PremiaConfigWithDefaults
 
 		merged.orderbookAddress =
-			Addresses[SupportedChainId.ARBITRUM_NOVA].ORDERBOOK
+			Addresses[merged.orderbookChainId as keyof typeof Addresses].ORDERBOOK
 		merged.poolFactoryAddress =
 			Addresses[merged.chainId as keyof typeof Addresses].POOL_FACTORY
 		merged.vaultRegistryAddress =
@@ -626,7 +640,7 @@ export class Premia {
 	 * @param [params] - {@link SetProviderParams}
 	 */
 	setProvider(params: SetProviderParams) {
-		const { provider, novaProvider } = params
+		const { provider, orderbookProvider } = params
 
 		if (typeof provider === 'string') {
 			this.provider = new JsonRpcProvider(provider as string)
@@ -638,12 +652,12 @@ export class Premia {
 
 		this.multicallProvider = new providers.MulticallProvider(this.provider)
 
-		if (typeof novaProvider === 'string') {
-			this.novaProvider = new JsonRpcProvider(novaProvider as string)
-			this.novaProviderCredentials = { rpcUrl: novaProvider }
-		} else if (novaProvider) {
-			this.novaProvider = novaProvider
-			this.novaProviderCredentials = { provider: novaProvider }
+		if (typeof orderbookProvider === 'string') {
+			this.orderbookProvider = new JsonRpcProvider(orderbookProvider as string)
+			this.orderbookProviderCredentials = { rpcUrl: orderbookProvider }
+		} else if (orderbookProvider) {
+			this.orderbookProvider = orderbookProvider
+			this.orderbookProviderCredentials = { provider: orderbookProvider }
 		}
 	}
 
@@ -655,9 +669,9 @@ export class Premia {
 			privateKey,
 			phrase,
 			signer,
-			novaPrivateKey,
-			novaPhrase,
-			novaSigner,
+			orderbookPrivateKey,
+			orderbookPhrase,
+			orderbookSigner,
 		} = params
 
 		if (signer) {
@@ -677,20 +691,23 @@ export class Premia {
 			} catch (e) {}
 		}
 
-		if (novaSigner) {
-			this.novaSigner = novaSigner
-		} else if (novaPrivateKey) {
-			const _privateKey = novaPrivateKey.startsWith('0x')
-				? novaPrivateKey
-				: `0x${novaPrivateKey}`
-			this.novaSigner = new Wallet(_privateKey, this.novaProvider)
-			this.novaSignerCredentials = { privateKey: novaPrivateKey }
-		} else if (novaPhrase) {
-			this.novaSigner = Wallet.fromPhrase(novaPhrase, this.novaProvider)
-			this.novaSignerCredentials = { phrase: novaPhrase }
-		} else if (this.novaProvider instanceof JsonRpcProvider) {
+		if (orderbookSigner) {
+			this.orderbookSigner = orderbookSigner
+		} else if (orderbookPrivateKey) {
+			const _privateKey = orderbookPrivateKey.startsWith('0x')
+				? orderbookPrivateKey
+				: `0x${orderbookPrivateKey}`
+			this.orderbookSigner = new Wallet(_privateKey, this.orderbookProvider)
+			this.orderbookSignerCredentials = { privateKey: orderbookPrivateKey }
+		} else if (orderbookPhrase) {
+			this.orderbookSigner = Wallet.fromPhrase(
+				orderbookPhrase,
+				this.orderbookProvider
+			)
+			this.orderbookSignerCredentials = { phrase: orderbookPhrase }
+		} else if (this.orderbookProvider instanceof JsonRpcProvider) {
 			try {
-				this.novaSigner = await this.novaProvider.getSigner()
+				this.orderbookSigner = await this.orderbookProvider.getSigner()
 			} catch (e) {}
 		}
 	}
@@ -707,9 +724,9 @@ export class Premia {
 			privateKey,
 			phrase,
 			signer,
-			novaPrivateKey,
-			novaPhrase,
-			novaSigner,
+			orderbookPrivateKey,
+			orderbookPhrase,
+			orderbookSigner,
 		} = params
 
 		if (signer) {
@@ -725,17 +742,20 @@ export class Premia {
 			this.signerCredentials = { phrase }
 		}
 
-		if (novaSigner) {
-			this.novaSigner = novaSigner
-		} else if (novaPrivateKey) {
-			const _privateKey = novaPrivateKey.startsWith('0x')
-				? novaPrivateKey
-				: `0x${novaPrivateKey}`
-			this.novaSigner = new Wallet(_privateKey, this.novaProvider)
-			this.novaSignerCredentials = { privateKey: novaPrivateKey }
-		} else if (novaPhrase) {
-			this.novaSigner = Wallet.fromPhrase(novaPhrase, this.novaProvider)
-			this.novaSignerCredentials = { phrase: novaPhrase }
+		if (orderbookSigner) {
+			this.orderbookSigner = orderbookSigner
+		} else if (orderbookPrivateKey) {
+			const _privateKey = orderbookPrivateKey.startsWith('0x')
+				? orderbookPrivateKey
+				: `0x${orderbookPrivateKey}`
+			this.orderbookSigner = new Wallet(_privateKey, this.orderbookProvider)
+			this.orderbookSignerCredentials = { privateKey: orderbookPrivateKey }
+		} else if (orderbookPhrase) {
+			this.orderbookSigner = Wallet.fromPhrase(
+				orderbookPhrase,
+				this.orderbookProvider
+			)
+			this.orderbookSignerCredentials = { phrase: orderbookPhrase }
 		}
 	}
 
@@ -793,13 +813,13 @@ export class Premia {
 			chainId: this.chainId,
 			provider: (this.providerCredentials?.provider ??
 				this.providerCredentials?.rpcUrl) as Provider | string,
-			novaProvider:
-				this.novaProviderCredentials?.provider ??
-				this.novaProviderCredentials?.rpcUrl,
+			orderbookProvider:
+				this.orderbookProviderCredentials?.provider ??
+				this.orderbookProviderCredentials?.rpcUrl,
 			privateKey: this.signerCredentials?.privateKey,
 			phrase: this.signerCredentials?.phrase,
-			novaPrivateKey: this.novaSignerCredentials?.privateKey,
-			novaPhrase: this.novaSignerCredentials?.phrase,
+			orderbookPrivateKey: this.orderbookSignerCredentials?.privateKey,
+			orderbookPhrase: this.orderbookSignerCredentials?.phrase,
 			subgraphUri: this.subgraph.uri,
 			skipSubgraph: this.skipSubgraph,
 			disableCache: this.disableCache,

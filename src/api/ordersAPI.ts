@@ -61,8 +61,14 @@ export class OrdersAPI extends BaseAPI {
 
 		/// @dev: return the first valid quote in order of sorting
 		for (const quote of bestQuotes) {
-			if (await this.isQuoteValid(quote, size)) {
-				return quote
+			try {
+				if (await this.isQuoteValid(quote, quote.fillableSize, true)) {
+					return quote
+				} else {
+					console.log('Invalid quote: ', quote)
+				}
+			} catch (err) {
+				console.error('Quote validation error: ', err)
 			}
 		}
 
@@ -92,6 +98,15 @@ export class OrdersAPI extends BaseAPI {
 			toBigInt(size) > toBigInt(quote.size)
 				? toBigInt(quote.size)
 				: toBigInt(size)
+		const premium = (_size * toBigInt(quote.price)) / BigInt(10 ** 18)
+
+		const takerFee = await this.premia.pools.takerFee(
+			poolAddress,
+			_size,
+			premium,
+			false,
+			quote.taker
+		)
 
 		return {
 			...quote,
@@ -100,9 +115,12 @@ export class OrdersAPI extends BaseAPI {
 			price: toBigInt(quote.price),
 			salt: toBigInt(quote.salt),
 			size: _size,
+			takerFee,
 			poolAddress,
 			approvalTarget: Addresses[this.premia.chainId].ERC20_ROUTER,
-			approvalAmount: (_size * toBigInt(quote.price)) / BigInt(10 ** 18),
+			approvalAmount: quote.isBuy
+				? premium + takerFee
+				: _size - premium + takerFee,
 			to: poolAddress,
 			data: poolContract.interface.encodeFunctionData('fillQuoteOB', [
 				quote,
@@ -160,23 +178,23 @@ export class OrdersAPI extends BaseAPI {
 		referrer?: string,
 		taker?: string
 	): Promise<FillableQuote | null> {
-		const side = isBuy ? 'bid' : 'ask'
 		await this.premia.orderbook.publishRFQ({
 			type: 'RFQ',
 			body: {
 				poolAddress: poolAddress,
-				side: side,
+				side: isBuy ? 'bid' : 'ask',
 				chainId: this.premia.chainId.toString(),
 				size: size.toString(),
 				taker: taker ?? ZeroAddress,
 			},
 		})
 
-		const quoteSide = isBuy ? 'ask' : 'bid'
 		const quotes = await this.premia.orderbook.getQuotes(
 			poolAddress,
 			size.toString(),
-			quoteSide
+			isBuy ? 'ask' : 'bid',
+			undefined,
+			taker
 		)
 		if (quotes.length === 0) {
 			return null
@@ -187,6 +205,7 @@ export class OrdersAPI extends BaseAPI {
 			size,
 			minimumSize
 		)) as SerializedIndexedQuote | null
+
 		if (bestQuote === null) {
 			return null
 		}
@@ -231,7 +250,8 @@ export class OrdersAPI extends BaseAPI {
 				options.size,
 				options.isBuy,
 				options.minimumSize,
-				options.referrer
+				options.referrer,
+				options.taker
 			)
 
 			callback(bestQuote)
@@ -239,17 +259,6 @@ export class OrdersAPI extends BaseAPI {
 			console.error('Error streaming OB quote: ', error)
 			callback(null)
 		}
-
-		await this.premia.orderbook.publishRFQ({
-			type: 'RFQ',
-			body: {
-				poolAddress: options.poolAddress,
-				side: options.isBuy ? 'bid' : 'ask',
-				chainId: this.premia.chainId.toString(),
-				size: options.size.toString(),
-				taker: options.taker ?? ZeroAddress,
-			},
-		})
 
 		await this.premia.orderbook.subscribe(
 			{

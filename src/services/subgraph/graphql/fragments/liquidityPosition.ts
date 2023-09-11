@@ -1,6 +1,7 @@
 import { gql } from '@apollo/client/core'
 
 import { PoolFragment } from './pool'
+import { VaultFragment } from './vault'
 
 export const LiquidityPositionFragment = gql`
 	${PoolFragment}
@@ -10,7 +11,9 @@ export const LiquidityPositionFragment = gql`
 		pool {
 			...Pool
 		}
-		owner
+		owner {
+			address
+		}
 		operator
 		orderType
 		lower
@@ -33,11 +36,14 @@ export const LiquidityPositionFragment = gql`
 
 export const LiquidityPositionExtendedFragment = gql`
 	${LiquidityPositionFragment}
+	${VaultFragment}
 
 	fragment LiquidityPositionExtended on LiquidityPosition {
 		...LiquidityPosition
 
-		vault
+		vault {
+			...Vault
+		}
 
 		collateral
 		collateralETH

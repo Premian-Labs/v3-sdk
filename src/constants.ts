@@ -59,7 +59,8 @@ export const Addresses: AddressMap = {
 		VAULT_REGISTRY: arbitrumJson.VaultRegistryProxy.address,
 		VOLATILITY_ORACLE: arbitrumJson.VolatilityOracleProxy.address,
 		VX_PREMIA: arbitrumJson.VxPremiaProxy.address,
-		VAULT_MINING: arbitrumJson.VaultMiningProxy.address
+		VAULT_MINING: arbitrumJson.VaultMiningProxy.address,
+		REFERRAL: arbitrumJson.ReferralProxy.address,
 	},
 	[SupportedChainId.ARBITRUM_NOVA]: {
 		CHAINLINK_BTC,
@@ -85,7 +86,7 @@ export const Addresses: AddressMap = {
 		VAULT_REGISTRY: arbitrumGoerliJson.VaultRegistryProxy.address,
 		VOLATILITY_ORACLE: arbitrumGoerliJson.VolatilityOracleProxy.address,
 		VX_PREMIA: arbitrumGoerliJson.VxPremiaProxy.address,
-		VAULT_MINING: arbitrumGoerliJson.VaultMiningProxy.address
+		VAULT_MINING: arbitrumGoerliJson.VaultMiningProxy.address,
 	},
 }
 

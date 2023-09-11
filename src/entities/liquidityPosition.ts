@@ -2,6 +2,7 @@ import { BigNumberish } from 'ethers'
 
 import { Pool } from './pool'
 import { Vault } from './vault'
+import { User } from './user'
 
 export enum OrderType {
 	COLLATERAL_SHORT_USE_PREMIUMS,
@@ -21,7 +22,7 @@ export interface PositionKey {
 
 export interface LiquidityPosition {
 	pool: Pool
-	owner: string
+	owner: User
 	operator: string
 	orderType: OrderType
 	lower: BigNumberish

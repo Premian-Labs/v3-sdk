@@ -2,6 +2,7 @@ import { BigNumberish } from 'ethers'
 
 import { Pool } from './pool'
 import { Vault } from './vault'
+import { User } from './user'
 
 export enum TokenType {
 	SHORT = 0,
@@ -15,7 +16,7 @@ export enum TokenTypeString {
 
 export interface OptionPosition {
 	pool: Pool
-	owner: string
+	owner: User
 	isBuy: boolean
 	tokenType: TokenTypeString
 	createdAt: BigNumberish
