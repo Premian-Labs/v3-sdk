@@ -19,6 +19,18 @@ export enum CacheTTL {
 	SECOND = 1,
 }
 
+export const Fees = {
+	PROTOCOL_FEE_PERCENT: BigInt(0.5e18), // 50%
+
+	PREMIUM_FEE_PERCENT: BigInt(0.03e18), // 3%
+	NOTIONAL_FEE_PERCENT: BigInt(0.003e18), // 0.3%
+	ORDERBOOK_NOTIONAL_FEE_PERCENT: BigInt(0.0008e18), // 0.08%
+	MAX_PREMIUM_FEE_PERCENT: BigInt(0.125e18), // 12.5%
+
+	EXERCISE_NOTIONAL_FEE_PERCENT: BigInt(0.003e18), // 0.3%
+	MAX_EXERCISE_FEE_PERCENT: BigInt(0.125e18), // 12.5%
+}
+
 export const WAD_DECIMALS = 18n
 export const USD_DECIMALS = 18n
 export const ETH_DECIMALS = 18n

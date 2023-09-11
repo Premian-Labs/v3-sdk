@@ -8,7 +8,7 @@ import {
 } from 'ethers'
 
 import { withCache } from '../cache'
-import { CacheTTL, WAD_BI } from '../constants'
+import { CacheTTL, WAD_BI, ZERO_BI } from '../constants'
 import {
 	FillableQuote,
 	PoolKey,
@@ -19,7 +19,7 @@ import {
 	VaultPositionExtended,
 } from '../entities'
 import { BaseAPI } from './baseAPI'
-import { sendTransaction } from '../utils'
+import { formatBigInt, sendTransaction } from '../utils'
 
 export class VaultAPI extends BaseAPI {
 	/**
@@ -145,7 +145,8 @@ export class VaultAPI extends BaseAPI {
 				const takerFee = await this.premia.pools.takerFee(
 					poolAddress,
 					_size,
-					quote,
+					ZERO_BI,
+					true,
 					false,
 					_taker
 				)

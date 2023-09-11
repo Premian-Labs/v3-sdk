@@ -105,6 +105,7 @@ export class OrdersAPI extends BaseAPI {
 			_size,
 			premium,
 			false,
+			true,
 			quote.taker
 		)
 

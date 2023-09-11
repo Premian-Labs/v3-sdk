@@ -27,7 +27,7 @@ import {
 	TokenPairMinimal,
 	TokenType,
 } from '../entities'
-import { Addresses, CacheTTL, WAD_BI } from '../constants'
+import { Addresses, CacheTTL, Fees, WAD_BI, ZERO_BI } from '../constants'
 import { Position } from '../typechain/IPool'
 import { BaseAPI } from './baseAPI'
 import { formatTokenId, sendTransaction } from '../utils'
@@ -327,6 +327,7 @@ export class PoolAPI extends BaseAPI {
 		size: bigint,
 		premium: bigint,
 		isPremiumNormalized: boolean = false,
+		isOrderbook: boolean = false,
 		taker?: string
 	): Promise<bigint> {
 		try {
@@ -342,15 +343,27 @@ export class PoolAPI extends BaseAPI {
 					taker ?? ZeroAddress,
 					size,
 					premium,
-					isPremiumNormalized
+					isPremiumNormalized,
+					isOrderbook
 				)
 			}
 		} catch (error) {}
 
-		const sizeBased = (size * 3n) / 100n // 0.3% of notional
-		const premiumBased = (premium * 3n) / 10n // 3% of premium
+		if (isOrderbook) {
+			const sizeBased = (Fees.ORDERBOOK_NOTIONAL_FEE_PERCENT * size) / WAD_BI
+			const maxFee = (Fees.MAX_PREMIUM_FEE_PERCENT * premium) / WAD_BI
+			return sizeBased > maxFee ? maxFee : sizeBased
+		}
 
-		return sizeBased > premiumBased ? sizeBased : premiumBased
+		const sizeBased = (size * Fees.NOTIONAL_FEE_PERCENT) / WAD_BI
+		const premiumBased = (premium * Fees.PREMIUM_FEE_PERCENT) / WAD_BI
+		const maxFee =
+			premium === ZERO_BI
+				? sizeBased
+				: (Fees.MAX_PREMIUM_FEE_PERCENT * premium) / WAD_BI
+
+		const fee = sizeBased > premiumBased ? sizeBased : premiumBased
+		return fee > maxFee ? maxFee : fee
 	}
 
 	/**
