@@ -158,7 +158,7 @@ export class VaultAPI extends BaseAPI {
 					/// @dev remove the taker fee from the price, to be consistent with the other quotes
 					price: (quote * WAD_BI) / _size - takerFee,
 					size: _size,
-					isBuy,
+					isBuy: !isBuy,
 					deadline: toBigInt(Math.floor(new Date().getTime() / 1000) + 60 * 60),
 					takerFee,
 					to: _vault.vault,

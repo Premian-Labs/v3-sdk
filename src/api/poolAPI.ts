@@ -450,7 +450,7 @@ export class PoolAPI extends BaseAPI {
 			taker: ZeroAddress,
 			price: (quote.premiumNet * WAD_BI) / _size,
 			size: _size,
-			isBuy,
+			isBuy: !isBuy,
 			deadline: toBigInt(Math.floor(new Date().getTime() / 1000 + 60 * 60)),
 			takerFee: quote.takerFee,
 			approvalTarget: Addresses[this.premia.chainId].ERC20_ROUTER,
