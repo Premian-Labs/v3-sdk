@@ -149,14 +149,15 @@ export class VaultAPI extends BaseAPI {
 					false,
 					_taker
 				)
+				/// @dev remove the taker fee from the price, to be consistent with the other quotes
+				const price = ((quote - takerFee) * WAD_BI) / _size
 
 				return {
 					poolKey,
 					poolAddress,
 					provider: _vault.vault,
 					taker: _taker,
-					/// @dev remove the taker fee from the price, to be consistent with the other quotes
-					price: (quote * WAD_BI) / _size - takerFee,
+					price,
 					size: _size,
 					isBuy: !isBuy,
 					deadline: toBigInt(Math.floor(new Date().getTime() / 1000) + 60 * 60),
