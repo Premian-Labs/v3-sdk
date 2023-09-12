@@ -8,7 +8,7 @@ import {
 } from 'ethers'
 
 import { withCache } from '../cache'
-import { CacheTTL, WAD_BI, ZERO_BI } from '../constants'
+import { CacheTTL, WAD_BI, WAD_DECIMALS, ZERO_BI } from '../constants'
 import {
 	FillableQuote,
 	PoolKey,
@@ -19,7 +19,7 @@ import {
 	VaultPositionExtended,
 } from '../entities'
 import { BaseAPI } from './baseAPI'
-import { formatBigInt, sendTransaction } from '../utils'
+import { convertDecimals, formatBigInt, sendTransaction } from '../utils'
 
 export class VaultAPI extends BaseAPI {
 	/**
