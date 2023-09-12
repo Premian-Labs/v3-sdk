@@ -63,6 +63,11 @@ export class ContractAPI extends BaseAPI {
 	poolFactoryAddress: string = Addresses[SupportedChainId.ARBITRUM].POOL_FACTORY
 
 	/**
+	 * The address of the Premia Diamond `IPool` contract.
+	 */
+	poolDiamondAddress: string = Addresses[SupportedChainId.ARBITRUM].POOL_DIAMOND
+
+	/**
 	 * The address of the `UserSettings` contract.
 	 */
 	userSettingsAddress: string =
@@ -158,6 +163,23 @@ export class ContractAPI extends BaseAPI {
 	getPoolFactoryContract(provider?: Provider): IPoolFactory {
 		return IPoolFactory__factory.connect(
 			this.poolFactoryAddress,
+			provider ?? (this.premia.signer || this.premia.provider)
+		)
+	}
+
+	/**
+	 * Connects to the Pool Diamond contract using a provider.
+	 *
+	 * This function utilizes the `IPool__factory` to connect to the Pool Diamond contract.
+	 * If no provider is specified, it will default to using the signer or provider from the `premia` object.
+	 *
+	 * @param {Provider} [provider] - The provider to use for the connection. If not provided, the function defaults to using `this.premia.signer` or `this.premia.provider`.
+	 * @return {IPool} The connected Pool Diamond contract instance.
+	 * @throws Will throw an error if the connection to the contract fails.
+	 */
+	getPoolDiamondContract(provider?: Provider): IPool {
+		return IPool__factory.connect(
+			this.poolDiamondAddress,
 			provider ?? (this.premia.signer || this.premia.provider)
 		)
 	}
@@ -334,6 +356,15 @@ export class ContractAPI extends BaseAPI {
 	 */
 	setPoolFactoryAddress(factoryAddress: string): void {
 		this.poolFactoryAddress = factoryAddress
+	}
+
+	/**
+	 * Sets the pool diamond contract address used for this instance.
+	 *
+	 * @param {string} diamondAddress - The address of the PremiaDiamond contract.
+	 */
+	setPoolDiamondAddress(diamondAddress: string): void {
+		this.poolDiamondAddress = diamondAddress
 	}
 
 	/**
