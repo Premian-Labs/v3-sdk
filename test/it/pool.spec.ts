@@ -93,12 +93,12 @@ describe('Pool API', async function (this: any) {
 	})
 
 	it('should correct deploy pool', async () => {
+
+		basePool = await sdk.pools.getPoolMinimalFromKey(poolKey)
+
 		if (basePool.initialized) return
 
-		console.log('Deploying pool')
-
 		sdk.setDisableCache(true)
-
 		const response = await sdk.pools.deployWithKey(poolKey)
 		await response.wait(1)
 		basePool = await sdk.pools.getPoolMinimalFromKey(poolKey)
