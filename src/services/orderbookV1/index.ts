@@ -21,8 +21,6 @@ import {
 	WSUnsubscribeMessage,
 } from './types'
 
-// TODO: migrate testnet implmentation to use Arb Goerli orderbook contract
-// TODO: throw clear error messages for unAuthorized 401 errors
 export class OrderbookV1 {
 	/**
 	 * The API key to use for fetching data from the Premia API.
