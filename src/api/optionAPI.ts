@@ -489,19 +489,19 @@ export class OptionAPI extends BaseAPI {
 		const bestQuotes: { [type: string]: FillableQuote | null } = {}
 
 		await Promise.all([
-			// this.premia.orders.streamQuotes(options, (quote) => {
-			// 	bestQuotes['orderbook'] = quote
+			this.premia.orders.streamQuotes(options, (quote) => {
+				bestQuotes['orderbook'] = quote
 
-			// 	if (
-			// 		this.premia.pricing.best(
-			// 			[quote, bestQuotes['pool'], bestQuotes['vault']],
-			// 			options.size,
-			// 			options.minimumSize
-			// 		) === quote
-			// 	) {
-			// 		callback(quote)
-			// 	}
-			// }),
+				if (
+					this.premia.pricing.best(
+						[quote, bestQuotes['pool'], bestQuotes['vault']],
+						options.size,
+						options.minimumSize
+					) === quote
+				) {
+					callback(quote)
+				}
+			}),
 
 			this.premia.pools.streamQuotes(options, (quote) => {
 				bestQuotes['pool'] = quote
