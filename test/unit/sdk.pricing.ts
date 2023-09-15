@@ -951,8 +951,14 @@ describe('PricingAPI', function (this: any) {
 			{
 				premium: 34043n,
 				maxSlippagePercent: 0.075,
-				isBuy: false,
+				isBuy: true,
 				expected: 36596n,
+			},
+			{
+				premium: 34043n,
+				maxSlippagePercent: 0.075,
+				isBuy: false,
+				expected: 31490,
 			},
 		]
 
