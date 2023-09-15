@@ -619,8 +619,9 @@ export class PoolAPI extends BaseAPI {
 		let initialized = false
 
 		try {
-			const deployCode = await this.premia.provider.getCode(address)
-			initialized = deployCode.length > 2
+			const poolContract = this.premia.contracts.getPoolContract(address)
+			const deployed = await poolContract.deploymentTransaction()
+			initialized = deployed !== null
 		} catch (err) {}
 
 		const oracleContract = await this.premia.contracts.getOracleAdapterContract(

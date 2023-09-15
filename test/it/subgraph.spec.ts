@@ -27,7 +27,7 @@ describe('PremiaSubgraph', function (this: any) {
 	let subgraph: PremiaSubgraph
 
 	const fakeAddress = '0x04Ab08f3F0dec1021930C649760158c4e02589B2'
-	const defaultUser = '0x252f5ef0771ebb83a7efd51644c0dc16b1e429f6'
+	const defaultUser = '0x013cd808529db9e3987a0c72385635be3fa97846'
 
 	const pair: TokenPairOrId = {
 		base: {
@@ -330,7 +330,7 @@ describe('PremiaSubgraph', function (this: any) {
 			expect(user).to.not.be.null
 
 			user = await subgraph.getUserExtended(fakeAddress)
-			expect(user).to.be.null
+			expect(user).to.be.undefined
 		})
 
 		it('#getUsers', async () => {
@@ -370,7 +370,7 @@ describe('PremiaSubgraph', function (this: any) {
 			expect(portfolio).to.not.be.null
 
 			portfolio = await subgraph.getUserPortfolio(fakeAddress)
-			expect(portfolio).to.be.null
+			expect(portfolio).to.be.undefined
 		})
 
 		it('#getUserPortfolioExtended', async () => {
@@ -378,7 +378,7 @@ describe('PremiaSubgraph', function (this: any) {
 			expect(portfolio).to.not.be.null
 
 			portfolio = await subgraph.getUserPortfolioExtended(fakeAddress)
-			expect(portfolio).to.be.null
+			expect(portfolio).to.be.undefined
 		})
 
 		it('#getUserSnapshot', async () => {
