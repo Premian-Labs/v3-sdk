@@ -58,7 +58,8 @@ describe('ContractsAPI', function (this: any) {
 			premia.signer
 		)
 
-		const maturity = moment()
+		const block = await premia.provider.getBlock('latest')
+		const maturity = moment((block?.timestamp ?? 0) * 1000)
 			.utcOffset(0)
 			.add(7, 'd')
 			.day(5)
