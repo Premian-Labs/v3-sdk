@@ -924,40 +924,46 @@ describe('PricingAPI', function (this: any) {
 	describe('#premiumLimit', async () => {
 		let tests = [
 			{
-				premium: 100,
+				premium: parseEther('100'),
 				maxSlippagePercent: 0.05,
 				isBuy: true,
-				expected: 105,
+				expected: parseEther('105'),
 			},
 			{
-				premium: 100,
+				premium: parseEther('100'),
 				maxSlippagePercent: 0,
 				isBuy: true,
-				expected: 100,
+				expected: parseEther('100'),
 			},
 			{
-				premium: 100,
+				premium: parseEther('100'),
 				maxSlippagePercent: 0.05,
 				isBuy: false,
-				expected: 95,
+				expected: parseEther('95'),
 			},
 			{
-				premium: 100,
+				premium: parseEther('100'),
 				maxSlippagePercent: 0,
 				isBuy: false,
-				expected: 100,
+				expected: parseEther('100'),
+			},
+			{
+				premium: 34043n,
+				maxSlippagePercent: 0,
+				isBuy: false,
+				expected: 36596n,
 			},
 		]
 
 		tests.forEach((test) => {
 			it(`should correctly compute the premium limit for slippage=${test.maxSlippagePercent} and isBuy=${test.isBuy}`, async () => {
 				let premiumLimit = premia.pricing.premiumLimit(
-					parseEther(test.premium.toString()),
-					parseEther(test.maxSlippagePercent.toString()),
+					test.premium,
+					test.maxSlippagePercent,
 					test.isBuy
 				)
 
-				expect(premiumLimit).eq(parseEther(test.expected.toString()))
+				expect(premiumLimit).eq(test.expected)
 			})
 		})
 	})

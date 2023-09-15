@@ -84,7 +84,7 @@ export class VaultAPI extends BaseAPI {
 	 * @param {string} isBuy - Whether the quote is a buy quote.
 	 * @param {string} minimumSize - The minimum size of the quote to stream. Only quotes with a size greater than or equal to this will be emitted.
 	 * @param {string} referrer - The referrer address to use for the quote.
-	 * @param {string} maxSlippagePercent - The maximum slippage percent to use for the quote.
+	 * @param {Number} maxSlippagePercent - The maximum slippage percent to use for the quote.
 	 *
 	 * @returns {Promise<FillableQuote | null>} A promise that resolves to the best quote for the given pool.
 	 */
@@ -96,7 +96,7 @@ export class VaultAPI extends BaseAPI {
 		minimumSize?: BigNumberish,
 		referrer?: string,
 		taker?: string,
-		maxSlippagePercent?: BigNumberish
+		maxSlippagePercent?: Number
 	): Promise<FillableQuote | null> {
 		const _size = toBigInt(size)
 		const _minimumSize = minimumSize ? toBigInt(minimumSize) : _size
