@@ -101,6 +101,12 @@ describe('Pool API', async function (this: any) {
 
 		const response = await sdk.pools.deployWithKey(poolKey)
 		await response.wait(1)
+
+		const poolAddress = await sdk.pools.getPoolAddress(poolKey)
+		const poolContract = sdk.contracts.getPoolContract(poolAddress)
+
+		await poolContract.waitForDeployment()
+
 		basePool = await sdk.pools.getPoolMinimalFromKey(poolKey)
 
 		sdk.setDisableCache(false)

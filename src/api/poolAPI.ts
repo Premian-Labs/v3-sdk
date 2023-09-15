@@ -27,10 +27,17 @@ import {
 	TokenPairMinimal,
 	TokenType,
 } from '../entities'
-import { Addresses, CacheTTL, Fees, WAD_BI, ZERO_BI } from '../constants'
+import {
+	Addresses,
+	CacheTTL,
+	Fees,
+	WAD_BI,
+	WAD_DECIMALS,
+	ZERO_BI,
+} from '../constants'
 import { Position } from '../typechain/IPool'
 import { BaseAPI } from './baseAPI'
-import { formatTokenId, sendTransaction } from '../utils'
+import { convertDecimals, formatTokenId, sendTransaction } from '../utils'
 import { snapToValidRange } from '../utils/range'
 
 export enum InvalidQuoteError {
@@ -316,11 +323,12 @@ export class PoolAPI extends BaseAPI {
 	/**
 	 * Returns the takerFee charged when trading with the pool.
 	 * @param poolAddress {string} The contract address of the relevant pool.
-	 * @param size {size} The amount of contracts to be bought / sold.
+	 * @param size {bigint} The amount of contracts to be bought / sold.
 	 * @param premium {bigint} The premium paid for the contracts .
 	 * @param isPremiumNormalized {isPremiumNormalized} Whether the premium is normalized. Relevant for put options where the price can be quoted normalized, which is the price divided by the strike, or unnormalized.
 	 * @param taker {string} The taker's address. Relevant in case staking discounts apply. Default: ZeroAddress.
-	 * @returns {Promise<bigint>} Promise containing the taker fee charged for trading on the exchange.
+	 * @returns {Promise<bigint>} Promise containing the taker fee charged for trading on the exchange,
+	 * 							  denominated in the pool token.
 	 */
 	async takerFee(
 		poolAddress: string,
@@ -330,37 +338,73 @@ export class PoolAPI extends BaseAPI {
 		isOrderbook: boolean = false,
 		taker?: string
 	): Promise<bigint> {
-		try {
-			const poolContract = await this.premia.contracts.getPoolContract(
-				poolAddress
-			)
+		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
 
-			/// @dev: default to calls to chain, but if the pool is not deployed
-			/// 	  yet, use a local calculation (which is subject to potential
-			///       change inaccuracies).
-			if (await poolContract.deployed()) {
-				return poolContract.takerFee(
-					taker ?? ZeroAddress,
-					size,
-					premium,
-					isPremiumNormalized,
-					isOrderbook
-				)
-			}
-		} catch (error) {}
+		const poolDiamond = this.premia.contracts.getPoolDiamondContract()
+		const [_feeFromPoolContract, _poolKey] = await Promise.allSettled([
+			poolContract.takerFee(
+				taker ?? ZeroAddress,
+				size,
+				premium,
+				isPremiumNormalized,
+				isOrderbook
+			),
+			this.getPoolKeyFromAddress(poolAddress),
+		])
 
+		if (_feeFromPoolContract.status === 'fulfilled') {
+			return _feeFromPoolContract.value
+		}
+
+		if (_poolKey.status === 'rejected') {
+			return this.takerFeeSync(size, premium, isOrderbook)
+		}
+
+		const poolKey = _poolKey.value
+
+		const tokenContract = this.premia.contracts.getTokenContract(
+			poolKey.isCallPool ? poolKey.base : poolKey.quote
+		)
+
+		const [_takerFee, tokenDecimals] = await Promise.all([
+			poolDiamond._takerFeeLowLevel(
+				taker ?? ZeroAddress,
+				size,
+				premium,
+				isPremiumNormalized,
+				isOrderbook,
+				poolKey.strike,
+				poolKey.isCallPool
+			),
+
+			tokenContract.decimals(),
+		])
+
+		return convertDecimals(_takerFee, WAD_DECIMALS, tokenDecimals)
+	}
+
+	/**
+	 * Returns the takerFee charged when trading with the pool.
+	 * Calculated synchronously (may be outdated, does not include taker discounts)
+	 * @param poolAddress {string} The contract address of the relevant pool.
+	 * @param size {bigint} The amount of contracts to be bought / sold.
+	 * @param premiumWad {bigint} The non-normalized premium paid for the contracts.
+	 * @param isOrderbook  {boolean} Whether the trade is an orderbook trade.
+	 * @returns {bigint} The taker fee charged for trading on the exchange denominated in 18 decimals.
+	 */
+	takerFeeSync(size: bigint, premiumWad: bigint, isOrderbook: boolean = false) {
 		if (isOrderbook) {
 			const sizeBased = (Fees.ORDERBOOK_NOTIONAL_FEE_PERCENT * size) / WAD_BI
-			const maxFee = (Fees.MAX_PREMIUM_FEE_PERCENT * premium) / WAD_BI
+			const maxFee = (Fees.MAX_PREMIUM_FEE_PERCENT * premiumWad) / WAD_BI
 			return sizeBased > maxFee ? maxFee : sizeBased
 		}
 
 		const sizeBased = (size * Fees.NOTIONAL_FEE_PERCENT) / WAD_BI
-		const premiumBased = (premium * Fees.PREMIUM_FEE_PERCENT) / WAD_BI
+		const premiumBased = (premiumWad * Fees.PREMIUM_FEE_PERCENT) / WAD_BI
 		const maxFee =
-			premium === ZERO_BI
+			premiumWad === ZERO_BI
 				? sizeBased
-				: (Fees.MAX_PREMIUM_FEE_PERCENT * premium) / WAD_BI
+				: (Fees.MAX_PREMIUM_FEE_PERCENT * premiumWad) / WAD_BI
 
 		const fee = sizeBased > premiumBased ? sizeBased : premiumBased
 		return fee > maxFee ? maxFee : fee
@@ -430,7 +474,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param {boolean} isBuy - Whether it's a buy or sell.
 	 * @param {string} [referrer] - The address of the referrer.
 	 * @param {string} [taker] - The address of the taker.
-	 * @param {BigNumberish} [maxSlippagePercent] - The maximum slippage percent.
+	 * @param {Number} [maxSlippagePercent] - The maximum slippage percent.
 	 * @returns {Promise<FillableQuote>} A promise that resolves to the fillable quote.
 	 */
 	@withCache(CacheTTL.SECOND)
@@ -440,7 +484,7 @@ export class PoolAPI extends BaseAPI {
 		isBuy: boolean,
 		referrer?: string,
 		taker?: string,
-		maxSlippagePercent?: BigNumberish
+		maxSlippagePercent?: Number
 	): Promise<FillableQuote> {
 		const _size = toBigInt(size)
 		const pool = this.premia.contracts.getPoolContract(poolAddress)
@@ -575,8 +619,9 @@ export class PoolAPI extends BaseAPI {
 		let initialized = false
 
 		try {
-			const deployCode = await this.premia.provider.getCode(address)
-			initialized = deployCode.length > 2
+			const poolContract = this.premia.contracts.getPoolContract(address)
+			const deployed = await poolContract.deploymentTransaction()
+			initialized = deployed !== null
 		} catch (err) {}
 
 		const oracleContract = await this.premia.contracts.getOracleAdapterContract(

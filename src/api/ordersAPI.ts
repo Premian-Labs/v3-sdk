@@ -13,8 +13,8 @@ import { isEqual } from 'lodash'
 
 import { BaseAPI } from './baseAPI'
 import { withCache } from '../cache'
-import { signData } from '../utils'
-import { Addresses, CacheTTL } from '../constants'
+import { convertDecimals, signData } from '../utils'
+import { Addresses, CacheTTL, WAD_BI, WAD_DECIMALS } from '../constants'
 import {
 	EIP712Domain,
 	FillableQuote,
@@ -94,34 +94,55 @@ export class OrdersAPI extends BaseAPI {
 		referrer?: string
 	): Promise<FillableQuote> {
 		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const price = toBigInt(quote.price)
 		const _size =
 			toBigInt(size) > toBigInt(quote.size)
 				? toBigInt(quote.size)
 				: toBigInt(size)
-		const premium = (_size * toBigInt(quote.price)) / BigInt(10 ** 18)
+		const normalizedPremium = (_size * price) / WAD_BI
 
-		const takerFee = await this.premia.pools.takerFee(
-			poolAddress,
-			_size,
-			premium,
-			false,
-			true,
-			quote.taker
+		const [pool, takerFee] = await Promise.all([
+			this.premia.pools.getPool(poolAddress),
+			this.premia.pools.takerFee(
+				poolAddress,
+				_size,
+				normalizedPremium,
+				true,
+				true,
+				quote.taker
+			),
+		])
+
+		const denormalizedPrice = pool.isCall
+			? price
+			: (price * toBigInt(pool.strike)) / WAD_BI
+		const convertedPrice = convertDecimals(
+			denormalizedPrice,
+			WAD_DECIMALS,
+			pool.collateralAsset.decimals
 		)
+
+		const premium = convertDecimals(
+			(_size * denormalizedPrice) / WAD_BI,
+			WAD_DECIMALS,
+			pool.collateralAsset.decimals
+		)
+
+		const approvalAmount = quote.isBuy
+			? _size - premium + takerFee
+			: premium + takerFee
 
 		return {
 			...quote,
 			createdAt,
 			deadline: toBigInt(quote.deadline),
-			price: toBigInt(quote.price),
+			price: convertedPrice,
 			salt: toBigInt(quote.salt),
 			size: _size,
 			takerFee,
 			poolAddress,
 			approvalTarget: Addresses[this.premia.chainId].ERC20_ROUTER,
-			approvalAmount: quote.isBuy
-				? premium + takerFee
-				: _size - premium + takerFee,
+			approvalAmount,
 			to: poolAddress,
 			data: poolContract.interface.encodeFunctionData('fillQuoteOB', [
 				quote,

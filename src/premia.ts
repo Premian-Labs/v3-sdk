@@ -191,6 +191,13 @@ export interface PremiaConfig
 	poolFactoryAddress?: string
 
 	/**
+	 * The address of the PremiaDiamond contract (on Arbitrum).
+	 * @defaultValue {@link Premia.poolDiamondAddress}
+	 * @see https://docs.premia.finance/contracts/pools
+	 */
+	poolDiamondAddress?: string
+
+	/**
 	 * The address of the UserSettings contract (on Arbitrum).
 	 *
 	 * @defaultValue {@link Premia.userSettingsAddress}
@@ -465,6 +472,7 @@ export class Premia {
 		if (Object.values(SupportedChainId).includes(this.chainId)) {
 			this.contracts.setOrderbookAddress(config.orderbookAddress!)
 			this.contracts.setPoolFactoryAddress(config.poolFactoryAddress!)
+			this.contracts.setPoolDiamondAddress(config.poolDiamondAddress!)
 			this.contracts.setVaultRegistryAddress(config.vaultRegistryAddress!)
 			this.contracts.setUserSettingsAddress(config.userSettingsAddress!)
 			this.contracts.setVxPremiaAddress(config.vxPremiaAddress!)
@@ -547,6 +555,8 @@ export class Premia {
 			Addresses[merged.orderbookChainId as keyof typeof Addresses].ORDERBOOK
 		merged.poolFactoryAddress =
 			Addresses[merged.chainId as keyof typeof Addresses].POOL_FACTORY
+		merged.poolDiamondAddress =
+			Addresses[merged.chainId as keyof typeof Addresses].POOL_DIAMOND
 		merged.vaultRegistryAddress =
 			Addresses[merged.chainId as keyof typeof Addresses].VAULT_REGISTRY
 		merged.userSettingsAddress =
@@ -767,6 +777,13 @@ export class Premia {
 	}
 
 	/**
+	 * @param diamondAddress - {@link PremiaConfig.poolDiamondAddress}
+	 */
+	setPoolDiamondAddress(diamondAddress: string) {
+		this.contracts.setPoolDiamondAddress(diamondAddress)
+	}
+
+	/**
 	 * @param registryAddress - {@link PremiaConfig.vaultRegistryAddress}
 	 */
 	setVaultRegistryAddress(registryAddress: string) {
@@ -830,6 +847,7 @@ export class Premia {
 			coingeckoProApiKey: this.coingeckoProApiKey,
 			orderbookAddress: this.contracts.orderbookAddress,
 			poolFactoryAddress: this.contracts.poolFactoryAddress,
+			poolDiamondAddress: this.contracts.poolDiamondAddress,
 			vaultRegistryAddress: this.contracts.vaultRegistryAddress,
 			userSettingsAddress: this.contracts.userSettingsAddress,
 		}
