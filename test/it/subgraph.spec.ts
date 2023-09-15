@@ -27,7 +27,7 @@ describe('PremiaSubgraph', function (this: any) {
 	let subgraph: PremiaSubgraph
 
 	const fakeAddress = '0x04Ab08f3F0dec1021930C649760158c4e02589B2'
-	const defaultUser = '0x013cd808529db9e3987a0c72385635be3fa97846'
+	const defaultUser = '0x252f5ef0771ebb83a7efd51644c0dc16b1e429f6'
 
 	const pair: TokenPairOrId = {
 		base: {
@@ -138,6 +138,7 @@ describe('PremiaSubgraph', function (this: any) {
 
 			let pool = await subgraph.getPoolMinimal(poolAddress)
 			expect(pool).to.not.be.null
+			expect(pool).to.not.be.undefined
 
 			pool = await subgraph.getPoolMinimal(fakeAddress)
 			expect(pool).to.be.null
@@ -148,6 +149,7 @@ describe('PremiaSubgraph', function (this: any) {
 
 			let pool = await subgraph.getPool(poolAddress)
 			expect(pool).to.not.be.null
+			expect(pool).to.not.be.undefined
 
 			pool = await subgraph.getPool(fakeAddress)
 			expect(pool).to.be.null
@@ -158,6 +160,7 @@ describe('PremiaSubgraph', function (this: any) {
 
 			let pool = await subgraph.getPoolExtended(poolAddress)
 			expect(pool).to.not.be.null
+			expect(pool).to.not.be.undefined
 
 			pool = await subgraph.getPoolExtended(fakeAddress)
 			expect(pool).to.be.null
@@ -239,6 +242,7 @@ describe('PremiaSubgraph', function (this: any) {
 		it('#getToken', async () => {
 			let _token = await subgraph.getToken(token.address)
 			expect(_token).to.not.be.null
+			expect(_token).to.not.be.undefined
 
 			_token = await subgraph.getToken(fakeToken.address)
 			expect(_token).to.be.null
@@ -247,6 +251,7 @@ describe('PremiaSubgraph', function (this: any) {
 		it('#getTokenExtended', async () => {
 			let _token = await subgraph.getTokenExtended(token.address)
 			expect(_token).to.not.be.null
+			expect(_token).to.not.be.undefined
 
 			_token = await subgraph.getTokenExtended(fakeToken.address)
 			expect(_token).to.be.null
@@ -298,11 +303,13 @@ describe('PremiaSubgraph', function (this: any) {
 		it('#getPair', async () => {
 			const tokenPair = await subgraph.getPair(minimalPair)
 			expect(tokenPair).to.not.be.null
+			expect(tokenPair).to.not.be.undefined
 		})
 
 		it('#getPairExtended', async () => {
 			const tokenPair = await subgraph.getPairExtended(minimalPair)
 			expect(tokenPair).to.not.be.null
+			expect(tokenPair).to.not.be.undefined
 		})
 
 		it('#getPairs', async () => {
@@ -320,6 +327,7 @@ describe('PremiaSubgraph', function (this: any) {
 		it('#getUser', async () => {
 			let user = await subgraph.getUser(defaultUser)
 			expect(user).to.not.be.null
+			expect(user).to.not.be.undefined
 
 			user = await subgraph.getUser(fakeAddress)
 			expect(user).to.be.null
@@ -328,6 +336,7 @@ describe('PremiaSubgraph', function (this: any) {
 		it('#getUserExtended', async () => {
 			let user = await subgraph.getUserExtended(defaultUser)
 			expect(user).to.not.be.null
+			expect(user).to.not.be.undefined
 
 			user = await subgraph.getUserExtended(fakeAddress)
 			expect(user).to.be.undefined
@@ -368,6 +377,7 @@ describe('PremiaSubgraph', function (this: any) {
 		it('#getUserPortfolio', async () => {
 			let portfolio = await subgraph.getUserPortfolio(defaultUser)
 			expect(portfolio).to.not.be.null
+			expect(portfolio).to.not.be.undefined
 
 			portfolio = await subgraph.getUserPortfolio(fakeAddress)
 			expect(portfolio).to.be.undefined
@@ -376,6 +386,7 @@ describe('PremiaSubgraph', function (this: any) {
 		it('#getUserPortfolioExtended', async () => {
 			let portfolio = await subgraph.getUserPortfolioExtended(defaultUser)
 			expect(portfolio).to.not.be.null
+			expect(portfolio).to.not.be.undefined
 
 			portfolio = await subgraph.getUserPortfolioExtended(fakeAddress)
 			expect(portfolio).to.be.undefined
@@ -475,7 +486,6 @@ describe('PremiaSubgraph', function (this: any) {
 	describe('OptionPositionQuery', async () => {
 		it('#getOptionPositionsExtendedForUser', async () => {
 			let owner = '0x9e600587b9035a8c1254e8256f4e588cc33b8467'
-
 			let positions = await subgraph.getOptionPositionsExtendedForUser(owner)
 
 			expect(positions.length).to.be.greaterThan(0)
@@ -485,7 +495,6 @@ describe('PremiaSubgraph', function (this: any) {
 	describe('LiquidityPositionQuery', async () => {
 		it('#getLiquidityPositionsExtendedForUser', async () => {
 			let owner = '0x9e600587b9035a8c1254e8256f4e588cc33b8467'
-
 			let positions = await subgraph.getLiquidityPositionsExtendedForUser(owner)
 
 			expect(positions.length).to.be.greaterThan(0)
@@ -521,6 +530,7 @@ describe('PremiaSubgraph', function (this: any) {
 			const vault = await subgraph.getVault(vaultAddress)
 
 			expect(vault).to.not.be.null
+			expect(vault).to.not.be.undefined
 		})
 
 		it('#getVaultExtended', async () => {
@@ -529,6 +539,7 @@ describe('PremiaSubgraph', function (this: any) {
 			const vault = await subgraph.getVaultExtended(vaultAddress)
 
 			expect(vault).to.not.be.null
+			expect(vault).to.not.be.undefined
 		})
 
 		it('#getVaults', async () => {
