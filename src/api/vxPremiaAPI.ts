@@ -244,9 +244,10 @@ export class VxPremiaAPI extends BaseAPI {
 	}
 
 	/**
-	 * Gets the fee a user would have to pay to unstake early.
+	 * Gets the fee percentage a user would have to pay to unstake early.
+	 * (fee percentage * lock amount = fee amount)
 	 * @param {string} user - The address of the user.
-	 * @returns {Promise<bigint>} - A promise that resolves to fee for unstaking early.
+	 * @returns {Promise<bigint>} - A promise that resolves to fee percentage for unstaking early.
 	 */
 	async getEarlyUnstakeFee(user: string): Promise<bigint> {
 		const contract = this.premia.contracts.getVxPremiaContract()
