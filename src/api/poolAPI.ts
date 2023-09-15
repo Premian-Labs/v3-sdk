@@ -474,7 +474,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param {boolean} isBuy - Whether it's a buy or sell.
 	 * @param {string} [referrer] - The address of the referrer.
 	 * @param {string} [taker] - The address of the taker.
-	 * @param {BigNumberish} [maxSlippagePercent] - The maximum slippage percent.
+	 * @param {Number} [maxSlippagePercent] - The maximum slippage percent.
 	 * @returns {Promise<FillableQuote>} A promise that resolves to the fillable quote.
 	 */
 	@withCache(CacheTTL.SECOND)
@@ -484,7 +484,7 @@ export class PoolAPI extends BaseAPI {
 		isBuy: boolean,
 		referrer?: string,
 		taker?: string,
-		maxSlippagePercent?: BigNumberish
+		maxSlippagePercent?: Number
 	): Promise<FillableQuote> {
 		const _size = toBigInt(size)
 		const pool = this.premia.contracts.getPoolContract(poolAddress)
@@ -619,8 +619,9 @@ export class PoolAPI extends BaseAPI {
 		let initialized = false
 
 		try {
-			const deployCode = await this.premia.provider.getCode(address)
-			initialized = deployCode.length > 2
+			const poolContract = this.premia.contracts.getPoolContract(address)
+			const deployed = await poolContract.deploymentTransaction()
+			initialized = deployed !== null
 		} catch (err) {}
 
 		const oracleContract = await this.premia.contracts.getOracleAdapterContract(

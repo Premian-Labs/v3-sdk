@@ -74,7 +74,8 @@ describe('PricingAPI', function (this: any) {
 			premia.signer
 		)
 
-		const maturity = moment()
+		const block = await premia.provider.getBlock('latest')
+		const maturity = moment((block?.timestamp ?? 0) * 1000)
 			.utcOffset(0)
 			.add(7, 'd')
 			.day(5)
@@ -924,40 +925,52 @@ describe('PricingAPI', function (this: any) {
 	describe('#premiumLimit', async () => {
 		let tests = [
 			{
-				premium: 100,
+				premium: parseEther('100'),
 				maxSlippagePercent: 0.05,
 				isBuy: true,
-				expected: 105,
+				expected: parseEther('105'),
 			},
 			{
-				premium: 100,
+				premium: parseEther('100'),
 				maxSlippagePercent: 0,
 				isBuy: true,
-				expected: 100,
+				expected: parseEther('100'),
 			},
 			{
-				premium: 100,
+				premium: parseEther('100'),
 				maxSlippagePercent: 0.05,
 				isBuy: false,
-				expected: 95,
+				expected: parseEther('95'),
 			},
 			{
-				premium: 100,
+				premium: parseEther('100'),
 				maxSlippagePercent: 0,
 				isBuy: false,
-				expected: 100,
+				expected: parseEther('100'),
+			},
+			{
+				premium: 34043n,
+				maxSlippagePercent: 0.075,
+				isBuy: true,
+				expected: 36596n,
+			},
+			{
+				premium: 34043n,
+				maxSlippagePercent: 0.075,
+				isBuy: false,
+				expected: 31490n,
 			},
 		]
 
 		tests.forEach((test) => {
 			it(`should correctly compute the premium limit for slippage=${test.maxSlippagePercent} and isBuy=${test.isBuy}`, async () => {
 				let premiumLimit = premia.pricing.premiumLimit(
-					parseEther(test.premium.toString()),
-					parseEther(test.maxSlippagePercent.toString()),
+					test.premium,
+					test.maxSlippagePercent,
 					test.isBuy
 				)
 
-				expect(premiumLimit).eq(parseEther(test.expected.toString()))
+				expect(premiumLimit).eq(test.expected)
 			})
 		})
 	})

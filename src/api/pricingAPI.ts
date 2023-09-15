@@ -1,4 +1,4 @@
-import { BigNumberish, FixedNumber, toBigInt } from 'ethers'
+import { BigNumberish, FixedNumber, parseEther, toBigInt } from 'ethers'
 import { emitWarning } from 'process'
 
 import { FillableQuote, QuoteOrFillableQuoteT } from '../entities'
@@ -217,18 +217,21 @@ export class PricingAPI extends BaseAPI {
 	 * for a 'sell', the premium limit is decreased by the slippage offset.
 	 *
 	 * @param {BigNumberish} premium - The premium value used as the base for limit calculation.
-	 * @param {BigNumberish} maxSlippagePercent - The maximum slippage percentage to calculate the offset.
+	 * @param {Number} maxSlippagePercent - The maximum slippage percentage to calculate the offset.
 	 * @param {boolean} isBuy - A flag indicating whether the operation is a 'buy' or 'sell'.
 	 *
 	 * @returns {bigint} The calculated limit for the premium considering the slippage.
 	 */
 	premiumLimit(
 		premium: BigNumberish,
-		maxSlippagePercent: BigNumberish,
+		maxSlippagePercent: Number,
 		isBuy: boolean
 	): bigint {
 		const _premium = FixedNumber.fromValue(premium, 18)
-		const _slippagePercent = FixedNumber.fromValue(maxSlippagePercent, 18)
+		const _slippagePercent = FixedNumber.fromValue(
+			parseEther(String(maxSlippagePercent)),
+			18
+		)
 		const offset = _premium.mul(_slippagePercent)
 
 		if (isBuy) {
