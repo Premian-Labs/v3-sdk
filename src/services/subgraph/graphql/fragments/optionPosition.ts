@@ -1,16 +1,25 @@
 import { gql } from '@apollo/client/core'
 
 import { PoolFragment } from './pool'
+import { OptionPhysicallySettledFragment } from './option'
 import { VaultFragment } from './vault'
+import { TokenFragment } from './token'
 
 export const OptionPositionFragment = gql`
-	${PoolFragment}
+	${TokenFragment}
 
 	fragment OptionPosition on OptionPosition {
 		id
-		pool {
-			...Pool
+		base {
+			...Token
 		}
+		quote {
+			...Token
+		}
+		strike
+		maturity
+		optionType
+		isCall
 		owner {
 			address
 		}
@@ -27,10 +36,20 @@ export const OptionPositionFragment = gql`
 
 export const OptionPositionExtendedFragment = gql`
 	${OptionPositionFragment}
+	${PoolFragment}
+	${OptionPhysicallySettledFragment}
 	${VaultFragment}
 
 	fragment OptionPositionExtended on OptionPosition {
 		...OptionPosition
+
+		pool {
+			...Pool
+		}
+
+		option {
+			...OptionPhysicallySettled
+		}
 
 		vault {
 			...Vault
