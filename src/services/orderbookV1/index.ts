@@ -7,7 +7,7 @@ import {
 	SerializedQuoteSaltOptional,
 	OrderbookQuote,
 	PublishQuoteResponse,
-	OrdersAPIResponse
+	GetOrdersResponse
 } from '../../entities'
 import {
 	AuthMessage,
@@ -147,7 +147,7 @@ export class OrderbookV1 {
 		side?: 'bid' | 'ask',
 		provider?: string,
 		chainId: string = String(this.chainId)
-	): Promise <OrdersAPIResponse> {
+	): Promise <GetOrdersResponse> {
 		const _poolAddress = poolAddress ? `poolAddress=${poolAddress}`: ''
 		const _size = size ? `&size=${size}`: ''
 		const _side = side ? `&side=${side}`: ''

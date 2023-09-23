@@ -99,10 +99,10 @@ export interface InvalidQuote {
 export interface PublishQuoteResponse {
 	created: OrderbookQuote[]
 	failed: InvalidQuote[]
-	exists: Omit<OrderbookQuote, 'fillableSize' & 'ts'>[]
+	exists: OrderbookQuote[]
 }
 
-export interface OrdersAPIResponse {
+export interface GetOrdersResponse {
 	validQuotes: OrderbookQuote[]
 	invalidQuotes: InvalidQuote[]
 }
