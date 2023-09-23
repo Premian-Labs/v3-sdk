@@ -7,27 +7,22 @@ export const OptionPhysicallySettledFragment = gql`
 
 	fragment OptionPhysicallySettled on OptionPhysicallySettled {
 		id
+		address
+		name
 		base {
 			...Token
 		}
 		quote {
 			...Token
 		}
-		strike
-		maturity
 		optionType
 		isCall
-		owner {
-			address
+		collateralAsset {
+			...Token
 		}
-		isBuy
-		tokenType
-		createdAt
-		createdAtBlock
-		closedAt
-		closedAtBlock
-
-		size
+		strikeAsset {
+			...Token
+		}
 	}
 `
 
