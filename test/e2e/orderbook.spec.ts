@@ -609,7 +609,7 @@ describe('OrderbookV1', () => {
 	it('should return all public quotes for a given market sorted by ts', async () => {
 		// get all quotes which is sorted by timestamp not price
 		const orders = await orderbook.getOrders(poolAddress)
-		expect(isTsSorted(orders)).to.eq(true)
+		expect(isTsSorted(orders.validQuotes)).to.eq(true)
 	})
 
 	it('should properly prevent duplication of orders', async () => {
