@@ -438,7 +438,7 @@ describe('OrderbookV1', () => {
 		const fillSize = parseEther('.01')
 		await fillQuote(quote, fillSize)
 		console.log('Waiting for Moralis to send fillQuoteOB event to Redis')
-		await delay(30000)
+		await delay(45000)
 		const updatedQuote = (await orderbook.getQuotes(
 			poolAddress,
 			parseEther('100').toString(),
@@ -459,7 +459,7 @@ describe('OrderbookV1', () => {
 		const fillSize = parseEther('.09')
 		await fillQuote(quote, fillSize)
 		console.log('Waiting for Moralis to send fillQuoteOB event to Redis')
-		await delay(30000)
+		await delay(45000)
 		const updatedQuote = (await orderbook.getQuotes(
 			poolAddress,
 			parseEther('100').toString(),
@@ -489,7 +489,7 @@ describe('OrderbookV1', () => {
 
 		await cancelQuote(quoteId)
 		console.log('Waiting for Moralis to send cancelQuote event to Redis')
-		await delay(30000)
+		await delay(45000)
 		const updatedQuotes = (await orderbook.getQuotes(
 			poolAddress,
 			parseEther('100').toString(),
@@ -609,7 +609,7 @@ describe('OrderbookV1', () => {
 	it('should return all public quotes for a given market sorted by ts', async () => {
 		// get all quotes which is sorted by timestamp not price
 		const orders = await orderbook.getOrders(poolAddress)
-		expect(isTsSorted(orders)).to.eq(true)
+		expect(isTsSorted(orders.validQuotes)).to.eq(true)
 	})
 
 	it('should properly prevent duplication of orders', async () => {
