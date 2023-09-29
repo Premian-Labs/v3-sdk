@@ -17,6 +17,7 @@ export enum TokenTypeString {
 }
 
 export interface OptionPosition {
+	id: string;
 	base: Token
 	quote: Token
 	strike: BigNumberish
