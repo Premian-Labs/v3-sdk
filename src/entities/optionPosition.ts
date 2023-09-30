@@ -18,12 +18,14 @@ export enum TokenTypeString {
 
 export interface OptionPosition {
 	id: string
+	address: string
 	base: Token
 	quote: Token
 	strike: BigNumberish
 	maturity: BigNumberish
 	optionType: OptionType
 	isCall: boolean
+	spotPrice: BigNumberish
 	owner: User
 	isBuy: boolean
 	tokenType: TokenTypeString

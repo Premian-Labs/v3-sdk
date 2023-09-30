@@ -10,6 +10,7 @@ export const OptionPositionFragment = gql`
 
 	fragment OptionPosition on OptionPosition {
 		id
+		address
 		base {
 			...Token
 		}
@@ -20,6 +21,7 @@ export const OptionPositionFragment = gql`
 		maturity
 		optionType
 		isCall
+		spotPrice
 		owner {
 			address
 		}
