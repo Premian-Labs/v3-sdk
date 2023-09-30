@@ -3,6 +3,8 @@ import { BigNumberish } from 'ethers'
 import { Pool } from './pool'
 import { Vault } from './vault'
 import { User } from './user'
+import { OptionPhysicallySettled, OptionType } from './option'
+import { Token } from './token'
 
 export enum TokenType {
 	SHORT = 0,
@@ -15,7 +17,13 @@ export enum TokenTypeString {
 }
 
 export interface OptionPosition {
-	pool: Pool
+	id: string
+	base: Token
+	quote: Token
+	strike: BigNumberish
+	maturity: BigNumberish
+	optionType: OptionType
+	isCall: boolean
 	owner: User
 	isBuy: boolean
 	tokenType: TokenTypeString
@@ -28,6 +36,8 @@ export interface OptionPosition {
 }
 
 export interface OptionPositionExtended extends OptionPosition {
+	pool?: Pool
+	option?: OptionPhysicallySettled
 	vault?: Vault
 
 	size: BigNumberish

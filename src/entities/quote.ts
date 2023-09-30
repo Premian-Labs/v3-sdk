@@ -49,15 +49,6 @@ export interface OrderbookQuote extends SerializedQuote {
 	ts: number
 }
 
-export interface PublishQuoteResponse {
-	created: OrderbookQuote[]
-	failed: {
-		reason: any
-		invalidQuote: SerializedQuote
-	}[]
-	exists: Omit<OrderbookQuote, 'fillableSize' & 'ts'>[]
-}
-
 export interface SerializedQuote {
 	poolKey: PoolKey
 	provider: string
@@ -98,4 +89,20 @@ export interface Domain {
 	version: string
 	chainId: string
 	verifyingContract: string
+}
+
+export interface InvalidQuote {
+	quote: OrderbookQuote
+	message: string
+}
+
+export interface PublishQuoteResponse {
+	created: OrderbookQuote[]
+	failed: InvalidQuote[]
+	exists: OrderbookQuote[]
+}
+
+export interface GetOrdersResponse {
+	validQuotes: OrderbookQuote[]
+	invalidQuotes: InvalidQuote[]
 }
