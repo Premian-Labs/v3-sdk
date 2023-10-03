@@ -33,6 +33,7 @@ export interface LiquidityPosition {
 	closedAt?: BigNumberish
 	closedAtBlock?: BigNumberish
 
+	size: BigNumberish
 	collateral: BigNumberish
 	longs: BigNumberish
 	shorts: BigNumberish
@@ -54,10 +55,8 @@ export interface LiquidityPositionExtended extends LiquidityPosition {
 	shorts: BigNumberish
 	shortsETH: BigNumberish
 	shortsUSD: BigNumberish
-	initialSize: BigNumberish
 	initialLongs: BigNumberish
 	initialShorts: BigNumberish
-	initialMarketPrice: BigNumberish
 
 	lastFeeRate: BigNumberish
 	claimableFees: BigNumberish

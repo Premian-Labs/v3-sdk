@@ -24,6 +24,7 @@ export const LiquidityPositionFragment = gql`
 		closedAt
 		closedAtBlock
 
+		size
 		collateral
 		longs
 		shorts
@@ -54,10 +55,8 @@ export const LiquidityPositionExtendedFragment = gql`
 		shorts
 		shortsETH
 		shortsUSD
-		initialSize
 		initialLongs
 		initialShorts
-		initialMarketPrice
 
 		lastFeeRate
 		claimableFees
