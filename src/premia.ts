@@ -578,6 +578,14 @@ export class Premia {
 	}
 
 	/**
+	 * @param [updateConfig] - {@link PremiaConfig}
+	 */
+	updateConfig(config: PremiaConfig = {}) {
+		const finalConfig = Premia.getDefaultConfig(config)
+		this.setSignerSync(finalConfig)
+	}
+
+	/**
 	 * @param uri - A uri associated with the PremiaSubgraph.
 	 */
 	set subgraphUri(uri: string) {
