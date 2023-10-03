@@ -620,7 +620,7 @@ export class PoolAPI extends BaseAPI {
 
 		try {
 			const poolContract = this.premia.contracts.getPoolContract(address)
-			const deployed = await poolContract.deploymentTransaction()
+			const deployed = await poolContract.getDeployedCode()
 			initialized = deployed !== null
 		} catch (err) {}
 
