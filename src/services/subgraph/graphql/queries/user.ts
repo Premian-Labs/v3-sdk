@@ -153,6 +153,19 @@ export class UserQuery {
 	}
 
 	@addFields
+	static GetAllUsers(subgraph: PremiaSubgraph): DocumentNode {
+		return gql`
+			${UserFragment}
+
+			{
+				users {
+					...User
+				}
+			}
+		`
+	}
+
+	@addFields
 	static GetUserSnapshots(
 		subgraph: PremiaSubgraph,
 		address: string,

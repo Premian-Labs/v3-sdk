@@ -653,6 +653,13 @@ export class PremiaSubgraph {
 		return get(response, 'data.users', []) as UserExtended[]
 	}
 
+	async getAllUsers(): Promise<User[]> {
+		const response = await this.client.query({
+			query: UserQuery.GetAllUsers(this),
+		})
+		return get(response, 'data.users', []) as User[]
+	}
+
 	async getUserSnapshot(
 		address: string,
 		timestamp: BigNumberish

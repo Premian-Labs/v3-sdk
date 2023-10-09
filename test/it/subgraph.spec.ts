@@ -27,7 +27,7 @@ describe('PremiaSubgraph', function (this: any) {
 	let subgraph: PremiaSubgraph
 
 	const fakeAddress = '0x04Ab08f3F0dec1021930C649760158c4e02589B2'
-	const defaultUser = '0x252f5ef0771ebb83a7efd51644c0dc16b1e429f6'
+	let defaultUser
 
 	const pair: TokenPairOrId = {
 		base: {
@@ -73,22 +73,6 @@ describe('PremiaSubgraph', function (this: any) {
 			Addresses[SupportedChainId.ARBITRUM_GOERLI].CHAINLINK_ORACLE_ADAPTER,
 		name: 'Fake WETH Chainlink / USDC Chainlink',
 	}
-
-	// const wbtcMinimalPair: TokenPairMinimal = {
-	// 	base: {
-	// 		address: Addresses[SupportedChainId.ARBITRUM_GOERLI].WBTC,
-	// 		symbol: 'WBTC',
-	// 		decimals: 18,
-	// 	},
-	// 	quote: {
-	// 		address: Addresses[SupportedChainId.ARBITRUM_GOERLI].USDC,
-	// 		symbol: 'USDC',
-	// 		decimals: 6,
-	// 	},
-	// 	priceOracleAddress:
-	// 		Addresses[SupportedChainId.ARBITRUM_GOERLI].CHAINLINK_ORACLE_ADAPTER,
-	// 	name: 'WBTC Chainlink / USDC Chainlink',
-	// }
 
 	const token: Token = {
 		chainId: SupportedChainId.ARBITRUM_GOERLI,
@@ -324,6 +308,13 @@ describe('PremiaSubgraph', function (this: any) {
 	})
 
 	describe('UserQuery', () => {
+		before(async () => {
+			const users = await subgraph.getAllUsers()
+			expect(users).to.not.be.empty
+
+			defaultUser = users[0].address
+		})
+
 		it('#getUser', async () => {
 			let user = await subgraph.getUser(defaultUser)
 			expect(user).to.not.be.null
