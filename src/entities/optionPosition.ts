@@ -9,11 +9,13 @@ import { Token } from './token'
 export enum TokenType {
 	SHORT = 0,
 	LONG = 1,
+	LONGEXERCISED = 2,
 }
 
 export enum TokenTypeString {
 	SHORT = 'SHORT',
 	LONG = 'LONG',
+	LONGEXERCISED = 'LONGEXERCISED',
 }
 
 export interface OptionPosition {

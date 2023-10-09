@@ -28,6 +28,8 @@ import {
 	OrderbookStream__factory,
 	ISolidStateERC20,
 	ISolidStateERC20__factory,
+	IOptionPS,
+	IOptionPS__factory,
 } from '../typechain'
 import { BaseAPI } from './baseAPI'
 
@@ -339,6 +341,24 @@ export class ContractAPI extends BaseAPI {
 	getVaultMiningContract(provider?: Provider): IVaultMining {
 		return IVaultMining__factory.connect(
 			this.vaultMiningAddress,
+			provider ?? (this.premia.signer || this.premia.provider)
+		)
+	}
+
+	/**
+	 * Connects to a optionPS contract at a given address using a provider.
+	 *
+	 * This function uses the `IPool__factory` to connect to a pool contract on the blockchain.
+	 * If no provider is specified, it will default to using the signer or provider from the `premia` object.
+	 *
+	 * @param {string} optionPSAddress - The address of the pool contract to connect to.
+	 * @param {Provider} [provider] - The provider to use for the connection. If not specified, the function defaults to using `this.premia.signer` or `this.premia.provider`.
+	 * @return {IPool} The connected pool contract instance.
+	 * @throws Will throw an error if the connection to the contract fails.
+	 */
+	getOptionPSContract(optionPSAddress: string, provider?: Provider): IOptionPS {
+		return IOptionPS__factory.connect(
+			optionPSAddress,
 			provider ?? (this.premia.signer || this.premia.provider)
 		)
 	}
