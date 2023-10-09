@@ -1,12 +1,15 @@
 {
 	"name": "@premia/v3-sdk-public",
-	"version": "0.6.2",
+	"version": "0.6.3",
 	"description": "The official SDK for building applications on Premia V3",
 	"main": "dist/index.js",
 	"typings": "dist/index.d.ts",
 	"files": [
 		"dist",
-		"src/abi/*.json"
+		"docs",
+		"scripts",
+		"src",
+		"abi"
 	],
 	"author": "research@premia.finance",
 	"license": "BSD-3-Clause",
@@ -28,7 +31,7 @@
 	],
 	"scripts": {
 		"docs": "npx typedoc src/index.ts",
-		"build": "yarn copy:abi && yarn postinstall && tsc",
+		"build": "yarn copy:abi && yarn docs && yarn postinstall && tsc",
 		"copy:abi": "ts-node scripts/copyAbiToDist.ts",
 		"prepublishOnly": "yarn build",
 		"postinstall": "yarn copy:abi && npx typechain --target ethers-v6 --out-dir \"./src/typechain\" \"./abi/*.json\"",
