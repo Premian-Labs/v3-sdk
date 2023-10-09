@@ -1,6 +1,6 @@
 {
 	"name": "@premia/v3-sdk-public",
-	"version": "0.6.0",
+	"version": "0.6.1",
 	"description": "The official SDK for building applications on Premia V3",
 	"main": "dist/index.js",
 	"typings": "dist/index.d.ts",
@@ -28,9 +28,10 @@
 	],
 	"scripts": {
 		"docs": "npx typedoc src/index.ts",
-		"build": "yarn postinstall && tsc",
+		"build": "yarn copy:abi && yarn postinstall && tsc",
+		"copy:abi": "ts-node scripts/copyAbiToDist.ts",
 		"prepublishOnly": "yarn build",
-		"postinstall": "npx typechain --target ethers-v6 --out-dir \"./src/typechain\" \"./node_modules/@premia/v3-abi/abi/*.json\"",
+		"postinstall": "npx typechain --target ethers-v6 --out-dir \"./src/typechain\" \"./dist/abi/*.json\"",
 		"test": "npx hardhat test test/unit/* --network anvil",
 		"it": "npx hardhat test test/it/* --network anvil",
 		"e2e": "npx hardhat test test/e2e/orderbook.spec.ts --network arbitrumGoerli"
@@ -72,6 +73,7 @@
 		"eslint-plugin-tsdoc": "^0.2.17",
 		"eth-testing": "^1.12.0",
 		"ethers": "^6.3.0",
+		"fs-extra": "^11.1.1",
 		"hardhat": "^2.13.0",
 		"husky": "^8.0.3",
 		"jsdom": "^21.1.0",
