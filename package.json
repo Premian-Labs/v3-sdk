@@ -1,6 +1,6 @@
 {
 	"name": "@premia/v3-sdk-public",
-	"version": "0.5.2",
+	"version": "0.6.0",
 	"description": "The official SDK for building applications on Premia V3",
 	"main": "dist/index.js",
 	"typings": "dist/index.d.ts",
@@ -32,13 +32,14 @@
 		"prepublishOnly": "yarn build",
 		"test": "npx hardhat test test/unit/* --network anvil",
 		"it": "npx hardhat test test/it/* --network anvil",
-		"postinstall": "npx typechain --target ethers-v6 --out-dir \"./src/typechain\" \"./src/abi/*.json\"",
+		"postinstall": "npx typechain --target ethers-v6 --out-dir \"./src/typechain\" \"./node_modules/@premia/v3-abi/abi/*.json\"",
 		"e2e": "npx hardhat test test/e2e/orderbook.spec.ts --network arbitrumGoerli"
 	},
 	"dependencies": {
 		"@apollo/client": "^3.7.10",
 		"@premia/ethers-multicall": "1.0.0-beta.13",
 		"@premia/pair-lists": "^0.1.0",
+		"@premia/v3-abi": "^1.0.4",
 		"@typechain/ethers-v6": "^0.3.2",
 		"@types/sinon": "^10.0.14",
 		"@types/ws": "^8.5.5",

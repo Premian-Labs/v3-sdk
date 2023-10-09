@@ -26,8 +26,8 @@ import {
 	IVxPremia__factory,
 	OrderbookStream,
 	OrderbookStream__factory,
-	SolidStateERC20,
-	SolidStateERC20__factory,
+	ISolidStateERC20,
+	ISolidStateERC20__factory,
 } from '../typechain'
 import { BaseAPI } from './baseAPI'
 
@@ -122,8 +122,11 @@ export class ContractAPI extends BaseAPI {
 	 * @return {SolidStateERC20} The connected token contract instance.
 	 * @throws Will throw an error if the connection to the contract fails.
 	 */
-	getTokenContract(tokenAddress: string, provider?: Provider): SolidStateERC20 {
-		return SolidStateERC20__factory.connect(
+	getTokenContract(
+		tokenAddress: string,
+		provider?: Provider
+	): ISolidStateERC20 {
+		return ISolidStateERC20__factory.connect(
 			tokenAddress,
 			provider ?? (this.premia.signer || this.premia.provider)
 		)

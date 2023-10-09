@@ -422,6 +422,7 @@ export class PoolAPI extends BaseAPI {
 	async isQuoteValid(
 		quote: QuoteWithSignatureT,
 		options?: {
+			taker?: string
 			poolAddress?: string
 			size?: BigNumberish
 		}
@@ -438,6 +439,7 @@ export class PoolAPI extends BaseAPI {
 
 		try {
 			const response = await pool.isQuoteOBValid(
+				options?.taker ?? ZeroAddress,
 				{
 					provider: quote.provider,
 					taker: quote.taker,
