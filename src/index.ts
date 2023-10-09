@@ -6,7 +6,6 @@ export {
 	PairList,
 } from '@premia/pair-lists'
 
-export * from './abi'
 export * from './api'
 export * from './entities'
 export * from './services/subgraph/graphql'

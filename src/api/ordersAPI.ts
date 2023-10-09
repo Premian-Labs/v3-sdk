@@ -47,7 +47,8 @@ export class OrdersAPI extends BaseAPI {
 	private async bestQuote(
 		quotes: OrderbookQuote[],
 		size: BigNumberish,
-		minimumSize?: BigNumberish
+		minimumSize?: BigNumberish,
+		taker?: string
 	): Promise<OrderbookQuote | null> {
 		const bestQuotes = quotes.slice().sort((a, b) => {
 			const betterQuote = this.premia.pricing.better(
@@ -62,7 +63,7 @@ export class OrdersAPI extends BaseAPI {
 		/// @dev: return the first valid quote in order of sorting
 		for (const quote of bestQuotes) {
 			try {
-				if (await this.isQuoteValid(quote, quote.fillableSize, true)) {
+				if (await this.isQuoteValid(quote, quote.fillableSize, taker, true)) {
 					return quote
 				} else {
 					console.log('Invalid quote: ', quote)
@@ -164,12 +165,14 @@ export class OrdersAPI extends BaseAPI {
 	async isQuoteValid(
 		quote: OrderbookQuote,
 		size?: BigNumberish,
+		taker?: string,
 		throwError: boolean = false
 	): Promise<boolean> {
 		/// @TODO: this currently will fail if a pool is not deployed. need to replace with
 		///        off-chain checks for allowance and balance
 
 		const { isValid, error } = await this.premia.pools.isQuoteValid(quote, {
+			taker,
 			size,
 		})
 
@@ -225,7 +228,8 @@ export class OrdersAPI extends BaseAPI {
 		const bestQuote: SerializedIndexedQuote | null = (await this.bestQuote(
 			quotes,
 			size,
-			minimumSize
+			minimumSize,
+			taker
 		)) as SerializedIndexedQuote | null
 
 		if (bestQuote === null) {
@@ -297,7 +301,8 @@ export class OrdersAPI extends BaseAPI {
 					const quote = (await this.bestQuote(
 						[message.body],
 						options.size,
-						options.minimumSize
+						options.minimumSize,
+						options.taker
 					)) as SerializedIndexedQuote | null
 					if (quote === null) return
 

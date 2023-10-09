@@ -7,6 +7,7 @@ import { VaultRegistry } from './vaultRegistry'
 export enum VaultTransactionType {
 	VAULT_DEPOSIT = 'VAULT_DEPOSIT',
 	VAULT_WITHDRAW = 'VAULT_WITHDRAW',
+	VAULT_SETTLE = 'VAULT_SETTLE',
 	VAULT_TRADE = 'VAULT_TRADE',
 	VAULT_SWAP = 'VAULT_SWAP',
 	VAULT_PERFORMANCE_FEE = 'VAULT_PERFORMANCE_FEE',
