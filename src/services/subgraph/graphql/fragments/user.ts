@@ -25,6 +25,8 @@ export const UserFragment = gql`
 		claimableFeesUSD
 		totalValueLockedETH
 		totalValueLockedUSD
+		netDepositsETH
+		netDepositsUSD
 
 		profitLossETH
 		profitLossUSD
@@ -58,18 +60,16 @@ export const UserExtendedFragment = gql`
 	fragment UserExtended on User {
 		...User
 
-		depositsETH
-		depositsUSD
-		withdrawalsETH
-		withdrawalsUSD
-		netDepositsETH
-		netDepositsUSD
 		collateralETH
 		collateralUSD
 		longsETH
 		longsUSD
 		shortsETH
 		shortsUSD
+		depositsETH
+		depositsUSD
+		withdrawalsETH
+		withdrawalsUSD
 		volumeETH
 		volumeUSD
 		premiumsPaidETH
@@ -86,15 +86,16 @@ export const UserExtendedFragment = gql`
 		feesPaidUSD
 
 		primaryReferrer {
-			...User
+			address
 		}
 		secondaryReferrer {
-			...User
+			address
 		}
 		totalReferrals
 		totalSecondaryReferrals
 		referralRebatesEarnedETH
 		referralRebatesEarnedUSD
+
 		referrals {
 			...Referral
 		}
@@ -183,10 +184,7 @@ export const UserPortfolioFragment = gql`
 	${UserExtendedFragment}
 	${LiquidityPositionFragment}
 	${OptionPositionFragment}
-	# ${VaultPositionFragment}
-	# ${UserSnapshotFragment}
-	# ${TransactionFragment}
-	# ${VaultTransactionFragment}
+	${VaultPositionFragment}
 
 	fragment UserPortfolio on User {
 		...UserExtended
@@ -197,19 +195,9 @@ export const UserPortfolioFragment = gql`
 		optionPositions {
 			...OptionPosition
 		}
-		# vaultPositions {
-		# 	...VaultPosition
-		# }
-
-		# snapshots {
-		# 	...UserSnapshot
-		# }
-		# poolTransactions {
-		# 	...Transaction
-		# }
-		# vaultTransactions {
-		# 	...VaultTransaction
-		# }
+		vaultPositions {
+			...VaultPosition
+		}
 	}
 `
 

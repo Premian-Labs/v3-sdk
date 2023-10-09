@@ -969,9 +969,11 @@ export class PremiaSubgraph {
 				orderType
 			),
 		})
+
 		return get(
 			response,
-			'data.liquidityPositions'
+			'data.liquidityPositions',
+			[]
 		) as LiquidityPositionExtended[]
 	}
 

@@ -316,12 +316,7 @@ describe('PremiaSubgraph', function (this: any) {
 		})
 
 		it('#getUser', async () => {
-			console.log('Getting user: ', defaultUser)
-			expect(defaultUser).to.not.be.undefined
-
 			let user = await subgraph.getUser(defaultUser)
-			console.log('User that was received: ', user)
-
 			expect(user).to.not.be.null
 			expect(user).to.not.be.undefined
 
