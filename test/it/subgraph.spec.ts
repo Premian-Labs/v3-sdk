@@ -419,7 +419,6 @@ describe('PremiaSubgraph', function (this: any) {
 				0,
 				'pool'
 			)
-			console.log(transactions)
 			expect(transactions.length).to.be.greaterThan(0)
 		})
 

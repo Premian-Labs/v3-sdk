@@ -55,7 +55,7 @@ export const UserFragment = gql`
 
 export const UserExtendedFragment = gql`
 	${UserFragment}
-	${ReferralFragment}
+	# ${ReferralFragment}
 
 	fragment UserExtended on User {
 		...User
@@ -96,12 +96,12 @@ export const UserExtendedFragment = gql`
 		referralRebatesEarnedETH
 		referralRebatesEarnedUSD
 
-		referrals {
-			...Referral
-		}
-		secondaryReferrals {
-			...Referral
-		}
+		# referrals {
+		# 	...Referral
+		# }
+		# secondaryReferrals {
+		# 	...Referral
+		# }
 	}
 `
 
