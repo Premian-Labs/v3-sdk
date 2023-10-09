@@ -31,7 +31,7 @@
 		"build": "yarn copy:abi && yarn postinstall && tsc",
 		"copy:abi": "ts-node scripts/copyAbiToDist.ts",
 		"prepublishOnly": "yarn build",
-		"postinstall": "npx typechain --target ethers-v6 --out-dir \"./src/typechain\" \"./dist/abi/*.json\"",
+		"postinstall": "yarn copy:abi && npx typechain --target ethers-v6 --out-dir \"./src/typechain\" \"./abi/*.json\"",
 		"test": "npx hardhat test test/unit/* --network anvil",
 		"it": "npx hardhat test test/it/* --network anvil",
 		"e2e": "npx hardhat test test/e2e/orderbook.spec.ts --network arbitrumGoerli"
