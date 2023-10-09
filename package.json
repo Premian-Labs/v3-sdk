@@ -1,6 +1,6 @@
 {
 	"name": "@premia/v3-sdk-public",
-	"version": "0.5.2",
+	"version": "0.6.0",
 	"description": "The official SDK for building applications on Premia V3",
 	"main": "dist/index.js",
 	"typings": "dist/index.d.ts",
@@ -30,16 +30,17 @@
 		"docs": "npx typedoc src/index.ts",
 		"build": "yarn postinstall && tsc",
 		"prepublishOnly": "yarn build",
+		"postinstall": "npx typechain --target ethers-v6 --out-dir \"./src/typechain\" \"./node_modules/@premia/v3-abi/abi/*.json\"",
 		"test": "npx hardhat test test/unit/* --network anvil",
 		"it": "npx hardhat test test/it/* --network anvil",
-		"postinstall": "npx typechain --target ethers-v6 --out-dir \"./src/typechain\" \"./src/abi/*.json\"",
 		"e2e": "npx hardhat test test/e2e/orderbook.spec.ts --network arbitrumGoerli"
 	},
 	"dependencies": {
 		"@apollo/client": "^3.7.10",
 		"@premia/ethers-multicall": "1.0.0-beta.13",
 		"@premia/pair-lists": "^0.1.0",
-		"@typechain/ethers-v6": "^0.3.2",
+		"@premia/v3-abi": "^1.0.4",
+		"@typechain/ethers-v6": "^0.5.0",
 		"@types/sinon": "^10.0.14",
 		"@types/ws": "^8.5.5",
 		"@uniswap/permit2-sdk": "^1.2.0",
@@ -57,12 +58,12 @@
 		"localforage-driver-memory": "^1.0.5",
 		"lodash": "^4.17.21",
 		"moment": "^2.29.4",
-		"typechain": "^8.1.1"
+		"typechain": "^8.3.1"
 	},
 	"devDependencies": {
 		"@nomicfoundation/hardhat-chai-matchers": "^2.0.0-beta.0",
 		"@nomiclabs/hardhat-ethers": "^3.0.0-beta.0",
-		"@typechain/hardhat": "^6.1.5",
+		"@typechain/hardhat": "^9.0.0",
 		"@types/chai": "^4.3.4",
 		"@types/lodash": "^4.14.191",
 		"@types/mocha": "^10.0.1",
