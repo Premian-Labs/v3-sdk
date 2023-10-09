@@ -55,7 +55,6 @@ export const UserFragment = gql`
 
 export const UserExtendedFragment = gql`
 	${UserFragment}
-	# ${ReferralFragment}
 
 	fragment UserExtended on User {
 		...User
@@ -84,26 +83,28 @@ export const UserExtendedFragment = gql`
 		feeRevenueUSD
 		feesPaidETH
 		feesPaidUSD
-
-		primaryReferrer {
-			address
-		}
-		secondaryReferrer {
-			address
-		}
-		totalReferrals
-		totalSecondaryReferrals
-		referralRebatesEarnedETH
-		referralRebatesEarnedUSD
-
-		# referrals {
-		# 	...Referral
-		# }
-		# secondaryReferrals {
-		# 	...Referral
-		# }
 	}
 `
+
+// # ${ReferralFragment}
+
+// # primaryReferrer {
+// # 	address
+// # }
+// # secondaryReferrer {
+// # 	address
+// # }
+// # totalReferrals
+// # totalSecondaryReferrals
+// # referralRebatesEarnedETH
+// # referralRebatesEarnedUSD
+
+// # referrals {
+// # 	...Referral
+// # }
+// # secondaryReferrals {
+// # 	...Referral
+// # }
 
 export const UserSnapshotFragment = gql`
 	${TransactionFragment}
