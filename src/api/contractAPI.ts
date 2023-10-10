@@ -98,11 +98,6 @@ export class ContractAPI extends BaseAPI {
 	referralAddress: string = Addresses[SupportedChainId.ARBITRUM].REFERRAL
 
 	/**
-	 * The address of the `OptionPS` contract.
-	 */
-	optionPSAddress: string = Addresses[SupportedChainId.ARBITRUM].OPTIONPS
-
-	/**
 	 * The address of the `OptionReward` contract.
 	 */
 	optionRewardAddress: string =
