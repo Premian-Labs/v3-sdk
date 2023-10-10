@@ -26,6 +26,20 @@ export class MiningAPI extends BaseAPI {
 	}
 
 	/**
+	 * Returns strike and maturity before claiming premia option rewards.
+	 * @returns {Promise<[bigint, bigint] & {strike: bigint, maturity: bigint}>} Promise strike and maturity for premia option rewards.
+	 */
+	async previewOptionParams(): Promise<
+		[bigint, bigint] & {
+			strike: bigint
+			maturity: bigint
+		}
+	> {
+		const vaultMiningContract = this.premia.contracts.getVaultMiningContract()
+		return vaultMiningContract.previewOptionParams()
+	}
+
+	/**
 	 * Encodes the claimAll parameters into a transaction that can be broadcasted to the provider network.
 	 *
 	 * @param {string[]} vaults - array of addresses of vaults to claim all rewards.
