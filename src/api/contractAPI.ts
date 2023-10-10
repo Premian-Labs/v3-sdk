@@ -101,7 +101,7 @@ export class ContractAPI extends BaseAPI {
 	 * The address of the `OptionReward` contract.
 	 */
 	optionRewardAddress: string =
-		Addresses[SupportedChainId.ARBITRUM].OPTIONREWARD
+		Addresses[SupportedChainId.ARBITRUM].OPTION_REWARD
 
 	/**
 	 * Connects to a pool contract at a given address using a provider.
