@@ -18,6 +18,8 @@ import {
 	VaultAPI,
 	VxPremiaAPI,
 	ReferralAPI,
+	OptionPSAPI,
+	OptionRewardAPI,
 } from './api'
 import { Addresses, SupportedChainId } from './constants'
 import { Coingecko, OrderbookV1 } from './services'
@@ -417,6 +419,20 @@ export class Premia {
 	 * @defaultValue {@link MiningAPI}
 	 */
 	mining: MiningAPI = new MiningAPI(this)
+
+	/**
+	 * The API used to interact with optionPS for Premia V3.
+	 *
+	 * @defaultValue {@link OptionPSAPI}
+	 */
+	optionPS: OptionPSAPI = new OptionPSAPI(this)
+
+	/**
+	 * The API used to interact with option reward for Premia V3.
+	 *
+	 * @defaultValue {@link OptionRewardAPI}
+	 */
+	optionReward: OptionRewardAPI = new OptionRewardAPI(this)
 
 	/**
 	 * The static types used to interact with the Premia V3 protocol.

@@ -951,6 +951,19 @@ export class PremiaSubgraph {
 		return get(response, 'data.optionPositions', []) as OptionPositionExtended[]
 	}
 
+	async getRewardOptionPositionsExtendedForUser(
+		owner: string
+	): Promise<OptionPositionExtended[]> {
+		const response = await this.client.query({
+			query: OptionPositionQuery.GetRewardOptionPositionsExtendedForUser(
+				this,
+				owner
+			),
+		})
+
+		return get(response, 'data.optionPositions', []) as OptionPositionExtended[]
+	}
+
 	async getLiquidityPositionsExtendedForUser(
 		owner: string,
 		orderType?: OrderType
