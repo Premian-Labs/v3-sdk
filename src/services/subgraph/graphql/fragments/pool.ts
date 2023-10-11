@@ -67,6 +67,9 @@ export const PoolFragment = gql`
 		isCall
 		strike
 		maturity
+		isExpired
+		isExpiredITM
+		isExpiredOTM
 		createdAt
 		createdAtBlock
 
