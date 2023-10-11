@@ -797,7 +797,7 @@ describe('OrderbookV1', () => {
 
 		await delay(2000)
 		orderbook.apiKey = properApiKey
-		expect(connectionMessage).to.eq(`Invalid API key`)
+		expect(connectionMessage).to.eq(`NOT_FOUND`)
 		expect(subscriptionMessage).to.eq(`Not Authorized`)
 	})
 
