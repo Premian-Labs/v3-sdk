@@ -14,9 +14,9 @@ import {
 	QuoteWithSignature,
 	signData
 } from '../../src'
-import PoolFactoryABI from '../../src/abi/PoolFactory.json'
-import PoolTradeABI from '../../src/abi/IPool.json'
-import ERC20MockABI from '../../src/abi/ERC20Mock.json'
+import PoolFactoryABI from '../../abi/IPoolFactory.json'
+import PoolTradeABI from '../../abi/IPool.json'
+import ERC20ABI from '../../abi/IERC20.json'
 import { expect } from 'chai'
 import {
 	Contract,
@@ -28,7 +28,7 @@ import {
 } from 'ethers'
 import moment from 'moment'
 import Ajv from 'ajv'
-import {omit, update} from 'lodash'
+import {omit } from 'lodash'
 import * as Dotenv from 'dotenv'
 
 
@@ -165,6 +165,14 @@ const orderbook = new OrderbookV1(
 	'https://test.orderbook.premia.finance',
 	'wss://test.quotes.premia.finance',
 	TEST_API_KEY,
+	CHAIN_ID
+)
+
+// this orderbook instance is used to test unkey auth
+const dummyOrderbook = new OrderbookV1(
+	'https://test.orderbook.premia.finance',
+	'wss://test.quotes.premia.finance',
+	'INVALID_API_KEY',
 	CHAIN_ID
 )
 
@@ -336,9 +344,9 @@ describe('OrderbookV1', () => {
 		// Create quote with signature
 		publicQuoteWithSignature = await createQuoteWithSig(poolAddress)
 		// Set approvals for deployer and quoter signers
-		let erc20 = new Contract(baseAddress, ERC20MockABI, deployer);
+		let erc20 = new Contract(baseAddress, ERC20ABI, deployer);
 		await erc20.approve(routerAddress, parseEther('100').toString());
-		erc20 = new Contract(baseAddress, ERC20MockABI, quoter);
+		erc20 = new Contract(baseAddress, ERC20ABI, quoter);
 		await erc20.approve(routerAddress, parseEther('100').toString());
 	})
 
@@ -388,9 +396,20 @@ describe('OrderbookV1', () => {
 		expect(publishedQuote.poolAddress).to.eq(poolAddress)
 	})
 
+	it ('should prevent unauthorized access of the orderbook', async () => {
+		let error: any
+		try{
+			await dummyOrderbook.publishQuotes([publicQuoteWithSignature])
+		} catch (e){
+			error = e
+		}
+		expect(error).to.not.eq(undefined)
+		expect(error.status).to.equal(401)
+	})
+
 	it('should attempt to publish an invalid public quote and receive an error message', async () => {
 		const invalidQuoteWithSignature = await createQuoteWithSig(poolAddress)
-		const erc20 = new Contract(baseAddress, ERC20MockABI, deployer);
+		const erc20 = new Contract(baseAddress, ERC20ABI, deployer);
 		// Set approval to ZERO so the order does not pass validation
 		await erc20.approve(routerAddress, parseEther('0').toString());
 
@@ -405,571 +424,571 @@ describe('OrderbookV1', () => {
 		await erc20.approve(routerAddress, parseEther('100').toString());
 	})
 
-	/**
-	 * transactions will come back preOrdered from best -> worst pricing
-	 */
-	it('Should get only valid public quotes from redis', async () => {
-		const quotes = await orderbook.getQuotes(
-			poolAddress,
-			parseEther('100').toString(),
-			'ask'
-		)
-
-		const unFilledQuote = quotes.filter(quote => quote.size === quote.fillableSize && quote.quoteId
-		=== publishedQuote.quoteId).length
-		const timestamp = moment.utc().unix()
-		const deadlineCheck = quotes.every(quote => quote.deadline > timestamp)
-
-		expect(deadlineCheck).to.eq(true)
-		expect(
-			quotes.some((quote) => quote.quoteId === publishedQuote.quoteId)
-		).to.eq(true)
-		expect(unFilledQuote).to.eq(1)
-
-	})
-
-	it ("should properly update fillableSize on a partial fill on-chain", async() => {
-		const quote = (await orderbook.getQuotes(
-			poolAddress,
-			parseEther('100').toString(),
-			'ask'
-		))[0]
-
-		const fillSize = parseEther('.01')
-		await fillQuote(quote, fillSize)
-		console.log('Waiting for Moralis to send fillQuoteOB event to Redis')
-		await delay(45000)
-		const updatedQuote = (await orderbook.getQuotes(
-			poolAddress,
-			parseEther('100').toString(),
-			'ask'
-		))[0]
-
-		expect(quote.fillableSize).to.eq(parseEther('.1').toString())
-		expect(updatedQuote.fillableSize).to.eq((parseEther('.1') - fillSize).toString())
-	})
-
-	it ('should properly remove an order from redis when completely filled on-chain', async() => {
-		const quote = (await orderbook.getQuotes(
-			poolAddress,
-			parseEther('100').toString(),
-			'ask'
-		))[0]
-
-		const fillSize = parseEther('.09')
-		await fillQuote(quote, fillSize)
-		console.log('Waiting for Moralis to send fillQuoteOB event to Redis')
-		await delay(45000)
-		const updatedQuote = (await orderbook.getQuotes(
-			poolAddress,
-			parseEther('100').toString(),
-			'ask'
-		))[0]
-
-		expect(updatedQuote).to.equal(undefined)
-	})
-
-	it ('should properly remove an order from redis when cancelled on-chain', async() => {
-		const quoteToCancel = await createQuoteWithSig(poolAddress)
-		publishedQuote = (await orderbook.publishQuotes([quoteToCancel])).created[0]
-		const quoteId = publishedQuote.quoteId
-		expect(publishedQuote).to.include.all.keys('quoteId', 'poolAddress', 'chainId')
-		expect(publishedQuote.poolAddress).to.eq(poolAddress)
-		await delay(10000)
-
-		const quotes = (await orderbook.getQuotes(
-			poolAddress,
-			parseEther('100').toString(),
-			'ask'
-		))
-
-		expect(
-			quotes.some((quote) => quote.quoteId === quoteId)
-		).to.eq(true)
-
-		await cancelQuote(quoteId)
-		console.log('Waiting for Moralis to send cancelQuote event to Redis')
-		await delay(45000)
-		const updatedQuotes = (await orderbook.getQuotes(
-			poolAddress,
-			parseEther('100').toString(),
-			'ask'
-		))
-
-		expect(
-			updatedQuotes.some((quote) => quote.quoteId === quoteId)
-		).to.eq(false)
-	})
-
-	// NOTE: This will keep TWO orders on the orderbook
-	it('Should get public quotes from redis filtered by provider', async () => {
-		// post initial public quote with deployer address as provider
-		publicQuoteWithSignature = await createQuoteWithSig(poolAddress)
-		const quoteWithNewProvider = await createQuoteWithSig(
-			poolAddress,
-			'0.13',
-			false,
-			ZeroAddress,
-			quoter.address,
-			Math.trunc(new Date().getTime() / 1000),
-			180,
-			parseEther('.1'),
-			false
-		)
-
-		const deployerQuote = (await orderbook.publishQuotes([publicQuoteWithSignature])).created[0]
-		const quoterQuote = (await orderbook.publishQuotes([quoteWithNewProvider])).created[0]
-
-		// we should have two identical quotes with except the provider address
-		const quotesProvider = await orderbook.getQuotes(
-			poolAddress,
-			parseEther('100').toString(),
-			'ask',
-			quoter.address
-		)
-		expect(quotesProvider.length).to.eq(1)
-		expect(quotesProvider[0].provider).to.eq(quoter.address.toLowerCase())
-		expect(
-			quotesProvider.some((quote) => quote.quoteId === quoterQuote.quoteId)
-		).to.eq(true)
-		expect(
-			quotesProvider.some((quote) => quote.quoteId === deployerQuote.quoteId)
-		).to.eq(false)
-
-		const quotes = await orderbook.getQuotes(
-			poolAddress,
-			parseEther('100').toString(),
-			'ask'
-		)
-		expect(
-			quotes.some((quote) => quote.quoteId === quoterQuote.quoteId)
-		).to.eq(true)
-		expect(
-			quotes.some((quote) => quote.quoteId === deployerQuote.quoteId)
-		).to.eq(true)
-	})
-
-	// NOTE: combined with the orders from above, this will have a total of THREE orders
-	it ('Should get public and rfq quotes together', async() => {
-		const quoteWithTaker = await createQuoteWithSig(poolAddress,'0.5', false, quoter.address)
-		await orderbook.publishQuotes([quoteWithTaker])
-
-		const quotes = await orderbook.getQuotes(
-			poolAddress,
-			parseEther('100').toString(),
-			'ask',
-			undefined,
-			quoter.address
-		)
-
-		expect(
-			quotes.some((quote) => quote.provider === deployer.address.toLowerCase())
-		).to.eq(true)
-		expect(
-			quotes.some((quote) => quote.provider === quoter.address.toLowerCase())
-		).to.eq(true)
-		expect(
-			quotes.some((quote) => quote.taker === quoter.address.toLowerCase())
-		).to.eq(true)
-		expect(quotes.length).to.be.gte(3)
-	})
-
-	it('should return properly sorted public quotes (ordered by price then timestamp)', async() => {
-
-		const order1 = await createQuoteWithSig(poolAddress, '0.2')
-		const publishedOrder1 = (await orderbook.publishQuotes([order1])).created[0]
-		// delay affects public quotes ordering
-		await delay(10000)
-
-		const order2 = await createQuoteWithSig(poolAddress, '0.2')
-		const publishedOrder2 = (await orderbook.publishQuotes([order2])).created[0]
-		// delay affects public quotes ordering
-		await delay(10000)
-
-		const order3 = await createQuoteWithSig(poolAddress, '0.15')
-		const publishedOrder3 = (await orderbook.publishQuotes([order3])).created[0]
-		await delay(10000)
-
-		// get quotes
-		const quotes = await orderbook.getQuotes(
-			poolAddress,
-			parseEther('100').toString(),
-			'ask'
-		)
-
-		const order1Index = quotes.findIndex(quote => quote.quoteId == publishedOrder1.quoteId)
-		const order2Index = quotes.findIndex(quote => quote.quoteId == publishedOrder2.quoteId)
-		const order3Index = quotes.findIndex(quote => quote.quoteId == publishedOrder3.quoteId)
-
-		// NOTE: better quotes have smaller index values
-		expect(order1Index).to.lt(order2Index) // tiebreaker goes to order 1
-		expect(order3Index).to.lt(order1Index) // better price is first
-	})
-
-	it('should return all public quotes for a given market sorted by ts', async () => {
-		// get all quotes which is sorted by timestamp not price
-		const orders = await orderbook.getOrders(poolAddress)
-		expect(isTsSorted(orders.validQuotes)).to.eq(true)
-	})
-
-	it('should properly prevent duplication of orders', async () => {
-		const mockSalt = Math.trunc(new Date().getTime() / 1000)
-		// Having the same salt (which is derived from timestamp) will ensure the specs of the order are identical
-		const order = await createQuoteWithSig(
-			poolAddress,
-			'0.3',
-			false,
-			ZeroAddress,
-			deployer.address,
-			mockSalt
-		)
-		const publishedOrder = (await orderbook.publishQuotes([order])).created[0]
-		// expect initial order to return order object with quoteId and poolAddress
-		expect(publishedOrder).to.include.all.keys('quoteId', 'poolAddress')
-
-		// Used in the next test
-		publishedQuoteId = publishedOrder.quoteId
-
-		const dupeOrder = await createQuoteWithSig(
-			poolAddress,
-			'0.3',
-			false,
-			ZeroAddress,
-			deployer.address,
-			mockSalt
-		)
-		const publishedDupeOrder = (await orderbook.publishQuotes([dupeOrder])).exists
-		// expect duplicate order to be return under exists
-		expect(publishedDupeOrder.length).to.be.eq(1)
-
-
-		const quotes = await orderbook.getQuotes(
-			poolAddress,
-			parseEther('100').toString(),
-			'ask'
-		)
-		// find how many quotes match the quoteId
-		const orderOccurances = quotes.filter(
-			(quote) => quote.quoteId == publishedOrder.quoteId
-		).length
-		// ensure order is only placed once
-		expect(orderOccurances).to.eq(1)
-	})
-
-	/*
-	 * NOTE: this test uses published quote from prior test (it will not run in isolation)
-	 */
-	it('should properly isolate public and private quotes when using api', async () => {
-		const dummyTakerAddress =
-			'0x3D1dcc44D65C08b39029cA8673D705D7e5c4cFF2'.toLowerCase()
-		const rfqQuoteWithSignature = await createQuoteWithSig(
-			poolAddress,
-			'0.4',
-			false,
-			dummyTakerAddress
-		)
-		const publishedPrivateQuote = (
-			await orderbook.publishQuotes([rfqQuoteWithSignature])
-		).created[0]
-
-		// check that PRIVATE quote posted
-		expect(publishedPrivateQuote).to.include.all.keys('quoteId', 'poolAddress')
-		expect(publishedPrivateQuote.poolAddress).to.eq(poolAddress)
-
-		// get all available PUBLIC sell (ask) quotes
-		// NOTE: 'publishedQuote' from previous test should show up here
-		const quotes = await orderbook.getQuotes(
-			poolAddress,
-			parseEther('100').toString(),
-			'ask'
-		)
-
-		// check that the public quote from previous test is still being received (public)
-		expect(
-			quotes.some((quote) => quote.quoteId === publishedQuoteId)
-		).to.eq(true)
-		// make sure PRIVATE quote does not show up from a PUBLIC quote query
-		expect(
-			quotes.some((quote) => quote.quoteId === publishedPrivateQuote.quoteId)
-		).to.eq(false)
-	})
-
-	// NOTE: this test uses the rfq quote posted in previous test
-	it('should properly retrieve an rfq quote when using api', async () => {
-		const dummyTakerAddress =
-			'0x3D1dcc44D65C08b39029cA8673D705D7e5c4cFF2'.toLowerCase()
-		const rfqQuoteWithSignature = await createQuoteWithSig(
-			poolAddress,
-			'0.5',
-			false,
-			dummyTakerAddress
-		)
-		const publishedPrivateQuote = (
-			await orderbook.publishQuotes([rfqQuoteWithSignature])
-		).created[0]
-
-		const rfqQuotes = await orderbook.getRfqQuotes(
-			poolAddress,
-			'ask',
-			dummyTakerAddress
-		)
-		expect(
-			rfqQuotes.some((quote) => quote.quoteId === publishedPrivateQuote.quoteId)
-		).to.eq(true)
-	})
-
-	it('should connect to ws', async () => {
-		let infoMessage = ''
-		await orderbook.connect((message) => {
-			switch (message.type) {
-				case 'INFO': {
-					infoMessage = message.message
-					break
-				}
-				default: {
-					throw `Wrong message type ${message.type}`
-				}
-			}
-		})
-		await delay(2000)
-		const isConnected = orderbook.isConnected()
-		expect(isConnected).to.be.true
-		expect(infoMessage).to.eq(`Session authorized. Subscriptions enabled.`)
-	})
-
-	it('should prevent unauthorized access', async () => {
-		let connectionMessage: string = ''
-		let subscriptionMessage: string = ''
-
-		const properApiKey = orderbook.apiKey
-		orderbook.apiKey = 'dummyapikey'
-		await orderbook.connect((message) => {
-			switch (message.type) {
-				case 'ERROR': {
-					connectionMessage = message.message
-					break
-				}
-				default: {
-					throw `Wrong message type ${message.type}`
-				}
-			}
-		})
-		await delay(2000)
-
-		const webSocketFilter: WSFilterMessage = {
-			type: 'FILTER',
-			channel: 'QUOTES',
-			body: {
-				chainId: '421613',
-				taker: deployer.address.toLowerCase(),
-			},
-		}
-
-		await orderbook.subscribe(webSocketFilter, (message) => {
-			switch (message.type) {
-				case 'ERROR': {
-					subscriptionMessage = message.message
-					break
-				}
-				default: {
-					throw `Wrong message type ${message.type}`
-				}
-			}
-		})
-
-		await delay(2000)
-		orderbook.apiKey = properApiKey
-		expect(connectionMessage).to.eq(`Invalid API key`)
-		expect(subscriptionMessage).to.eq(`Not Authorized`)
-	})
-
-	it('should disconnect from ws', async () => {
-		// ensure we have a connection to disconnect from
-		const isConnected = orderbook.isConnected()
-		expect(isConnected).to.be.true
-
-		orderbook.disconnect()
-		await delay(2000)
-		const isDisconnected = orderbook.isDisconnected()
-		expect(isDisconnected).to.be.true
-	})
-
-	/*
-	 * Single connection to WS remains live for all tests from this point onward
-	 */
-	it('should request quote and receive a private quote & public quote via ws', async () => {
-		let quotesReceived: OrderbookQuote[] = []
-		let infoMessage: string[] = []
-
-		await orderbook.connect((message) => {
-			switch (message.type) {
-				case 'INFO': {
-					infoMessage.push(message.message)
-					break
-				}
-				default: {
-					throw `Wrong message type ${message.type}`
-				}
-			}
-		})
-
-		await delay(2000)
-		expect(infoMessage[0]).to.eq(`Session authorized. Subscriptions enabled.`)
-
-		// listen to public quotes AND private quotes (since we provide takerAddress)
-		const webSocketFilter: WSFilterMessage = {
-			type: 'FILTER',
-			channel: 'QUOTES',
-			body: {
-				chainId: '421613',
-				taker: deployer.address.toLowerCase(),
-			},
-		}
-
-		await orderbook.subscribe(webSocketFilter, (message) => {
-			switch (message.type) {
-				case 'POST_QUOTE': {
-					// add quote received to our array
-					quotesReceived.push(message.body)
-					break
-				}
-				case 'INFO': {
-					infoMessage.push(message.message)
-					break
-				}
-				default: {
-					throw `Wrong message type ${message.type}`
-				}
-			}
-		})
-		await delay(2000)
-		expect(infoMessage[1]).to.eq(
-			`Subscribed to quotes:${webSocketFilter.body.chainId}:*:*:${ZeroAddress},quotes:${webSocketFilter.body.chainId}:*:*:${webSocketFilter.body.taker} channel.`
-		)
-
-		const rfqRequest: WSRFQRequest = {
-			type: 'RFQ',
-			body: {
-				poolAddress: poolAddress,
-				side: 'ask',
-				chainId: CHAIN_ID.toString(),
-				size: parseEther('1').toString(),
-				taker: deployer.address.toLowerCase(),
-			},
-		}
-
-		const RFQChannelKey = `rfq:${rfqRequest.body.chainId}:${rfqRequest.body.poolAddress}:${rfqRequest.body.side}:${rfqRequest.body.taker}`
-
-		// request a quote
-		await orderbook.publishRFQ(rfqRequest)
-		await delay(2000)
-
-		// receive private quote
-		const rfqQuoteWithSignature = await createQuoteWithSig(
-			poolAddress,
-			'0.4',
-			false,
-			deployer.address
-		)
-		const publishedPrivateQuote = (
-			await orderbook.publishQuotes([rfqQuoteWithSignature])
-		).created[0]
-		await delay(10000)
-
-		// receive generic quote
-		const publicQuoteWithSignature = await createQuoteWithSig(poolAddress)
-		const publishedPublicQuote = (
-			await orderbook.publishQuotes([publicQuoteWithSignature])
-		).created[0]
-		await delay(10000)
-
-		const publicOrderOccurances = quotesReceived.filter(
-			(quote) => quote.quoteId == publishedPrivateQuote.quoteId
-		).length
-		const privateOrderOccurances = quotesReceived.filter(
-			(quote) => quote.quoteId == publishedPublicQuote.quoteId
-		).length
-
-		expect(quotesReceived.length).to.eq(2)
-		expect(publicOrderOccurances).to.eq(1)
-		expect(privateOrderOccurances).to.eq(1)
-		expect(infoMessage[2]).to.eq(
-			`Published RFQ to ${RFQChannelKey} Redis channel`
-		)
-	})
-
-	it('should be able to unsubscribe from Quotes stream ws', async () => {
-		let infoMessage: string = ''
-		orderbook.unsubscribe('QUOTES', (message) => {
-			switch (message.type) {
-				case 'INFO': {
-					infoMessage = message.message
-					break
-				}
-				default: {
-					throw `Wrong message type ${message.type}`
-				}
-			}
-		})
-
-		await delay(2000)
-		expect(infoMessage).to.eq('Unsubscribed from QUOTES channel')
-	})
-
-	it('should be able to publish and receive rfq stream via ws', async () => {
-		let subCases: string[] = []
-		let infoMessage: string[] = []
-		// params to listen to rfq requests
-		const webSocketFilter: WSFilterMessage = {
-			type: 'FILTER',
-			channel: 'RFQ',
-			body: {
-				chainId: '421613',
-			},
-		}
-		// params to broadcast rfq request
-		const rfqRequest: WSRFQRequest = {
-			type: 'RFQ',
-			body: {
-				poolAddress: poolAddress,
-				side: 'bid',
-				chainId: CHAIN_ID.toString(),
-				size: '1000000000000000',
-				taker: deployer.address.toLowerCase(),
-			},
-		}
-
-		await orderbook.subscribe(webSocketFilter, (message) => {
-			switch (message.type) {
-				case 'RFQ': {
-					// expect to receive broadcast rfq request
-					expect(message).deep.eq(rfqRequest)
-					subCases.push('RFQ')
-					break
-				}
-				case 'INFO': {
-					// first INFO message will be confirmation of RFQ subscription
-					// second INFO message will be confirmation of PUBLISHING RFQ message
-					infoMessage.push(message.message)
-					subCases.push('PUBLISHED')
-					break
-				}
-				default: {
-					throw `Wrong message type ${message.type}`
-				}
-			}
-		})
-
-		await delay(2000)
-		await orderbook.publishRFQ(rfqRequest)
-		await delay(2000)
-
-		expect(subCases.includes('PUBLISHED')).to.be.true
-		expect(subCases.includes('RFQ')).to.be.true
-
-		expect(infoMessage[0]).eq('Subscribed to rfq:421613:*:*:* channel.')
-		const RFQChannelKey = `rfq:${rfqRequest.body.chainId}:${rfqRequest.body.poolAddress}:${rfqRequest.body.side}:${rfqRequest.body.taker}`
-		expect(infoMessage[1]).eq(`Published RFQ to ${RFQChannelKey} Redis channel`)
-		orderbook.disconnect()
-	})
+	// /**
+	//  * transactions will come back preOrdered from best -> worst pricing
+	//  */
+	// it('Should get only valid public quotes from redis', async () => {
+	// 	const quotes = await orderbook.getQuotes(
+	// 		poolAddress,
+	// 		parseEther('100').toString(),
+	// 		'ask'
+	// 	)
+	//
+	// 	const unFilledQuote = quotes.filter(quote => quote.size === quote.fillableSize && quote.quoteId
+	// 	=== publishedQuote.quoteId).length
+	// 	const timestamp = moment.utc().unix()
+	// 	const deadlineCheck = quotes.every(quote => quote.deadline > timestamp)
+	//
+	// 	expect(deadlineCheck).to.eq(true)
+	// 	expect(
+	// 		quotes.some((quote) => quote.quoteId === publishedQuote.quoteId)
+	// 	).to.eq(true)
+	// 	expect(unFilledQuote).to.eq(1)
+	//
+	// })
+	//
+	// it ("should properly update fillableSize on a partial fill on-chain", async() => {
+	// 	const quote = (await orderbook.getQuotes(
+	// 		poolAddress,
+	// 		parseEther('100').toString(),
+	// 		'ask'
+	// 	))[0]
+	//
+	// 	const fillSize = parseEther('.01')
+	// 	await fillQuote(quote, fillSize)
+	// 	console.log('Waiting for Moralis to send fillQuoteOB event to Redis')
+	// 	await delay(45000)
+	// 	const updatedQuote = (await orderbook.getQuotes(
+	// 		poolAddress,
+	// 		parseEther('100').toString(),
+	// 		'ask'
+	// 	))[0]
+	//
+	// 	expect(quote.fillableSize).to.eq(parseEther('.1').toString())
+	// 	expect(updatedQuote.fillableSize).to.eq((parseEther('.1') - fillSize).toString())
+	// })
+	//
+	// it ('should properly remove an order from redis when completely filled on-chain', async() => {
+	// 	const quote = (await orderbook.getQuotes(
+	// 		poolAddress,
+	// 		parseEther('100').toString(),
+	// 		'ask'
+	// 	))[0]
+	//
+	// 	const fillSize = parseEther('.09')
+	// 	await fillQuote(quote, fillSize)
+	// 	console.log('Waiting for Moralis to send fillQuoteOB event to Redis')
+	// 	await delay(45000)
+	// 	const updatedQuote = (await orderbook.getQuotes(
+	// 		poolAddress,
+	// 		parseEther('100').toString(),
+	// 		'ask'
+	// 	))[0]
+	//
+	// 	expect(updatedQuote).to.equal(undefined)
+	// })
+	//
+	// it ('should properly remove an order from redis when cancelled on-chain', async() => {
+	// 	const quoteToCancel = await createQuoteWithSig(poolAddress)
+	// 	publishedQuote = (await orderbook.publishQuotes([quoteToCancel])).created[0]
+	// 	const quoteId = publishedQuote.quoteId
+	// 	expect(publishedQuote).to.include.all.keys('quoteId', 'poolAddress', 'chainId')
+	// 	expect(publishedQuote.poolAddress).to.eq(poolAddress)
+	// 	await delay(10000)
+	//
+	// 	const quotes = (await orderbook.getQuotes(
+	// 		poolAddress,
+	// 		parseEther('100').toString(),
+	// 		'ask'
+	// 	))
+	//
+	// 	expect(
+	// 		quotes.some((quote) => quote.quoteId === quoteId)
+	// 	).to.eq(true)
+	//
+	// 	await cancelQuote(quoteId)
+	// 	console.log('Waiting for Moralis to send cancelQuote event to Redis')
+	// 	await delay(45000)
+	// 	const updatedQuotes = (await orderbook.getQuotes(
+	// 		poolAddress,
+	// 		parseEther('100').toString(),
+	// 		'ask'
+	// 	))
+	//
+	// 	expect(
+	// 		updatedQuotes.some((quote) => quote.quoteId === quoteId)
+	// 	).to.eq(false)
+	// })
+	//
+	// // NOTE: This will keep TWO orders on the orderbook
+	// it('Should get public quotes from redis filtered by provider', async () => {
+	// 	// post initial public quote with deployer address as provider
+	// 	publicQuoteWithSignature = await createQuoteWithSig(poolAddress)
+	// 	const quoteWithNewProvider = await createQuoteWithSig(
+	// 		poolAddress,
+	// 		'0.13',
+	// 		false,
+	// 		ZeroAddress,
+	// 		quoter.address,
+	// 		Math.trunc(new Date().getTime() / 1000),
+	// 		180,
+	// 		parseEther('.1'),
+	// 		false
+	// 	)
+	//
+	// 	const deployerQuote = (await orderbook.publishQuotes([publicQuoteWithSignature])).created[0]
+	// 	const quoterQuote = (await orderbook.publishQuotes([quoteWithNewProvider])).created[0]
+	//
+	// 	// we should have two identical quotes with except the provider address
+	// 	const quotesProvider = await orderbook.getQuotes(
+	// 		poolAddress,
+	// 		parseEther('100').toString(),
+	// 		'ask',
+	// 		quoter.address
+	// 	)
+	// 	expect(quotesProvider.length).to.eq(1)
+	// 	expect(quotesProvider[0].provider).to.eq(quoter.address.toLowerCase())
+	// 	expect(
+	// 		quotesProvider.some((quote) => quote.quoteId === quoterQuote.quoteId)
+	// 	).to.eq(true)
+	// 	expect(
+	// 		quotesProvider.some((quote) => quote.quoteId === deployerQuote.quoteId)
+	// 	).to.eq(false)
+	//
+	// 	const quotes = await orderbook.getQuotes(
+	// 		poolAddress,
+	// 		parseEther('100').toString(),
+	// 		'ask'
+	// 	)
+	// 	expect(
+	// 		quotes.some((quote) => quote.quoteId === quoterQuote.quoteId)
+	// 	).to.eq(true)
+	// 	expect(
+	// 		quotes.some((quote) => quote.quoteId === deployerQuote.quoteId)
+	// 	).to.eq(true)
+	// })
+	//
+	// // NOTE: combined with the orders from above, this will have a total of THREE orders
+	// it ('Should get public and rfq quotes together', async() => {
+	// 	const quoteWithTaker = await createQuoteWithSig(poolAddress,'0.5', false, quoter.address)
+	// 	await orderbook.publishQuotes([quoteWithTaker])
+	//
+	// 	const quotes = await orderbook.getQuotes(
+	// 		poolAddress,
+	// 		parseEther('100').toString(),
+	// 		'ask',
+	// 		undefined,
+	// 		quoter.address
+	// 	)
+	//
+	// 	expect(
+	// 		quotes.some((quote) => quote.provider === deployer.address.toLowerCase())
+	// 	).to.eq(true)
+	// 	expect(
+	// 		quotes.some((quote) => quote.provider === quoter.address.toLowerCase())
+	// 	).to.eq(true)
+	// 	expect(
+	// 		quotes.some((quote) => quote.taker === quoter.address.toLowerCase())
+	// 	).to.eq(true)
+	// 	expect(quotes.length).to.be.gte(3)
+	// })
+	//
+	// it('should return properly sorted public quotes (ordered by price then timestamp)', async() => {
+	//
+	// 	const order1 = await createQuoteWithSig(poolAddress, '0.2')
+	// 	const publishedOrder1 = (await orderbook.publishQuotes([order1])).created[0]
+	// 	// delay affects public quotes ordering
+	// 	await delay(10000)
+	//
+	// 	const order2 = await createQuoteWithSig(poolAddress, '0.2')
+	// 	const publishedOrder2 = (await orderbook.publishQuotes([order2])).created[0]
+	// 	// delay affects public quotes ordering
+	// 	await delay(10000)
+	//
+	// 	const order3 = await createQuoteWithSig(poolAddress, '0.15')
+	// 	const publishedOrder3 = (await orderbook.publishQuotes([order3])).created[0]
+	// 	await delay(10000)
+	//
+	// 	// get quotes
+	// 	const quotes = await orderbook.getQuotes(
+	// 		poolAddress,
+	// 		parseEther('100').toString(),
+	// 		'ask'
+	// 	)
+	//
+	// 	const order1Index = quotes.findIndex(quote => quote.quoteId == publishedOrder1.quoteId)
+	// 	const order2Index = quotes.findIndex(quote => quote.quoteId == publishedOrder2.quoteId)
+	// 	const order3Index = quotes.findIndex(quote => quote.quoteId == publishedOrder3.quoteId)
+	//
+	// 	// NOTE: better quotes have smaller index values
+	// 	expect(order1Index).to.lt(order2Index) // tiebreaker goes to order 1
+	// 	expect(order3Index).to.lt(order1Index) // better price is first
+	// })
+	//
+	// it('should return all public quotes for a given market sorted by ts', async () => {
+	// 	// get all quotes which is sorted by timestamp not price
+	// 	const orders = await orderbook.getOrders(poolAddress)
+	// 	expect(isTsSorted(orders.validQuotes)).to.eq(true)
+	// })
+	//
+	// it('should properly prevent duplication of orders', async () => {
+	// 	const mockSalt = Math.trunc(new Date().getTime() / 1000)
+	// 	// Having the same salt (which is derived from timestamp) will ensure the specs of the order are identical
+	// 	const order = await createQuoteWithSig(
+	// 		poolAddress,
+	// 		'0.3',
+	// 		false,
+	// 		ZeroAddress,
+	// 		deployer.address,
+	// 		mockSalt
+	// 	)
+	// 	const publishedOrder = (await orderbook.publishQuotes([order])).created[0]
+	// 	// expect initial order to return order object with quoteId and poolAddress
+	// 	expect(publishedOrder).to.include.all.keys('quoteId', 'poolAddress')
+	//
+	// 	// Used in the next test
+	// 	publishedQuoteId = publishedOrder.quoteId
+	//
+	// 	const dupeOrder = await createQuoteWithSig(
+	// 		poolAddress,
+	// 		'0.3',
+	// 		false,
+	// 		ZeroAddress,
+	// 		deployer.address,
+	// 		mockSalt
+	// 	)
+	// 	const publishedDupeOrder = (await orderbook.publishQuotes([dupeOrder])).exists
+	// 	// expect duplicate order to be return under exists
+	// 	expect(publishedDupeOrder.length).to.be.eq(1)
+	//
+	//
+	// 	const quotes = await orderbook.getQuotes(
+	// 		poolAddress,
+	// 		parseEther('100').toString(),
+	// 		'ask'
+	// 	)
+	// 	// find how many quotes match the quoteId
+	// 	const orderOccurances = quotes.filter(
+	// 		(quote) => quote.quoteId == publishedOrder.quoteId
+	// 	).length
+	// 	// ensure order is only placed once
+	// 	expect(orderOccurances).to.eq(1)
+	// })
+	//
+	// /*
+	//  * NOTE: this test uses published quote from prior test (it will not run in isolation)
+	//  */
+	// it('should properly isolate public and private quotes when using api', async () => {
+	// 	const dummyTakerAddress =
+	// 		'0x3D1dcc44D65C08b39029cA8673D705D7e5c4cFF2'.toLowerCase()
+	// 	const rfqQuoteWithSignature = await createQuoteWithSig(
+	// 		poolAddress,
+	// 		'0.4',
+	// 		false,
+	// 		dummyTakerAddress
+	// 	)
+	// 	const publishedPrivateQuote = (
+	// 		await orderbook.publishQuotes([rfqQuoteWithSignature])
+	// 	).created[0]
+	//
+	// 	// check that PRIVATE quote posted
+	// 	expect(publishedPrivateQuote).to.include.all.keys('quoteId', 'poolAddress')
+	// 	expect(publishedPrivateQuote.poolAddress).to.eq(poolAddress)
+	//
+	// 	// get all available PUBLIC sell (ask) quotes
+	// 	// NOTE: 'publishedQuote' from previous test should show up here
+	// 	const quotes = await orderbook.getQuotes(
+	// 		poolAddress,
+	// 		parseEther('100').toString(),
+	// 		'ask'
+	// 	)
+	//
+	// 	// check that the public quote from previous test is still being received (public)
+	// 	expect(
+	// 		quotes.some((quote) => quote.quoteId === publishedQuoteId)
+	// 	).to.eq(true)
+	// 	// make sure PRIVATE quote does not show up from a PUBLIC quote query
+	// 	expect(
+	// 		quotes.some((quote) => quote.quoteId === publishedPrivateQuote.quoteId)
+	// 	).to.eq(false)
+	// })
+	//
+	// // NOTE: this test uses the rfq quote posted in previous test
+	// it('should properly retrieve an rfq quote when using api', async () => {
+	// 	const dummyTakerAddress =
+	// 		'0x3D1dcc44D65C08b39029cA8673D705D7e5c4cFF2'.toLowerCase()
+	// 	const rfqQuoteWithSignature = await createQuoteWithSig(
+	// 		poolAddress,
+	// 		'0.5',
+	// 		false,
+	// 		dummyTakerAddress
+	// 	)
+	// 	const publishedPrivateQuote = (
+	// 		await orderbook.publishQuotes([rfqQuoteWithSignature])
+	// 	).created[0]
+	//
+	// 	const rfqQuotes = await orderbook.getRfqQuotes(
+	// 		poolAddress,
+	// 		'ask',
+	// 		dummyTakerAddress
+	// 	)
+	// 	expect(
+	// 		rfqQuotes.some((quote) => quote.quoteId === publishedPrivateQuote.quoteId)
+	// 	).to.eq(true)
+	// })
+	//
+	// it('should connect to ws', async () => {
+	// 	let infoMessage = ''
+	// 	await orderbook.connect((message) => {
+	// 		switch (message.type) {
+	// 			case 'INFO': {
+	// 				infoMessage = message.message
+	// 				break
+	// 			}
+	// 			default: {
+	// 				throw `Wrong message type ${message.type}`
+	// 			}
+	// 		}
+	// 	})
+	// 	await delay(2000)
+	// 	const isConnected = orderbook.isConnected()
+	// 	expect(isConnected).to.be.true
+	// 	expect(infoMessage).to.eq(`Session authorized. Subscriptions enabled.`)
+	// })
+	//
+	// it('should prevent unauthorized access to ws', async () => {
+	// 	let connectionMessage: string = ''
+	// 	let subscriptionMessage: string = ''
+	//
+	// 	const properApiKey = orderbook.apiKey
+	// 	orderbook.apiKey = 'dummyapikey'
+	// 	await orderbook.connect((message) => {
+	// 		switch (message.type) {
+	// 			case 'ERROR': {
+	// 				connectionMessage = message.message
+	// 				break
+	// 			}
+	// 			default: {
+	// 				throw `Wrong message type ${message.type}`
+	// 			}
+	// 		}
+	// 	})
+	// 	await delay(2000)
+	//
+	// 	const webSocketFilter: WSFilterMessage = {
+	// 		type: 'FILTER',
+	// 		channel: 'QUOTES',
+	// 		body: {
+	// 			chainId: '421613',
+	// 			taker: deployer.address.toLowerCase(),
+	// 		},
+	// 	}
+	//
+	// 	await orderbook.subscribe(webSocketFilter, (message) => {
+	// 		switch (message.type) {
+	// 			case 'ERROR': {
+	// 				subscriptionMessage = message.message
+	// 				break
+	// 			}
+	// 			default: {
+	// 				throw `Wrong message type ${message.type}`
+	// 			}
+	// 		}
+	// 	})
+	//
+	// 	await delay(2000)
+	// 	orderbook.apiKey = properApiKey
+	// 	expect(connectionMessage).to.eq(`Invalid API key`)
+	// 	expect(subscriptionMessage).to.eq(`Not Authorized`)
+	// })
+	//
+	// it('should disconnect from ws', async () => {
+	// 	// ensure we have a connection to disconnect from
+	// 	const isConnected = orderbook.isConnected()
+	// 	expect(isConnected).to.be.true
+	//
+	// 	orderbook.disconnect()
+	// 	await delay(2000)
+	// 	const isDisconnected = orderbook.isDisconnected()
+	// 	expect(isDisconnected).to.be.true
+	// })
+	//
+	// /*
+	//  * Single connection to WS remains live for all tests from this point onward
+	//  */
+	// it('should request quote and receive a private quote & public quote via ws', async () => {
+	// 	let quotesReceived: OrderbookQuote[] = []
+	// 	let infoMessage: string[] = []
+	//
+	// 	await orderbook.connect((message) => {
+	// 		switch (message.type) {
+	// 			case 'INFO': {
+	// 				infoMessage.push(message.message)
+	// 				break
+	// 			}
+	// 			default: {
+	// 				throw `Wrong message type ${message.type}`
+	// 			}
+	// 		}
+	// 	})
+	//
+	// 	await delay(2000)
+	// 	expect(infoMessage[0]).to.eq(`Session authorized. Subscriptions enabled.`)
+	//
+	// 	// listen to public quotes AND private quotes (since we provide takerAddress)
+	// 	const webSocketFilter: WSFilterMessage = {
+	// 		type: 'FILTER',
+	// 		channel: 'QUOTES',
+	// 		body: {
+	// 			chainId: '421613',
+	// 			taker: deployer.address.toLowerCase(),
+	// 		},
+	// 	}
+	//
+	// 	await orderbook.subscribe(webSocketFilter, (message) => {
+	// 		switch (message.type) {
+	// 			case 'POST_QUOTE': {
+	// 				// add quote received to our array
+	// 				quotesReceived.push(message.body)
+	// 				break
+	// 			}
+	// 			case 'INFO': {
+	// 				infoMessage.push(message.message)
+	// 				break
+	// 			}
+	// 			default: {
+	// 				throw `Wrong message type ${message.type}`
+	// 			}
+	// 		}
+	// 	})
+	// 	await delay(2000)
+	// 	expect(infoMessage[1]).to.eq(
+	// 		`Subscribed to quotes:${webSocketFilter.body.chainId}:*:*:${ZeroAddress},quotes:${webSocketFilter.body.chainId}:*:*:${webSocketFilter.body.taker} channel.`
+	// 	)
+	//
+	// 	const rfqRequest: WSRFQRequest = {
+	// 		type: 'RFQ',
+	// 		body: {
+	// 			poolAddress: poolAddress,
+	// 			side: 'ask',
+	// 			chainId: CHAIN_ID.toString(),
+	// 			size: parseEther('1').toString(),
+	// 			taker: deployer.address.toLowerCase(),
+	// 		},
+	// 	}
+	//
+	// 	const RFQChannelKey = `rfq:${rfqRequest.body.chainId}:${rfqRequest.body.poolAddress}:${rfqRequest.body.side}:${rfqRequest.body.taker}`
+	//
+	// 	// request a quote
+	// 	await orderbook.publishRFQ(rfqRequest)
+	// 	await delay(2000)
+	//
+	// 	// receive private quote
+	// 	const rfqQuoteWithSignature = await createQuoteWithSig(
+	// 		poolAddress,
+	// 		'0.4',
+	// 		false,
+	// 		deployer.address
+	// 	)
+	// 	const publishedPrivateQuote = (
+	// 		await orderbook.publishQuotes([rfqQuoteWithSignature])
+	// 	).created[0]
+	// 	await delay(10000)
+	//
+	// 	// receive generic quote
+	// 	const publicQuoteWithSignature = await createQuoteWithSig(poolAddress)
+	// 	const publishedPublicQuote = (
+	// 		await orderbook.publishQuotes([publicQuoteWithSignature])
+	// 	).created[0]
+	// 	await delay(10000)
+	//
+	// 	const publicOrderOccurances = quotesReceived.filter(
+	// 		(quote) => quote.quoteId == publishedPrivateQuote.quoteId
+	// 	).length
+	// 	const privateOrderOccurances = quotesReceived.filter(
+	// 		(quote) => quote.quoteId == publishedPublicQuote.quoteId
+	// 	).length
+	//
+	// 	expect(quotesReceived.length).to.eq(2)
+	// 	expect(publicOrderOccurances).to.eq(1)
+	// 	expect(privateOrderOccurances).to.eq(1)
+	// 	expect(infoMessage[2]).to.eq(
+	// 		`Published RFQ to ${RFQChannelKey} Redis channel`
+	// 	)
+	// })
+	//
+	// it('should be able to unsubscribe from Quotes stream ws', async () => {
+	// 	let infoMessage: string = ''
+	// 	orderbook.unsubscribe('QUOTES', (message) => {
+	// 		switch (message.type) {
+	// 			case 'INFO': {
+	// 				infoMessage = message.message
+	// 				break
+	// 			}
+	// 			default: {
+	// 				throw `Wrong message type ${message.type}`
+	// 			}
+	// 		}
+	// 	})
+	//
+	// 	await delay(2000)
+	// 	expect(infoMessage).to.eq('Unsubscribed from QUOTES channel')
+	// })
+	//
+	// it('should be able to publish and receive rfq stream via ws', async () => {
+	// 	let subCases: string[] = []
+	// 	let infoMessage: string[] = []
+	// 	// params to listen to rfq requests
+	// 	const webSocketFilter: WSFilterMessage = {
+	// 		type: 'FILTER',
+	// 		channel: 'RFQ',
+	// 		body: {
+	// 			chainId: '421613',
+	// 		},
+	// 	}
+	// 	// params to broadcast rfq request
+	// 	const rfqRequest: WSRFQRequest = {
+	// 		type: 'RFQ',
+	// 		body: {
+	// 			poolAddress: poolAddress,
+	// 			side: 'bid',
+	// 			chainId: CHAIN_ID.toString(),
+	// 			size: '1000000000000000',
+	// 			taker: deployer.address.toLowerCase(),
+	// 		},
+	// 	}
+	//
+	// 	await orderbook.subscribe(webSocketFilter, (message) => {
+	// 		switch (message.type) {
+	// 			case 'RFQ': {
+	// 				// expect to receive broadcast rfq request
+	// 				expect(message).deep.eq(rfqRequest)
+	// 				subCases.push('RFQ')
+	// 				break
+	// 			}
+	// 			case 'INFO': {
+	// 				// first INFO message will be confirmation of RFQ subscription
+	// 				// second INFO message will be confirmation of PUBLISHING RFQ message
+	// 				infoMessage.push(message.message)
+	// 				subCases.push('PUBLISHED')
+	// 				break
+	// 			}
+	// 			default: {
+	// 				throw `Wrong message type ${message.type}`
+	// 			}
+	// 		}
+	// 	})
+	//
+	// 	await delay(2000)
+	// 	await orderbook.publishRFQ(rfqRequest)
+	// 	await delay(2000)
+	//
+	// 	expect(subCases.includes('PUBLISHED')).to.be.true
+	// 	expect(subCases.includes('RFQ')).to.be.true
+	//
+	// 	expect(infoMessage[0]).eq('Subscribed to rfq:421613:*:*:* channel.')
+	// 	const RFQChannelKey = `rfq:${rfqRequest.body.chainId}:${rfqRequest.body.poolAddress}:${rfqRequest.body.side}:${rfqRequest.body.taker}`
+	// 	expect(infoMessage[1]).eq(`Published RFQ to ${RFQChannelKey} Redis channel`)
+	// 	orderbook.disconnect()
+	// })
 })
