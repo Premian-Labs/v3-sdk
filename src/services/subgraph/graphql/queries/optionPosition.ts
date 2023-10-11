@@ -77,4 +77,28 @@ export class OptionPositionQuery {
 			}
 		`
 	}
+
+	@addFields
+	static GetRewardOptionPositionsExtendedForUser(
+		subgraph: PremiaSubgraph,
+		owner: string
+	): DocumentNode {
+		return gql`
+			${OptionPositionExtendedFragment}
+
+			{
+				optionPositions(
+					where: { 
+						owner: "${owner.toLowerCase()}"
+						option_not: null
+					},
+					first: 1000, 
+					orderBy: createdAt, 
+					orderDirection: desc
+				) {
+					...OptionPositionExtended
+				}
+			}
+		`
+	}
 }

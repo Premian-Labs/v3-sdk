@@ -74,6 +74,7 @@ export const Addresses: AddressMap = {
 		VX_PREMIA: arbitrumJson.VxPremiaProxy.address,
 		VAULT_MINING: arbitrumJson.VaultMiningProxy.address,
 		REFERRAL: arbitrumJson.ReferralProxy.address,
+		OPTION_REWARD: arbitrumJson.optionReward['PREMIA/USDC'].address,
 	},
 	[SupportedChainId.ARBITRUM_NOVA]: {
 		CHAINLINK_BTC,

@@ -1,7 +1,7 @@
 import { BigNumberish, formatUnits, toBigInt } from 'ethers'
 import { MIN_TICK_DISTANCE, WAD_DECIMALS } from '../constants'
 import { parseNumber } from './parse'
-import { OrderType } from '../entities'
+import { OrderType, TokenType } from '../entities'
 
 export interface TokenIdParams {
 	version?: number
@@ -9,6 +9,12 @@ export interface TokenIdParams {
 	operator: string
 	upper: bigint
 	lower: bigint
+}
+
+export interface PositionTokenIdParams {
+	tokenType: TokenType
+	maturity: bigint
+	strike: bigint
 }
 
 export function precisionForNumber(decimalValue: number) {
@@ -100,6 +106,19 @@ export function formatTokenId({
 	tokenId = tokenId + (toBigInt(operator) << 20n)
 	tokenId = tokenId + ((upper / MIN_TICK_DISTANCE) << 10n)
 	tokenId = tokenId + lower / MIN_TICK_DISTANCE
+
+	return tokenId
+}
+
+export function formatTokenIdPosition({
+	tokenType,
+	maturity,
+	strike,
+}: PositionTokenIdParams) {
+	let tokenId = toBigInt(tokenType) << 248n
+
+	tokenId = tokenId + (maturity << 128n)
+	tokenId = tokenId + strike
 
 	return tokenId
 }
