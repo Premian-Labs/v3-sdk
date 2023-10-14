@@ -1,5 +1,6 @@
 import { BigNumberish, ContractTransaction } from 'ethers'
 import { BaseAPI } from './baseAPI'
+import { IVaultMining } from '../typechain'
 
 /**
  * Represents a class for handling operations related to making liquidity mining.
@@ -27,7 +28,7 @@ export class MiningAPI extends BaseAPI {
 
 	/**
 	 * Returns strike and maturity before claiming premia option rewards.
-	 * @returns {Promise<[bigint, bigint] & {strike: bigint, maturity: bigint}>} Promise strike and maturity for premia option rewards.
+	 * @returns {Promise<[bigint, bigint] & {strike: bigint, maturity: bigint}>} A promise that resolves to the strike and maturity for premia option rewards.
 	 */
 	async previewOptionParams(): Promise<
 		[bigint, bigint] & {
@@ -37,6 +38,50 @@ export class MiningAPI extends BaseAPI {
 	> {
 		const vaultMiningContract = this.premia.contracts.getVaultMiningContract()
 		return vaultMiningContract.previewOptionParams()
+	}
+
+	/**
+	 * Returns the total number of votes across all targets (vaults).
+	 * @returns {Promise<bigint>} A promise that resolves to the total number of votes across all targets (vaults).
+	 */
+	async getTotalVotes(): Promise<bigint> {
+		const vaultMiningContract = this.premia.contracts.getVaultMiningContract()
+		return vaultMiningContract.getTotalVotes()
+	}
+
+	/**
+	 * Returns the VaultInfo including the number of votes for the specified vault.
+	 * @param vaultAddress {string} The address of the vault.
+	 * @returns {Promise<IVaultMining.VaultInfoStructOutput>} A promise that resolves to the VaultInfo including the number of votes for the specified vault.
+	 */
+	async getVaultInfo(
+		vaultAddress: string
+	): Promise<IVaultMining.VaultInfoStructOutput> {
+		const vaultMiningContract = this.premia.contracts.getVaultMiningContract()
+		return vaultMiningContract.getVaultInfo(vaultAddress)
+	}
+
+	/**
+	 * Returns the UserInfo including the votes of the specified user in the vault.
+	 * @param user {string} The address of the user.
+	 * @param vaultAddress {string} The address of the vault.
+	 * @returns {Promise<IVaultMining.UserInfoStructOutput>} A promise that resolves to the UserInfo including the votes of the specified user in the vault.
+	 */
+	async getUserInfo(
+		user: string,
+		vaultAddress: string
+	): Promise<IVaultMining.UserInfoStructOutput> {
+		const vaultMiningContract = this.premia.contracts.getVaultMiningContract()
+		return vaultMiningContract.getUserInfo(user, vaultAddress)
+	}
+
+	/**
+	 * Returns the total number of rewards across all targets for the next year.
+	 * @returns {Promise<bigint>} A promise that resolves to the total number of rewards across all targets for the next year.
+	 */
+	async getRewardsPerYear(): Promise<bigint> {
+		const vaultMiningContract = this.premia.contracts.getVaultMiningContract()
+		return vaultMiningContract.getRewardsPerYear()
 	}
 
 	/**
