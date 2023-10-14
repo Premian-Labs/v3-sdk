@@ -14,9 +14,9 @@ import {
 	QuoteWithSignature,
 	signData
 } from '../../src'
-import PoolFactoryABI from '../../src/abi/PoolFactory.json'
-import PoolTradeABI from '../../src/abi/IPool.json'
-import ERC20MockABI from '../../src/abi/ERC20Mock.json'
+import PoolFactoryABI from '../../abi/IPoolFactory.json'
+import PoolTradeABI from '../../abi/IPool.json'
+import ERC20ABI from '../../abi/IERC20.json'
 import { expect } from 'chai'
 import {
 	Contract,
@@ -28,7 +28,7 @@ import {
 } from 'ethers'
 import moment from 'moment'
 import Ajv from 'ajv'
-import {omit, update} from 'lodash'
+import {omit } from 'lodash'
 import * as Dotenv from 'dotenv'
 
 
@@ -336,9 +336,9 @@ describe('OrderbookV1', () => {
 		// Create quote with signature
 		publicQuoteWithSignature = await createQuoteWithSig(poolAddress)
 		// Set approvals for deployer and quoter signers
-		let erc20 = new Contract(baseAddress, ERC20MockABI, deployer);
+		let erc20 = new Contract(baseAddress, ERC20ABI, deployer);
 		await erc20.approve(routerAddress, parseEther('100').toString());
-		erc20 = new Contract(baseAddress, ERC20MockABI, quoter);
+		erc20 = new Contract(baseAddress, ERC20ABI, quoter);
 		await erc20.approve(routerAddress, parseEther('100').toString());
 	})
 
@@ -388,9 +388,27 @@ describe('OrderbookV1', () => {
 		expect(publishedQuote.poolAddress).to.eq(poolAddress)
 	})
 
+	it ('should prevent unauthorized access of the orderbook', async () => {
+		const dummyOrderbook = new OrderbookV1(
+			'https://test.orderbook.premia.finance',
+			'wss://test.quotes.premia.finance',
+			'INVALID_API_KEY',
+			CHAIN_ID
+		)
+
+		let error: any
+		try{
+			await dummyOrderbook.publishQuotes([publicQuoteWithSignature])
+		} catch (e){
+			error = e
+		}
+		expect(error).to.not.eq(undefined)
+		expect(error.status).to.equal(401)
+	})
+
 	it('should attempt to publish an invalid public quote and receive an error message', async () => {
 		const invalidQuoteWithSignature = await createQuoteWithSig(poolAddress)
-		const erc20 = new Contract(baseAddress, ERC20MockABI, deployer);
+		const erc20 = new Contract(baseAddress, ERC20ABI, deployer);
 		// Set approval to ZERO so the order does not pass validation
 		await erc20.approve(routerAddress, parseEther('0').toString());
 
@@ -737,7 +755,7 @@ describe('OrderbookV1', () => {
 		expect(infoMessage).to.eq(`Session authorized. Subscriptions enabled.`)
 	})
 
-	it('should prevent unauthorized access', async () => {
+	it('should prevent unauthorized access to ws', async () => {
 		let connectionMessage: string = ''
 		let subscriptionMessage: string = ''
 
@@ -779,7 +797,7 @@ describe('OrderbookV1', () => {
 
 		await delay(2000)
 		orderbook.apiKey = properApiKey
-		expect(connectionMessage).to.eq(`Invalid API key`)
+		expect(connectionMessage).to.eq(`NOT_FOUND`)
 		expect(subscriptionMessage).to.eq(`Not Authorized`)
 	})
 
