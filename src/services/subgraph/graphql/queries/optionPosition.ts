@@ -56,7 +56,9 @@ export class OptionPositionQuery {
 		if (isOpen == undefined) {
 			filter = ''
 		} else {
-			filter = isOpen ? ', closedAt: null' : ', closedAt_not: null'
+			filter = isOpen
+				? ', { closedAt: null }, { or: [{ pool_: { isExpiredOTM: false } }, { option_not: null }] }'
+				: ', { or: [{ closedAt_not: null }, { pool_: { isExpiredOTM: true } }] }'
 		}
 
 		return gql`
@@ -65,8 +67,10 @@ export class OptionPositionQuery {
 			{
 				optionPositions(
 					where: { 
-						owner: "${owner.toLowerCase()}"
-						${filter}
+						and: [
+							{ owner: "${owner.toLowerCase()}" }
+							${filter}
+						]
 					},
 					first: 1000, 
 					orderBy: createdAt, 
