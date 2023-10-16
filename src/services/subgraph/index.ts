@@ -952,12 +952,16 @@ export class PremiaSubgraph {
 	}
 
 	async getRewardOptionPositionsExtendedForUser(
-		owner: string
+		owner: string,
+		timestamp?: number,
+		isOpen?: boolean
 	): Promise<OptionPositionExtended[]> {
 		const response = await this.client.query({
 			query: OptionPositionQuery.GetRewardOptionPositionsExtendedForUser(
 				this,
-				owner
+				owner,
+				timestamp,
+				isOpen
 			),
 		})
 

@@ -215,15 +215,22 @@ export class UserAPI extends BaseAPI {
 	 * Retrieves extended reward option positions for a given user.
 	 *
 	 * @param {string} owner - The address of the user for whom to retrieve option positions.
+	 * @param {number} timestamp - Timestamp to check maturity of the option.
 	 * @param {boolean} [isOpen] - Optional parameter that if set to true, only returns open option positions.
 	 *                             If set to false, returns closed option positions. If omitted, returns all option positions.
 	 *
 	 * @returns {Promise<OptionPositionExtended[]>} A promise that resolves to an array of extended option positions for the given user.
 	 */
 	async getRewardOptionPositionsExtendedForUser(
-		owner: string
+		owner: string,
+		timestamp?: number,
+		isOpen?: boolean
 	): Promise<OptionPositionExtended[]> {
-		return this.premia.subgraph.getRewardOptionPositionsExtendedForUser(owner)
+		return this.premia.subgraph.getRewardOptionPositionsExtendedForUser(
+			owner,
+			timestamp,
+			isOpen
+		)
 	}
 
 	/**
