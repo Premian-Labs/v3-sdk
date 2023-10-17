@@ -85,16 +85,23 @@ export class OptionPositionQuery {
 	@addFields
 	static GetRewardOptionPositionsExtendedForUser(
 		subgraph: PremiaSubgraph,
-		owner: string
+		owner: string,
+		timestamp?: number,
+		isOpen?: boolean
 	): DocumentNode {
+		let filter = `owner: "${owner.toLowerCase()}", option_not: null`
+		if (isOpen !== undefined) {
+			filter += isOpen ? ', closedAt: null' : ', closedAt_not: null'
+		}
+		if (timestamp) {
+			filter += `, maturity_lte: ${timestamp}`
+		}
 		return gql`
 			${OptionPositionExtendedFragment}
-
 			{
 				optionPositions(
 					where: { 
-						owner: "${owner.toLowerCase()}"
-						option_not: null
+						 ${filter}
 					},
 					first: 1000, 
 					orderBy: createdAt, 
