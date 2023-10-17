@@ -12,8 +12,8 @@ export class OptionPSAPI extends BaseAPI {
 	 * get the amount of exerciseToken to pay to exercise the given amount of contracts
 	 *
 	 * @param {string} optionAddress - The address of the option.
-	 * @param {bigint} strike - The address of the option.
-	 * @param {bigint} contractSize - The address of the option.
+	 * @param {bigint} strike - The strike price of the option.
+	 * @param {bigint} contractSize - The size of the option.
 	 * @returns {Promise<[bigint, bigint] & { totalExerciseCost: bigint; fee: bigint }>} The amount of exerciseToken to pay to exercise the given amount of contracts
 	 */
 	async getExerciseCost(
@@ -25,6 +25,25 @@ export class OptionPSAPI extends BaseAPI {
 
 		const exerciseCost = await contract.getExerciseCost(strike, contractSize)
 		return exerciseCost
+	}
+
+	/**
+	 * get the amount of collateral that would be received for a given amount of long tokens
+	 *
+	 * @param {string} optionAddress - The address of the option.
+	 * @param {bigint} strike - The strike price of the option.
+	 * @param {bigint} contractSize - The size of the option.
+	 * @returns {Promise<bigint>} The amount of collateral that would be received for a given amount of long tokens
+	 */
+	async getExerciseValue(
+		optionAddress: string,
+		strike: bigint,
+		contractSize: bigint
+	): Promise<bigint> {
+		const contract = this.premia.contracts.getOptionPSContract(optionAddress)
+
+		const exerciseValue = await contract.getExerciseValue(strike, contractSize)
+		return exerciseValue
 	}
 
 	/**

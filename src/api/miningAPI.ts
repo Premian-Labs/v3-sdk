@@ -12,18 +12,38 @@ export class MiningAPI extends BaseAPI {
 	/**
 	 * Returns a promise containing the amount of pending user rewards for a vault.
 	 * @param user {string} The address of the user.
-	 * @param vault {string[]} The addres of the vault addresses.
+	 * @param vault {string} The addres of individual vault.
 	 * @returns {Promise<bigint>} Promise the amount of pending user rewards for a vault.
 	 */
-	async getPendingUserRewards({
+	async getPendingUserRewardsFromVault({
 		user,
-		vaults,
+		vault,
 	}: {
 		user: string
-		vaults: string[]
+		vault: string
 	}): Promise<bigint> {
 		const vaultMiningContract = this.premia.contracts.getVaultMiningContract()
-		return vaultMiningContract.getPendingUserRewards(user, vaults)
+		return vaultMiningContract.getPendingUserRewardsFromVault(user, vault)
+	}
+
+	/**
+	 * Returns a promise containing total amount of pending user rewards.
+	 * @param user {string} The address of the user.
+	 * @returns {Promise<bigint>} Promise total amount of pending user rewards.
+	 */
+	async getTotalUserRewards({ user }: { user: string }): Promise<bigint> {
+		const vaultMiningContract = this.premia.contracts.getVaultMiningContract()
+		return vaultMiningContract.getTotalUserRewards(user)
+	}
+
+	/**
+	 * Returns a promise containing amount of user rewards.
+	 * @param user {string} The address of the user.
+	 * @returns {Promise<bigint>} Promise amount of user rewards.
+	 */
+	async getUserRewards({ user }: { user: string }): Promise<bigint> {
+		const vaultMiningContract = this.premia.contracts.getVaultMiningContract()
+		return vaultMiningContract.getUserRewards(user)
 	}
 
 	/**
