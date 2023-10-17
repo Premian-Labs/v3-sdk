@@ -30,9 +30,7 @@ export const PoolMinimalFragment = gql`
 		maturity
 
 		longLiquidity
-		longLiquidityUSD
 		shortLiquidity
-		shortLiquidityUSD
 	}
 `
 
@@ -80,10 +78,6 @@ export const PoolFragment = gql`
 
 		spotPrice
 
-		longLiquidity
-		longLiquidityUSD
-		shortLiquidity
-		shortLiquidityUSD
 		openInterest
 		openInterestUSD
 		volume

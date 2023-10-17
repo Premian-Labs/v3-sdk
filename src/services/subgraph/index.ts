@@ -966,13 +966,15 @@ export class PremiaSubgraph {
 
 	async getLiquidityPositionsExtendedForUser(
 		owner: string,
-		orderType?: OrderType
+		orderType?: OrderType,
+		isOpen?: boolean
 	): Promise<LiquidityPositionExtended[]> {
 		const response = await this.client.query({
 			query: LiquidityPositionQuery.GetLiquidityPositionsExtendedForUser(
 				this,
 				owner,
-				orderType
+				orderType,
+				isOpen
 			),
 		})
 		return get(
