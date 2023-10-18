@@ -57,12 +57,12 @@ export class TokenPairAPI extends BaseAPI {
 	 * Fetches data for a token pair from the subgraph.
 	 * Uses caching with a one-day time-to-live.
 	 *
-	 * @param {TokenPairOrInfo} pair - The token pair to fetch the data for.
+	 * @param {TokenPairOrId} pair - The token pair or id to fetch the data for.
 	 *
 	 * @returns {Promise<TokenPair>} The data for the token pair.
 	 */
 	@withCache(CacheTTL.DAILY)
-	async getPair(pair: TokenPairOrInfo): Promise<TokenPair> {
+	async getPair(pair: TokenPairOrId): Promise<TokenPair> {
 		return this.premia.subgraph.getPair(pair)
 	}
 

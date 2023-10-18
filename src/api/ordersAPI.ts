@@ -214,7 +214,7 @@ export class OrdersAPI extends BaseAPI {
 			},
 		})
 
-		const quotes = await this.premia.orderbook.getQuotes(
+		let quotes = await this.premia.orderbook.getQuotes(
 			poolAddress,
 			size.toString(),
 			isBuy ? 'ask' : 'bid',
@@ -224,6 +224,8 @@ export class OrdersAPI extends BaseAPI {
 		if (quotes.length === 0) {
 			return null
 		}
+
+		quotes = quotes.map((quote) => ({ ...quote, size: quote.fillableSize }))
 
 		const bestQuote: SerializedIndexedQuote | null = (await this.bestQuote(
 			quotes,
