@@ -39,6 +39,7 @@ import { Position } from '../typechain/IPool'
 import { BaseAPI } from './baseAPI'
 import { convertDecimals, formatTokenId, sendTransaction } from '../utils'
 import { snapToValidRange } from '../utils/range'
+import { TokenPairOrId } from '..'
 
 export enum InvalidQuoteError {
 	None = 0,
@@ -753,24 +754,22 @@ export class PoolAPI extends BaseAPI {
 	/**
 	 * Retrieves pools for a given token pair. Cached daily.
 	 *
-	 * @param {TokenPairMinimal} pair - The token pair.
+	 * @param {TokenPairOrId} pair - The token pair or pair id.
 	 * @returns {Promise<Pool[]>} A promise that resolves to an array of `Pool` objects.
 	 */
 	@withCache(CacheTTL.DAILY)
-	async getPoolsForPair(pair: TokenPairMinimal): Promise<Pool[]> {
+	async getPoolsForPair(pair: TokenPairOrId): Promise<Pool[]> {
 		return this.premia.subgraph.getPoolsForPair(pair)
 	}
 
 	/**
 	 * Retrieves extended pools for a given token pair. Cached per minute.
 	 *
-	 * @param {TokenPairMinimal} pair - The token pair.
+	 * @param {TokenPairOrId} pair - The token pair or pair id.
 	 * @returns {Promise<PoolExtended[]>} A promise that resolves to an array of `PoolExtended` objects.
 	 */
 	@withCache(CacheTTL.MINUTE)
-	async getPoolsExtendedForPair(
-		pair: TokenPairMinimal
-	): Promise<PoolExtended[]> {
+	async getPoolsExtendedForPair(pair: TokenPairOrId): Promise<PoolExtended[]> {
 		return this.premia.subgraph.getPoolsExtendedForPair(pair)
 	}
 

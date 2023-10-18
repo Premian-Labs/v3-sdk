@@ -28,9 +28,6 @@ export const PoolMinimalFragment = gql`
 		isCall
 		strike
 		maturity
-
-		longLiquidity
-		shortLiquidity
 	}
 `
 
@@ -78,6 +75,8 @@ export const PoolFragment = gql`
 
 		spotPrice
 
+		longLiquidity
+		shortLiquidity
 		openInterest
 		openInterestUSD
 		volume
