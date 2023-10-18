@@ -23,7 +23,6 @@ import {
 	TokenExtended,
 	TokenPair,
 	TokenPairExtended,
-	TokenPairMinimal,
 	Transaction,
 	User,
 	UserExtended,
@@ -64,7 +63,7 @@ import {
 import { BigNumberish, toBigInt } from 'ethers'
 import { get } from 'lodash'
 import { TokenInfo } from '@premia/pair-lists/src/types'
-import { TokenPairOrId, TokenPairOrInfo } from '../../api'
+import { TokenOrAddress, TokenPairOrId, TokenPairOrInfo } from '../../api'
 
 /**
  * The PremiaSubgraph class is the entry point for interacting with the Premia V3 subgraph
@@ -291,7 +290,7 @@ export class PremiaSubgraph {
 		return get(response, 'data.pools', []) as Pool[]
 	}
 
-	async getPoolsForPair(pair: TokenPairMinimal): Promise<Pool[]> {
+	async getPoolsForPair(pair: TokenPairOrId): Promise<Pool[]> {
 		const response = await this.client.query({
 			query: PoolQuery.GetPoolsForPair(this, pair),
 		})
@@ -306,7 +305,7 @@ export class PremiaSubgraph {
 	}
 
 	async getPoolsExtendedForPair(
-		pair: TokenPairMinimal,
+		pair: TokenPairOrId,
 		options?: {
 			strike?: BigNumberish
 			maturity?: BigNumberish
@@ -443,6 +442,22 @@ export class PremiaSubgraph {
 		return get(response, 'data.tokens') as TokenExtended[]
 	}
 
+	/**
+	 * Parses a token input to return a token address string.
+	 *
+	 * @param {TokenOrAddress} token - The token input which can be either a Token object or a string representing the address.
+	 * @returns {string} - The token address as a string.
+	 */
+	_parseTokenAddress(token: TokenOrAddress): string {
+		let tokenAddress: string
+		if (get(token, 'address')) {
+			tokenAddress = (token as Token).address
+		} else {
+			tokenAddress = token as string
+		}
+		return tokenAddress
+	}
+
 	_parsePairId(pair: TokenPairOrId): string {
 		let _pairId: string
 		if (get(pair, 'base')) {
@@ -481,7 +496,7 @@ export class PremiaSubgraph {
 		return _pair
 	}
 
-	async getPair(pair: TokenPairOrInfo): Promise<TokenPair> {
+	async getPair(pair: TokenPairOrId): Promise<TokenPair> {
 		const pairId = this._parsePairId(pair)
 		const response = await this.client.query({
 			query: TokenPairQuery.GetPair(this, pairId),
@@ -780,7 +795,7 @@ export class PremiaSubgraph {
 	}
 
 	async getVaultsForToken(
-		token: Token,
+		token: TokenOrAddress,
 		isQuote: boolean = false
 	): Promise<Vault[]> {
 		const response = await this.client.query({
@@ -790,7 +805,7 @@ export class PremiaSubgraph {
 	}
 
 	async getVaultsExtendedForToken(
-		token: Token,
+		token: TokenOrAddress,
 		isQuote: boolean = false
 	): Promise<VaultExtended[]> {
 		const response = await this.client.query({

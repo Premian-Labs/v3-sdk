@@ -11,6 +11,7 @@ import { addFields } from '../../../../utils/subgraph'
 import { TokenQuery } from './token'
 import { TokenPairQuery } from './tokenPair'
 import PremiaSubgraph from '../../index'
+import { TokenPairOrId } from '../../../..'
 
 export class PoolQuery {
 	static poolId(address: string): string {
@@ -89,11 +90,7 @@ export class PoolQuery {
 			${PoolFragment}
 
 			{
-				pools(
-					first: 1000, 
-					orderBy: createdAt, 
-					orderDirection: desc
-				) {
+				pools(first: 1000, orderBy: createdAt, orderDirection: desc) {
 					...Pool
 				}
 			}
@@ -106,11 +103,7 @@ export class PoolQuery {
 			${PoolExtendedFragment}
 
 			{
-				pools(
-					first: 1000, 
-					orderBy: createdAt, 
-					orderDirection: desc
-				) {
+				pools(first: 1000, orderBy: createdAt, orderDirection: desc) {
 					...PoolExtended
 				}
 			}
@@ -178,7 +171,9 @@ export class PoolQuery {
 
         {
             pools(
-            	where: { ${isQuote ? 'quote' : 'base'}: "${TokenQuery.tokenId(token.address)}" },
+            	where: { ${isQuote ? 'quote' : 'base'}: "${TokenQuery.tokenId(
+			token.address
+		)}" },
             	first: 1000, 
 				orderBy: createdAt, 
 				orderDirection: desc
@@ -211,25 +206,15 @@ export class PoolQuery {
 	@addFields
 	static GetPoolsForPair(
 		subgraph: PremiaSubgraph,
-		pair: TokenPairMinimal
+		pair: TokenPairOrId
 	): DocumentNode {
+		const pairId = subgraph._parsePairId(pair)
 		return gql`
-        ${PoolMinimalFragment}
+        ${PoolFragment}
 
         {
-            pools(where: { pair: "${TokenPairQuery.pairId(
-							pair.base.address,
-							pair.quote.address,
-							pair.priceOracleAddress
-						)}" }) {
-                ...PoolMinimal
-
-                impliedVolatility
-                marketPrice
-                spotPrice
-
-                totalValueLocked
-                totalValueLockedUSD
+            pools(where: { pair: "${pairId}" }) {
+                ...Pool
             }
         }
     `
@@ -238,17 +223,14 @@ export class PoolQuery {
 	@addFields
 	static GetPoolsExtendedForPair(
 		subgraph: PremiaSubgraph,
-		pair: TokenPairMinimal
+		pair: TokenPairOrId
 	): DocumentNode {
+		const pairId = subgraph._parsePairId(pair)
 		return gql`
         ${PoolExtendedFragment}
 
         {
-            pools(where: { pair: "${TokenPairQuery.pairId(
-							pair.base.address,
-							pair.quote.address,
-							pair.priceOracleAddress
-						)}" }) {
+            pools(where: { pair: "${pairId}" }) {
                 ...PoolExtended
             }
         }

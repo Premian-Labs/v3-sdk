@@ -20,6 +20,7 @@ import {
 } from '../entities'
 import { BaseAPI } from './baseAPI'
 import { convertDecimals, formatBigInt, sendTransaction } from '../utils'
+import { TokenOrAddress } from './tokenAPI'
 
 export class VaultAPI extends BaseAPI {
 	/**
@@ -371,7 +372,7 @@ export class VaultAPI extends BaseAPI {
 	 * This function is cached, meaning that if it is called multiple times within a daily period,
 	 * it will only perform the operation once and then return the cached result for subsequent calls.
 	 *
-	 * @param {Token} token - The token for which vaults should be retrieved.
+	 * @param {TokenOrAddress} token - The token or token address for which vaults should be retrieved.
 	 * @param {boolean} isQuote - Optional parameter that indicates whether the token is a quote token. Default is false.
 	 *
 	 * @returns {Promise<Vault[]>} A promise that resolves to an array of Vault objects, each containing information
@@ -379,7 +380,7 @@ export class VaultAPI extends BaseAPI {
 	 */
 	@withCache(CacheTTL.DAILY)
 	async getVaultsForToken(
-		token: Token,
+		token: TokenOrAddress,
 		isQuote: boolean = false
 	): Promise<Vault[]> {
 		return this.premia.subgraph.getVaultsForToken(token, isQuote)
@@ -391,7 +392,7 @@ export class VaultAPI extends BaseAPI {
 	 * This function is cached, meaning that if it is called multiple times within a one minute period,
 	 * it will only perform the operation once and then return the cached result for subsequent calls.
 	 *
-	 * @param {Token} token - The token for which vaults should be retrieved.
+	 * @param {TokenOrAddress} token - The token or token address for which vaults should be retrieved.
 	 * @param {boolean} isQuote - Optional parameter that indicates whether the token is a quote token. Default is false.
 	 *
 	 * @returns {Promise<VaultExtended[]>} A promise that resolves to an array of VaultExtended objects, each containing
@@ -399,7 +400,7 @@ export class VaultAPI extends BaseAPI {
 	 */
 	@withCache(CacheTTL.MINUTE)
 	async getVaultsExtendedForToken(
-		token: Token,
+		token: TokenOrAddress,
 		isQuote: boolean = false
 	): Promise<VaultExtended[]> {
 		return this.premia.subgraph.getVaultsExtendedForToken(token, isQuote)
