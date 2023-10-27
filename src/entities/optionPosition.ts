@@ -37,6 +37,9 @@ export interface OptionPosition {
 	closedAtBlock?: BigNumberish
 
 	size: BigNumberish
+	closedSize: BigNumberish
+	entryPrice: BigNumberish
+	closePrice: BigNumberish
 }
 
 export interface OptionPositionExtended extends OptionPosition {
@@ -44,9 +47,15 @@ export interface OptionPositionExtended extends OptionPosition {
 	option?: OptionPhysicallySettled
 	vault?: Vault
 
-	size: BigNumberish
 	sizeETH: BigNumberish
 	sizeUSD: BigNumberish
+
+	closedSizeETH: BigNumberish
+	closedSizeUSD: BigNumberish
+	entryPriceETH: BigNumberish
+	entryPriceUSD: BigNumberish
+	closePriceETH: BigNumberish
+	closePriceUSD: BigNumberish
 
 	deposits: BigNumberish
 	depositsETH: BigNumberish
