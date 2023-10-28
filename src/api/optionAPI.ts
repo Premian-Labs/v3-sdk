@@ -227,7 +227,7 @@ export class OptionAPI extends BaseAPI {
 			strike?: BigNumberish
 		}
 	): Promise<Pool | null> {
-		let pools = await this.premia.pools.getPools(baseAddress)
+		let pools = await this.premia.pools.getPools(baseAddress, false)
 
 		pools.filter((p) => p.isCall === options.isCall)
 
@@ -304,7 +304,7 @@ export class OptionAPI extends BaseAPI {
 	): Promise<PoolMinimal | null> {
 		let [tokenPair, pools] = await Promise.all([
 			this.premia.pairs.getPair(pair),
-			this.premia.pools.getPoolsForPair(pair),
+			this.premia.pools.getPoolsForPair(pair, false),
 		])
 
 		pools.filter((p) => p.isCall === options.isCall)
