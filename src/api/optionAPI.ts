@@ -1,4 +1,4 @@
-import { BigNumberish, toBigInt } from 'ethers'
+import { BigNumberish, ZeroAddress, parseEther, toBigInt } from 'ethers'
 import { get, isEqual } from 'lodash'
 
 import { withCache } from '../cache'
@@ -250,21 +250,59 @@ export class OptionAPI extends BaseAPI {
 					v.optionType === (options.isCall ? OptionType.CALL : OptionType.PUT)
 			)
 
+			const willTrade = await Promise.all(
+				vaults.map(async (vault) => {
+					if (!options.isBuy) return pools.map(() => false)
+
+					const vaultContract = this.premia.contracts.getVaultContract(
+						vault.address
+					)
+
+					return await Promise.all(
+						pools.map(async (pool) => {
+							try {
+								const poolKey = await this.premia.pools.getPoolKeyFromAddress(
+									pool.address
+								)
+								const quote = await vaultContract.getQuote(
+									poolKey,
+									parseEther('0.0001'),
+									options.isBuy,
+									ZeroAddress
+								)
+								return quote > 0n
+							} catch (err) {
+								console.log('Vault + Pool failed: ', vault.name, pool.name, err)
+								return false
+							}
+						})
+					)
+				})
+			)
+
 			const vaultSizes = vaults.map((vault) => toBigInt(vault.netSize))
 
-			return pools.reduce((prev: Pool | null, curr: Pool) => {
+			return pools.reduce((prev: Pool | null, curr: Pool, poolIndex) => {
 				if (prev == null) return curr
+
+				const prevVaultSize = vaultSizes.reduce((a, b, index) => {
+					return willTrade[index][pools.indexOf(prev)] ? a + b : a
+				}, 0n)
+
+				const vaultSize = vaultSizes.reduce((a, b, index) => {
+					return willTrade[index][poolIndex] ? a + b : a
+				}, 0n)
 
 				const prevSize =
 					toBigInt((prev as Pool).shortLiquidity) +
 					(options.isCall
-						? vaultSizes.reduce((a, b) => a + b, 0n)
-						: vaultSizes.reduce((a, b) => a + b, 0n) / toBigInt(prev.strike))
+						? prevVaultSize
+						: (prevVaultSize * WAD_BI) / toBigInt(prev.strike))
 				const currSize =
 					toBigInt(curr.shortLiquidity) +
 					(options.isCall
-						? vaultSizes.reduce((a, b) => a + b, 0n)
-						: vaultSizes.reduce((a, b) => a + b, 0n) / toBigInt(curr.strike))
+						? vaultSize
+						: (vaultSize * WAD_BI) / toBigInt(curr.strike))
 
 				if (prev != null && prevSize > currSize) {
 					return prev
@@ -331,21 +369,59 @@ export class OptionAPI extends BaseAPI {
 					v.optionType === (options.isCall ? OptionType.CALL : OptionType.PUT)
 			)
 
+			const willTrade = await Promise.all(
+				vaults.map(async (vault) => {
+					if (!options.isBuy) return pools.map(() => false)
+
+					const vaultContract = this.premia.contracts.getVaultContract(
+						vault.address
+					)
+
+					return await Promise.all(
+						pools.map(async (pool) => {
+							try {
+								const poolKey = await this.premia.pools.getPoolKeyFromAddress(
+									pool.address
+								)
+								const quote = await vaultContract.getQuote(
+									poolKey,
+									parseEther('0.0001'),
+									options.isBuy,
+									ZeroAddress
+								)
+								return quote > 0n
+							} catch (err) {
+								console.log('Vault + Pool failed: ', vault.name, pool.name, err)
+								return false
+							}
+						})
+					)
+				})
+			)
+
 			const vaultSizes = vaults.map((vault) => toBigInt(vault.netSize))
 
-			return pools.reduce((prev: Pool | null, curr: Pool) => {
+			return pools.reduce((prev: Pool | null, curr: Pool, poolIndex) => {
 				if (prev == null) return curr
+
+				const prevVaultSize = vaultSizes.reduce((a, b, index) => {
+					return willTrade[index][pools.indexOf(prev)] ? a + b : a
+				}, 0n)
+
+				const vaultSize = vaultSizes.reduce((a, b, index) => {
+					return willTrade[index][poolIndex] ? a + b : a
+				}, 0n)
 
 				const prevSize =
 					toBigInt((prev as Pool).shortLiquidity) +
 					(options.isCall
-						? vaultSizes.reduce((a, b) => a + b, 0n)
-						: vaultSizes.reduce((a, b) => a + b, 0n) / toBigInt(prev.strike))
+						? prevVaultSize
+						: (prevVaultSize * WAD_BI) / toBigInt(prev.strike))
 				const currSize =
 					toBigInt(curr.shortLiquidity) +
 					(options.isCall
-						? vaultSizes.reduce((a, b) => a + b, 0n)
-						: vaultSizes.reduce((a, b) => a + b, 0n) / toBigInt(curr.strike))
+						? vaultSize
+						: (vaultSize * WAD_BI) / toBigInt(curr.strike))
 
 				if (prev != null && prevSize > currSize) {
 					return prev
