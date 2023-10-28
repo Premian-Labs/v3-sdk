@@ -66,19 +66,64 @@ export class PoolQuery {
 	@addFields
 	static GetPools(
 		subgraph: PremiaSubgraph,
-		tokenAddress: string
+		tokenAddress: string,
+		isExpired?: boolean
 	): DocumentNode {
+		let filter = ''
+
+		if (isExpired) {
+			filter = `, maturity_lt: ${Math.floor(Date.now() / 1000)}`
+		} else if (isExpired !== undefined && !isExpired) {
+			filter = `, maturity_gt: ${Math.floor(Date.now() / 1000)}`
+		}
+
 		return gql`
         ${PoolFragment}
 
         {
             pools(
-            	where: { base: "${tokenAddress.toLowerCase()}"}, 
+            	where: {
+					base: "${tokenAddress.toLowerCase()}"
+					${filter}
+				}, 
             	first: 1000, 
             	orderBy: createdAt, 
             	orderDirection: desc
             ) {
                 ...Pool
+            }
+        }
+    `
+	}
+
+	@addFields
+	static GetPoolsExtended(
+		subgraph: PremiaSubgraph,
+		tokenAddress: string,
+		isExpired?: boolean
+	): DocumentNode {
+		let filter = ''
+
+		if (isExpired) {
+			filter = `, maturity_lt: ${Math.floor(Date.now() / 1000)}`
+		} else if (isExpired !== undefined && !isExpired) {
+			filter = `, maturity_gt: ${Math.floor(Date.now() / 1000)}`
+		}
+
+		return gql`
+        ${PoolExtendedFragment}
+
+        {
+            pools(
+            	where: {
+					base: "${tokenAddress.toLowerCase()}"
+					${filter}
+				},
+            	first: 1000, 
+				orderBy: createdAt, 
+				orderDirection: desc
+            ) {
+                ...PoolExtended
             }
         }
     `
@@ -140,27 +185,6 @@ export class PoolQuery {
 	}
 
 	@addFields
-	static GetPoolsExtended(
-		subgraph: PremiaSubgraph,
-		tokenAddress: string
-	): DocumentNode {
-		return gql`
-        ${PoolExtendedFragment}
-
-        {
-            pools(
-            	where: { base: "${tokenAddress.toLowerCase()}" },
-            	first: 1000, 
-				orderBy: createdAt, 
-				orderDirection: desc
-            ) {
-                ...PoolExtended
-            }
-        }
-    `
-	}
-
-	@addFields
 	static GetPoolsForToken(
 		subgraph: PremiaSubgraph,
 		token: Token,
@@ -206,14 +230,26 @@ export class PoolQuery {
 	@addFields
 	static GetPoolsForPair(
 		subgraph: PremiaSubgraph,
-		pair: TokenPairOrId
+		pair: TokenPairOrId,
+		isExpired?: boolean
 	): DocumentNode {
 		const pairId = subgraph._parsePairId(pair)
+		let filter = ''
+
+		if (isExpired) {
+			filter = `, maturity_lt: ${Math.floor(Date.now() / 1000)}`
+		} else if (isExpired !== undefined && !isExpired) {
+			filter = `, maturity_gt: ${Math.floor(Date.now() / 1000)}`
+		}
+
 		return gql`
         ${PoolFragment}
 
         {
-            pools(where: { pair: "${pairId}" }) {
+            pools(where: {
+				pair: "${pairId}",
+				${filter}
+			}) {
                 ...Pool
             }
         }
@@ -223,14 +259,42 @@ export class PoolQuery {
 	@addFields
 	static GetPoolsExtendedForPair(
 		subgraph: PremiaSubgraph,
-		pair: TokenPairOrId
+		pair: TokenPairOrId,
+		options?: {
+			strike?: BigNumberish
+			maturity?: BigNumberish
+			isExpired?: boolean
+		}
 	): DocumentNode {
 		const pairId = subgraph._parsePairId(pair)
+		let filter = ''
+
+		if (options?.strike) {
+			filter += `, strike: "${options.strike}"`
+		}
+
+		if (options?.maturity) {
+			filter += `, maturity: "${options.maturity}"`
+		}
+
+		if (!options?.maturity && options?.isExpired) {
+			filter += `, maturity_lt: ${Math.floor(Date.now() / 1000)}`
+		} else if (
+			!options?.maturity &&
+			options?.isExpired !== undefined &&
+			!options.isExpired
+		) {
+			filter += `, maturity_gt: ${Math.floor(Date.now() / 1000)}`
+		}
+
 		return gql`
         ${PoolExtendedFragment}
 
         {
-            pools(where: { pair: "${pairId}" }) {
+            pools(where: {
+				pair: "${pairId}",
+				${filter}
+			}) {
                 ...PoolExtended
             }
         }

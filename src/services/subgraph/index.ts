@@ -185,9 +185,9 @@ export class PremiaSubgraph {
 		return get(response, 'data.pool') as PoolExtended
 	}
 
-	async getPools(baseAddress: string): Promise<Pool[]> {
+	async getPools(baseAddress: string, isExpired?: boolean): Promise<Pool[]> {
 		const response = await this.client.query({
-			query: PoolQuery.GetPools(this, baseAddress),
+			query: PoolQuery.GetPools(this, baseAddress, isExpired),
 		})
 
 		if (!response.data) {
@@ -199,9 +199,12 @@ export class PremiaSubgraph {
 		return get(response, 'data.pools', []) as Pool[]
 	}
 
-	async getPoolsExtended(baseAddress: string): Promise<PoolExtended[]> {
+	async getPoolsExtended(
+		baseAddress: string,
+		isExpired?: boolean
+	): Promise<PoolExtended[]> {
 		const response = await this.client.query({
-			query: PoolQuery.GetPoolsExtended(this, baseAddress),
+			query: PoolQuery.GetPoolsExtended(this, baseAddress, isExpired),
 		})
 
 		if (!response.data) {
@@ -290,9 +293,12 @@ export class PremiaSubgraph {
 		return get(response, 'data.pools', []) as Pool[]
 	}
 
-	async getPoolsForPair(pair: TokenPairOrId): Promise<Pool[]> {
+	async getPoolsForPair(
+		pair: TokenPairOrId,
+		isExpired?: boolean
+	): Promise<Pool[]> {
 		const response = await this.client.query({
-			query: PoolQuery.GetPoolsForPair(this, pair),
+			query: PoolQuery.GetPoolsForPair(this, pair, isExpired),
 		})
 
 		if (!response.data) {
@@ -309,10 +315,11 @@ export class PremiaSubgraph {
 		options?: {
 			strike?: BigNumberish
 			maturity?: BigNumberish
+			isExpired?: boolean
 		}
 	): Promise<PoolExtended[]> {
 		const response = await this.client.query({
-			query: PoolQuery.GetPoolsExtendedForPair(this, pair),
+			query: PoolQuery.GetPoolsExtendedForPair(this, pair, options),
 		})
 
 		if (!response.data) {
@@ -321,15 +328,7 @@ export class PremiaSubgraph {
 			)
 		}
 
-		return get(response, 'data.pools', []).filter(
-			(pool: PoolExtended) =>
-				(!options ||
-					!options.strike ||
-					String(pool.strike) === String(options.strike)) &&
-				(!options ||
-					!options.maturity ||
-					String(pool.maturity) === String(options.maturity))
-		) as PoolExtended[]
+		return get(response, 'data.pools', []) as PoolExtended[]
 	}
 
 	async getTicksForPool(poolAddress: string): Promise<Tick[]> {

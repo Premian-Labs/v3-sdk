@@ -703,22 +703,27 @@ export class PoolAPI extends BaseAPI {
 	 * Retrieves pools based on the base address. Cached daily.
 	 *
 	 * @param {string} baseAddress - The address of the base token.
+	 * @param {boolean} isExpired - A filter for [non-] expired pools.
 	 * @returns {Promise<Pool[]>} A promise that resolves to an array of `Pool` objects.
 	 */
 	@withCache(CacheTTL.DAILY)
-	async getPools(baseAddress: string): Promise<Pool[]> {
-		return this.premia.subgraph.getPools(baseAddress)
+	async getPools(baseAddress: string, isExpired?: boolean): Promise<Pool[]> {
+		return this.premia.subgraph.getPools(baseAddress, isExpired)
 	}
 
 	/**
 	 * Retrieves extended pools based on the base address. Cached daily.
 	 *
 	 * @param {string} baseAddress - The address of the base token.
+	 * @param {boolean} isExpired - A filter for [non-] expired pools.
 	 * @returns {Promise<PoolExtended[]>} A promise that resolves to an array of `PoolExtended` objects.
 	 */
 	@withCache(CacheTTL.MINUTE)
-	async getPoolsExtended(baseAddress: string): Promise<PoolExtended[]> {
-		return this.premia.subgraph.getPoolsExtended(baseAddress)
+	async getPoolsExtended(
+		baseAddress: string,
+		isExpired?: boolean
+	): Promise<PoolExtended[]> {
+		return this.premia.subgraph.getPoolsExtended(baseAddress, isExpired)
 	}
 
 	/**
@@ -755,22 +760,30 @@ export class PoolAPI extends BaseAPI {
 	 * Retrieves pools for a given token pair. Cached daily.
 	 *
 	 * @param {TokenPairOrId} pair - The token pair or pair id.
+	 * @param {boolean} isExpired - A filter for [non-] expired pools.
 	 * @returns {Promise<Pool[]>} A promise that resolves to an array of `Pool` objects.
 	 */
 	@withCache(CacheTTL.DAILY)
-	async getPoolsForPair(pair: TokenPairOrId): Promise<Pool[]> {
-		return this.premia.subgraph.getPoolsForPair(pair)
+	async getPoolsForPair(
+		pair: TokenPairOrId,
+		isExpired?: boolean
+	): Promise<Pool[]> {
+		return this.premia.subgraph.getPoolsForPair(pair, isExpired)
 	}
 
 	/**
 	 * Retrieves extended pools for a given token pair. Cached per minute.
 	 *
 	 * @param {TokenPairOrId} pair - The token pair or pair id.
+	 * @param {boolean} isExpired - A filter for [non-] expired pools.
 	 * @returns {Promise<PoolExtended[]>} A promise that resolves to an array of `PoolExtended` objects.
 	 */
 	@withCache(CacheTTL.MINUTE)
-	async getPoolsExtendedForPair(pair: TokenPairOrId): Promise<PoolExtended[]> {
-		return this.premia.subgraph.getPoolsExtendedForPair(pair)
+	async getPoolsExtendedForPair(
+		pair: TokenPairOrId,
+		isExpired?: boolean
+	): Promise<PoolExtended[]> {
+		return this.premia.subgraph.getPoolsExtendedForPair(pair, { isExpired })
 	}
 
 	/**
