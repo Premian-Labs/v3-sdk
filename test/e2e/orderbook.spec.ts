@@ -12,7 +12,7 @@ import {
 	WSRFQRequest,
 	QuoteSaltOptionalT,
 	QuoteWithSignature,
-	signData
+	signData,
 } from '../../src'
 import PoolFactoryABI from '../../abi/IPoolFactory.json'
 import PoolTradeABI from '../../abi/IPool.json'
@@ -28,9 +28,8 @@ import {
 } from 'ethers'
 import moment from 'moment'
 import Ajv from 'ajv'
-import {omit } from 'lodash'
+import { omit } from 'lodash'
 import * as Dotenv from 'dotenv'
-
 
 Dotenv.config()
 const {
@@ -149,7 +148,8 @@ const baseAddress: string =
 const quoteAddress: string = Addresses[SupportedChainId.ARBITRUM_GOERLI].USDC
 const oracleAdapter: string =
 	Addresses[SupportedChainId.ARBITRUM_GOERLI].CHAINLINK_ORACLE_ADAPTER
-const routerAddress: string = Addresses[SupportedChainId.ARBITRUM_GOERLI].ERC20_ROUTER
+const routerAddress: string =
+	Addresses[SupportedChainId.ARBITRUM_GOERLI].ERC20_ROUTER
 const deployer = new Wallet(TESTNET_PRIVATE_KEY_1, provider)
 const quoter = new Wallet(TESTNET_PRIVATE_KEY_2, provider)
 
@@ -208,25 +208,24 @@ async function deployPool(): Promise<string> {
 	}
 }
 
-async function fillQuote(quote: OrderbookQuote, fillSize: bigint){
-
+async function fillQuote(quote: OrderbookQuote, fillSize: bigint) {
 	const pool = new Contract(poolAddress, PoolTradeABI, deployer)
 
 	const quoteOB: QuoteOB = {
 		provider: quote.provider,
-		taker:  quote.taker,
+		taker: quote.taker,
 		price: toBigInt(quote.price),
 		size: toBigInt(quote.size),
 		isBuy: quote.isBuy,
 		deadline: toBigInt(quote.deadline),
-		salt: toBigInt(quote.salt)
+		salt: toBigInt(quote.salt),
 	}
 
 	const signedQuote = {
 		...quoteOB,
 		r: quote.signature.r,
 		s: quote.signature.s,
-		v: quote.signature.v
+		v: quote.signature.v,
 	}
 
 	const fillQuoteTx = await pool.fillQuoteOB(
@@ -237,23 +236,24 @@ async function fillQuote(quote: OrderbookQuote, fillSize: bigint){
 		{
 			gasLimit: 10000000,
 		}
-	);
-	console.log("order sent")
+	)
+	console.log('order sent')
 
-	const receipt = await provider.waitForTransaction(fillQuoteTx.hash, 1);
-	receipt?.status == 1? console.log("Fill Trans Successful") : console.log("WARNING: Fill Trans Reverted")
+	const receipt = await provider.waitForTransaction(fillQuoteTx.hash, 1)
+	receipt?.status == 1
+		? console.log('Fill Trans Successful')
+		: console.log('WARNING: Fill Trans Reverted')
 }
 
-async function cancelQuote(quoteHash: string){
+async function cancelQuote(quoteHash: string) {
 	const pool = new Contract(poolAddress, PoolTradeABI, deployer)
-	const cancelQuoteTx = await pool.cancelQuotesOB(
-		[quoteHash],
-		{
-			gasLimit: 10000000,
-		}
-	)
-	const receipt = await provider.waitForTransaction(cancelQuoteTx.hash, 1);
-	receipt?.status == 1? console.log("Cancel Trans Successful") : console.log("WARNING: Cancel Trans Reverted")
+	const cancelQuoteTx = await pool.cancelQuotesOB([quoteHash], {
+		gasLimit: 10000000,
+	})
+	const receipt = await provider.waitForTransaction(cancelQuoteTx.hash, 1)
+	receipt?.status == 1
+		? console.log('Cancel Trans Successful')
+		: console.log('WARNING: Cancel Trans Reverted')
 }
 
 async function createQuoteWithSig(
@@ -267,7 +267,6 @@ async function createQuoteWithSig(
 	size = parseEther('0.1'),
 	isDeployer: boolean = true
 ): Promise<QuoteWithSignature> {
-
 	const quoteOB: QuoteOB = {
 		provider: provider.toLowerCase(),
 		taker: takerAddress.toLowerCase(),
@@ -311,9 +310,8 @@ async function createQuoteWithSig(
 		message,
 	}
 
-
-	const signer = isDeployer? deployer: quoter
-	const addr = isDeployer? deployer.address : quoter.address
+	const signer = isDeployer ? deployer : quoter
+	const addr = isDeployer ? deployer.address : quoter.address
 	const sig: Signature = await signData(signer, addr, typedData)
 
 	return {
@@ -336,10 +334,10 @@ describe('OrderbookV1', () => {
 		// Create quote with signature
 		publicQuoteWithSignature = await createQuoteWithSig(poolAddress)
 		// Set approvals for deployer and quoter signers
-		let erc20 = new Contract(baseAddress, ERC20ABI, deployer);
-		await erc20.approve(routerAddress, parseEther('100').toString());
-		erc20 = new Contract(baseAddress, ERC20ABI, quoter);
-		await erc20.approve(routerAddress, parseEther('100').toString());
+		let erc20 = new Contract(baseAddress, ERC20ABI, deployer)
+		await erc20.approve(routerAddress, parseEther('100').toString())
+		erc20 = new Contract(baseAddress, ERC20ABI, quoter)
+		await erc20.approve(routerAddress, parseEther('100').toString())
 	})
 
 	it('should properly initialize orderbook', () => {
@@ -383,12 +381,19 @@ describe('OrderbookV1', () => {
 	 * quoteId is just the quote hash. Calculating the quote hash output is not tested here
 	 */
 	it('should publish a valid public quote and receive quoteId, poolAddress & chainId along with quote', async () => {
-		publishedQuote = (await orderbook.publishQuotes([publicQuoteWithSignature])).created[0]
-		expect(publishedQuote).to.include.all.keys('quoteId', 'poolAddress', 'chainId', 'fillableSize','ts')
+		publishedQuote = (await orderbook.publishQuotes([publicQuoteWithSignature]))
+			.created[0]
+		expect(publishedQuote).to.include.all.keys(
+			'quoteId',
+			'poolAddress',
+			'chainId',
+			'fillableSize',
+			'ts'
+		)
 		expect(publishedQuote.poolAddress).to.eq(poolAddress)
 	})
 
-	it ('should prevent unauthorized access of the orderbook', async () => {
+	it('should prevent unauthorized access of the orderbook', async () => {
 		const dummyOrderbook = new OrderbookV1(
 			'https://test.orderbook.premia.finance',
 			'wss://test.quotes.premia.finance',
@@ -397,9 +402,9 @@ describe('OrderbookV1', () => {
 		)
 
 		let error: any
-		try{
+		try {
 			await dummyOrderbook.publishQuotes([publicQuoteWithSignature])
-		} catch (e){
+		} catch (e) {
 			error = e
 		}
 		expect(error).to.not.eq(undefined)
@@ -408,19 +413,21 @@ describe('OrderbookV1', () => {
 
 	it('should attempt to publish an invalid public quote and receive an error message', async () => {
 		const invalidQuoteWithSignature = await createQuoteWithSig(poolAddress)
-		const erc20 = new Contract(baseAddress, ERC20ABI, deployer);
+		const erc20 = new Contract(baseAddress, ERC20ABI, deployer)
 		// Set approval to ZERO so the order does not pass validation
-		await erc20.approve(routerAddress, parseEther('0').toString());
+		await erc20.approve(routerAddress, parseEther('0').toString())
 
 		try {
 			await orderbook.publishQuotes([invalidQuoteWithSignature])
-		} catch (e) {
-			const errorData = (e as any).data
-			expect(errorData.invalidQuotes[0][1]).to.eq('InsufficientCollateralAllowance')
+		} catch (err) {
+			const errorData = err.data
+			expect(errorData.invalidQuotes[0][1]).to.eq(
+				'InsufficientCollateralAllowance'
+			)
 		}
 
 		// Reset the approval back
-		await erc20.approve(routerAddress, parseEther('100').toString());
+		await erc20.approve(routerAddress, parseEther('100').toString())
 	})
 
 	/**
@@ -433,90 +440,104 @@ describe('OrderbookV1', () => {
 			'ask'
 		)
 
-		const unFilledQuote = quotes.filter(quote => quote.size === quote.fillableSize && quote.quoteId
-		=== publishedQuote.quoteId).length
+		const unFilledQuote = quotes.filter(
+			(quote) =>
+				quote.size === quote.fillableSize &&
+				quote.quoteId === publishedQuote.quoteId
+		).length
 		const timestamp = moment.utc().unix()
-		const deadlineCheck = quotes.every(quote => quote.deadline > timestamp)
+		const deadlineCheck = quotes.every((quote) => quote.deadline > timestamp)
 
 		expect(deadlineCheck).to.eq(true)
 		expect(
 			quotes.some((quote) => quote.quoteId === publishedQuote.quoteId)
 		).to.eq(true)
 		expect(unFilledQuote).to.eq(1)
-
 	})
 
-	it ("should properly update fillableSize on a partial fill on-chain", async() => {
-		const quote = (await orderbook.getQuotes(
-			poolAddress,
-			parseEther('100').toString(),
-			'ask'
-		))[0]
+	it('should properly update fillableSize on a partial fill on-chain', async () => {
+		const quote = (
+			await orderbook.getQuotes(
+				poolAddress,
+				parseEther('100').toString(),
+				'ask'
+			)
+		)[0]
 
 		const fillSize = parseEther('.01')
 		await fillQuote(quote, fillSize)
 		console.log('Waiting for Moralis to send fillQuoteOB event to Redis')
 		await delay(45000)
-		const updatedQuote = (await orderbook.getQuotes(
-			poolAddress,
-			parseEther('100').toString(),
-			'ask'
-		))[0]
+		const updatedQuote = (
+			await orderbook.getQuotes(
+				poolAddress,
+				parseEther('100').toString(),
+				'ask'
+			)
+		)[0]
 
 		expect(quote.fillableSize).to.eq(parseEther('.1').toString())
-		expect(updatedQuote.fillableSize).to.eq((parseEther('.1') - fillSize).toString())
+		expect(updatedQuote.fillableSize).to.eq(
+			(parseEther('.1') - fillSize).toString()
+		)
 	})
 
-	it ('should properly remove an order from redis when completely filled on-chain', async() => {
-		const quote = (await orderbook.getQuotes(
-			poolAddress,
-			parseEther('100').toString(),
-			'ask'
-		))[0]
+	it('should properly remove an order from redis when completely filled on-chain', async () => {
+		const quote = (
+			await orderbook.getQuotes(
+				poolAddress,
+				parseEther('100').toString(),
+				'ask'
+			)
+		)[0]
 
 		const fillSize = parseEther('.09')
 		await fillQuote(quote, fillSize)
 		console.log('Waiting for Moralis to send fillQuoteOB event to Redis')
 		await delay(45000)
-		const updatedQuote = (await orderbook.getQuotes(
-			poolAddress,
-			parseEther('100').toString(),
-			'ask'
-		))[0]
+		const updatedQuote = (
+			await orderbook.getQuotes(
+				poolAddress,
+				parseEther('100').toString(),
+				'ask'
+			)
+		)[0]
 
 		expect(updatedQuote).to.equal(undefined)
 	})
 
-	it ('should properly remove an order from redis when cancelled on-chain', async() => {
+	it('should properly remove an order from redis when cancelled on-chain', async () => {
 		const quoteToCancel = await createQuoteWithSig(poolAddress)
 		publishedQuote = (await orderbook.publishQuotes([quoteToCancel])).created[0]
 		const quoteId = publishedQuote.quoteId
-		expect(publishedQuote).to.include.all.keys('quoteId', 'poolAddress', 'chainId')
+		expect(publishedQuote).to.include.all.keys(
+			'quoteId',
+			'poolAddress',
+			'chainId'
+		)
 		expect(publishedQuote.poolAddress).to.eq(poolAddress)
 		await delay(10000)
 
-		const quotes = (await orderbook.getQuotes(
+		const quotes = await orderbook.getQuotes(
 			poolAddress,
 			parseEther('100').toString(),
 			'ask'
-		))
+		)
 
-		expect(
-			quotes.some((quote) => quote.quoteId === quoteId)
-		).to.eq(true)
+		expect(quotes.some((quote) => quote.quoteId === quoteId)).to.eq(true)
 
 		await cancelQuote(quoteId)
 		console.log('Waiting for Moralis to send cancelQuote event to Redis')
 		await delay(45000)
-		const updatedQuotes = (await orderbook.getQuotes(
+		const updatedQuotes = await orderbook.getQuotes(
 			poolAddress,
 			parseEther('100').toString(),
 			'ask'
-		))
+		)
 
-		expect(
-			updatedQuotes.some((quote) => quote.quoteId === quoteId)
-		).to.eq(false)
+		expect(updatedQuotes.some((quote) => quote.quoteId === quoteId)).to.eq(
+			false
+		)
 	})
 
 	// NOTE: This will keep TWO orders on the orderbook
@@ -535,8 +556,11 @@ describe('OrderbookV1', () => {
 			false
 		)
 
-		const deployerQuote = (await orderbook.publishQuotes([publicQuoteWithSignature])).created[0]
-		const quoterQuote = (await orderbook.publishQuotes([quoteWithNewProvider])).created[0]
+		const deployerQuote = (
+			await orderbook.publishQuotes([publicQuoteWithSignature])
+		).created[0]
+		const quoterQuote = (await orderbook.publishQuotes([quoteWithNewProvider]))
+			.created[0]
 
 		// we should have two identical quotes with except the provider address
 		const quotesProvider = await orderbook.getQuotes(
@@ -559,17 +583,22 @@ describe('OrderbookV1', () => {
 			parseEther('100').toString(),
 			'ask'
 		)
-		expect(
-			quotes.some((quote) => quote.quoteId === quoterQuote.quoteId)
-		).to.eq(true)
+		expect(quotes.some((quote) => quote.quoteId === quoterQuote.quoteId)).to.eq(
+			true
+		)
 		expect(
 			quotes.some((quote) => quote.quoteId === deployerQuote.quoteId)
 		).to.eq(true)
 	})
 
 	// NOTE: combined with the orders from above, this will have a total of THREE orders
-	it ('Should get public and rfq quotes together', async() => {
-		const quoteWithTaker = await createQuoteWithSig(poolAddress,'0.5', false, quoter.address)
+	it('Should get public and rfq quotes together', async () => {
+		const quoteWithTaker = await createQuoteWithSig(
+			poolAddress,
+			'0.5',
+			false,
+			quoter.address
+		)
 		await orderbook.publishQuotes([quoteWithTaker])
 
 		const quotes = await orderbook.getQuotes(
@@ -592,8 +621,7 @@ describe('OrderbookV1', () => {
 		expect(quotes.length).to.be.gte(3)
 	})
 
-	it('should return properly sorted public quotes (ordered by price then timestamp)', async() => {
-
+	it('should return properly sorted public quotes (ordered by price then timestamp)', async () => {
 		const order1 = await createQuoteWithSig(poolAddress, '0.2')
 		const publishedOrder1 = (await orderbook.publishQuotes([order1])).created[0]
 		// delay affects public quotes ordering
@@ -615,9 +643,15 @@ describe('OrderbookV1', () => {
 			'ask'
 		)
 
-		const order1Index = quotes.findIndex(quote => quote.quoteId == publishedOrder1.quoteId)
-		const order2Index = quotes.findIndex(quote => quote.quoteId == publishedOrder2.quoteId)
-		const order3Index = quotes.findIndex(quote => quote.quoteId == publishedOrder3.quoteId)
+		const order1Index = quotes.findIndex(
+			(quote) => quote.quoteId == publishedOrder1.quoteId
+		)
+		const order2Index = quotes.findIndex(
+			(quote) => quote.quoteId == publishedOrder2.quoteId
+		)
+		const order3Index = quotes.findIndex(
+			(quote) => quote.quoteId == publishedOrder3.quoteId
+		)
 
 		// NOTE: better quotes have smaller index values
 		expect(order1Index).to.lt(order2Index) // tiebreaker goes to order 1
@@ -656,10 +690,10 @@ describe('OrderbookV1', () => {
 			deployer.address,
 			mockSalt
 		)
-		const publishedDupeOrder = (await orderbook.publishQuotes([dupeOrder])).exists
+		const publishedDupeOrder = (await orderbook.publishQuotes([dupeOrder]))
+			.exists
 		// expect duplicate order to be return under exists
 		expect(publishedDupeOrder.length).to.be.eq(1)
-
 
 		const quotes = await orderbook.getQuotes(
 			poolAddress,
@@ -703,9 +737,9 @@ describe('OrderbookV1', () => {
 		)
 
 		// check that the public quote from previous test is still being received (public)
-		expect(
-			quotes.some((quote) => quote.quoteId === publishedQuoteId)
-		).to.eq(true)
+		expect(quotes.some((quote) => quote.quoteId === publishedQuoteId)).to.eq(
+			true
+		)
 		// make sure PRIVATE quote does not show up from a PUBLIC quote query
 		expect(
 			quotes.some((quote) => quote.quoteId === publishedPrivateQuote.quoteId)
