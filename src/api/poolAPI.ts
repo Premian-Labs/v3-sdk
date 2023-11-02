@@ -598,7 +598,10 @@ export class PoolAPI extends BaseAPI {
 	 * @returns {Promise<PoolKey>}
 	 */
 	async getPoolKeyFromAddress(poolAddress: string): Promise<PoolKey> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			this.premia.multicallProvider
+		)
 		const poolSettings = await poolContract.getPoolSettings()
 
 		return {
