@@ -4,6 +4,7 @@ import {
 	randomBytes,
 	Signer,
 	toBigInt,
+	TypedDataDomain,
 	ZeroAddress,
 } from 'ethers'
 import { PermitTransferFrom, SignatureTransfer } from '@uniswap/permit2-sdk'
@@ -31,7 +32,7 @@ export async function signPermit2(signer: Signer, permit: PermitTransferFrom) {
 		Number(chainId)
 	)
 
-	return signer.signTypedData(domain as any, types, values)
+	return signer.signTypedData(domain as TypedDataDomain, types, values)
 }
 
 export async function signPremiaPermit2(

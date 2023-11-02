@@ -1,7 +1,13 @@
 import localforage from 'localforage'
 import * as memoryDriver from 'localforage-driver-memory'
 
-;(BigInt.prototype as any).toJSON = function () {
+declare global {
+	interface BigInt {
+		toJSON(): string
+	}
+}
+
+BigInt.prototype.toJSON = function () {
 	return this.toString()
 }
 

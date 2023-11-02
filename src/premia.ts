@@ -1,5 +1,11 @@
-import { JsonRpcProvider, Provider, Signer, Wallet } from 'ethers'
-import { providers } from '@premia/ethers-multicall'
+import {
+	AbstractProvider,
+	JsonRpcProvider,
+	Provider,
+	Signer,
+	Wallet,
+} from 'ethers'
+import { MulticallProvider, MulticallWrapper } from 'ethers-multicall-provider'
 import { merge } from 'lodash'
 
 import * as _entities from './entities'
@@ -246,6 +252,13 @@ export class Premia {
 	provider: Provider
 
 	/**
+	 * The ethers.js multicall provider instance used for batched contract calls.
+	 *
+	 * @see https://github.com/Rubilmax/ethers-multicall-provider
+	 */
+	multicallProvider: MulticallProvider
+
+	/**
 	 * The `SetProviderParams` field used to instantiate the SDK.
 	 */
 	providerCredentials: { rpcUrl?: string; provider?: Provider }
@@ -261,13 +274,6 @@ export class Premia {
 	 * The `SetProviderParams` field used to instantiate the SDK.
 	 */
 	orderbookProviderCredentials?: { rpcUrl?: string; provider?: Provider }
-
-	/**
-	 * The ethers.js multicall provider instance used for batched contract calls.
-	 *
-	 * @see https://github.com/0xsequence/sequence.js/tree/master/packages/multicall
-	 */
-	multicallProvider?: providers.MulticallProvider
 
 	/**
 	 * The ethers.js signer instance used for transacting with the main exchange contracts.
@@ -482,6 +488,11 @@ export class Premia {
 			this.providerCredentials = { provider: config.provider }
 		}
 
+		// Required to silence Typescript errors
+		this.multicallProvider = MulticallWrapper.wrap(
+			this.provider as AbstractProvider
+		)
+
 		this.setProvider(config)
 
 		// Setup addresses for contracts
@@ -676,7 +687,9 @@ export class Premia {
 			this.providerCredentials = { provider }
 		}
 
-		this.multicallProvider = new providers.MulticallProvider(this.provider)
+		this.multicallProvider = MulticallWrapper.wrap(
+			this.provider as AbstractProvider
+		)
 
 		if (typeof orderbookProvider === 'string') {
 			this.orderbookProvider = new JsonRpcProvider(orderbookProvider as string)
