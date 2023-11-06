@@ -1,6 +1,6 @@
 import { BigNumberish, ContractTransaction } from 'ethers'
 import { BaseAPI } from './baseAPI'
-import { IVaultMining } from '../typechain'
+import { IVaultMining } from '@premia/v3-abi/typechain'
 
 /**
  * Represents a class for handling operations related to making liquidity mining.
