@@ -420,7 +420,7 @@ describe('OrderbookV1', () => {
 		try {
 			await orderbook.publishQuotes([invalidQuoteWithSignature])
 		} catch (err) {
-			const errorData = err.data
+			const errorData = (err as any).data
 			expect(errorData.invalidQuotes[0][1]).to.eq(
 				'InsufficientCollateralAllowance'
 			)
