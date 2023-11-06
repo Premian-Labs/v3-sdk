@@ -255,7 +255,8 @@ export class OptionAPI extends BaseAPI {
 					if (!options.isBuy) return pools.map(() => false)
 
 					const vaultContract = this.premia.contracts.getVaultContract(
-						vault.address
+						vault.address,
+						this.premia.multicallProvider
 					)
 
 					return await Promise.all(
@@ -280,7 +281,7 @@ export class OptionAPI extends BaseAPI {
 				})
 			)
 
-			const vaultSizes = vaults.map((vault) => toBigInt(vault.netSize))
+			const vaultSizes = vaults.map((vault) => toBigInt(vault.totalAvailable))
 
 			return pools.reduce((prev: Pool | null, curr: Pool, poolIndex) => {
 				if (prev == null) return curr
@@ -374,7 +375,8 @@ export class OptionAPI extends BaseAPI {
 					if (!options.isBuy) return pools.map(() => false)
 
 					const vaultContract = this.premia.contracts.getVaultContract(
-						vault.address
+						vault.address,
+						this.premia.multicallProvider
 					)
 
 					return await Promise.all(
@@ -399,7 +401,7 @@ export class OptionAPI extends BaseAPI {
 				})
 			)
 
-			const vaultSizes = vaults.map((vault) => toBigInt(vault.netSize))
+			const vaultSizes = vaults.map((vault) => toBigInt(vault.totalAvailable))
 
 			return pools.reduce((prev: Pool | null, curr: Pool, poolIndex) => {
 				if (prev == null) return curr
