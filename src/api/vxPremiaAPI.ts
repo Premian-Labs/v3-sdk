@@ -21,7 +21,7 @@ import {
 	IPremiaStaking,
 	PremiaStakingStorage,
 	VxPremiaStorage,
-} from '../typechain/IVxPremia'
+} from '@premia/v3-abi/typechain/IVxPremia'
 import { sendTransaction } from '../utils'
 
 /**

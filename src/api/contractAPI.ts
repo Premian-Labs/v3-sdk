@@ -32,7 +32,7 @@ import {
 	IOptionPS__factory,
 	IOptionReward,
 	IOptionReward__factory,
-} from '../typechain'
+} from '@premia/v3-abi/typechain'
 import { BaseAPI } from './baseAPI'
 
 /**
