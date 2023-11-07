@@ -21,7 +21,7 @@ Feedback is welcome!
 
 ### Dev Setup
 
-1. Add `API_KEY_ALCHEMY`, `API_KEY_INFURA` and `PKEY_ETH_TEST` to a `.env` file (see example)
+1. Add `API_KEY_ALCHEMY`, `API_KEY_INFURA` and `TESTNET_PRIVATE_KEY` to a `.env` file (see example)
 2. Run `yarn install` to download dependencies
 3. If necessary, run `chmod ug+x .husky/*` to make the husky precommit script an executable.
 
