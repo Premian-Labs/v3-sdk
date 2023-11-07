@@ -13,7 +13,11 @@ Pull requests are welcome!
 [![npm version](https://img.shields.io/npm/v/@premia/v3-sdk/latest.svg)](https://www.npmjs.com/package/@premia/v3-sdk/v/latest)
 [![npm bundle size (scoped version)](https://img.shields.io/bundlephobia/minzip/@premia/v3-sdk/latest.svg)](https://bundlephobia.com/result?p=@premia/v3-sdk@latest)
 
-In-depth documentation on this SDK is available at [premia.blue](https://docs.premia.blue/).
+In-depth documentation on this SDK is available at [docs.premia.blue](https://docs.premia.blue/).
+
+Auto-generated documentation is available at [docs-sdk.premia.finance](https://docs-sdk.premia.finance/).
+
+Feedback is welcome!
 
 ### Dev Setup
 
