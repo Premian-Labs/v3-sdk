@@ -1,6 +1,6 @@
 {
 	"name": "@premia/v3-sdk-public",
-	"version": "0.7.7",
+	"version": "0.7.8",
 	"description": "The official SDK for building applications on Premia V3",
 	"main": "dist/index.js",
 	"typings": "dist/index.d.ts",
@@ -31,7 +31,8 @@
 	],
 	"scripts": {
 		"docs": "npx typedoc src/index.ts",
-		"build": "yarn docs && tsc",
+		"build": "yarn docs && yarn cp:typechain && tsc",
+		"cp:typechain": "shx rm -rf ./src/typechain && shx cp -r ./node_modules/@premia/v3-abi/typechain ./src/typechain",
 		"prepublishOnly": "yarn build",
 		"test": "npx hardhat test test/unit/* --network anvil",
 		"it": "npx hardhat test test/it/* --network anvil",
@@ -83,6 +84,7 @@
 		"mock-local-storage": "^1.1.23",
 		"prettier": "^2.8.4",
 		"pretty-quick": "^3.1.3",
+		"shx": "^0.3.4",
 		"sinon": "^15.0.4",
 		"ts-node": "^10.9.1",
 		"typedoc": "^0.24.1",
