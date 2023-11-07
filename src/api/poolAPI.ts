@@ -35,7 +35,7 @@ import {
 	WAD_DECIMALS,
 	ZERO_BI,
 } from '../constants'
-import { Position } from '../typechain/IPool'
+import { Position } from '@premia/v3-abi/typechain/IPool'
 import { BaseAPI } from './baseAPI'
 import { convertDecimals, formatTokenId, sendTransaction } from '../utils'
 import { snapToValidRange } from '../utils/range'

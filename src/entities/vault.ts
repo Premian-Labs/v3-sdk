@@ -1,6 +1,6 @@
 import { BigNumberish } from 'ethers'
 
-import { IVault } from '../typechain/IVault'
+import { IVault } from '@premia/v3-abi/typechain/IVault'
 import { OptionType } from './option'
 import { Token, TokenMinimal } from './token'
 import { VaultRegistry } from './vaultRegistry'

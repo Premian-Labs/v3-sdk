@@ -63,7 +63,7 @@ import {
 import { BigNumberish, toBigInt } from 'ethers'
 import { get } from 'lodash'
 import { TokenInfo } from '@premia/pair-lists/src/types'
-import { TokenOrAddress, TokenPairOrId, TokenPairOrInfo } from '../../api'
+import { TokenOrAddress, TokenPairOrId } from '../../api'
 
 /**
  * The PremiaSubgraph class is the entry point for interacting with the Premia V3 subgraph

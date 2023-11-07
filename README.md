@@ -17,11 +17,9 @@ In-depth documentation on this SDK is available at [premia.blue](https://docs.pr
 
 ### Dev Setup
 
-1. Add `API_KEY_ALCHEMY` and `PKEY_ETH_TEST` to a `.env` file (see example)
-2. Ensure the latest ABI's are used in the `./src/abi` folder
-3. Run `yarn install` to download dependencies
-4. If necessary, run `chmod ug+x .husky/*` to make the husky precommit script an executable.
-6. Run `yarn postinstall` to set up and install husky.
+1. Add `API_KEY_ALCHEMY`, `API_KEY_INFURA` and `PKEY_ETH_TEST` to a `.env` file (see example)
+2. Run `yarn install` to download dependencies
+3. If necessary, run `chmod ug+x .husky/*` to make the husky precommit script an executable.
 
 ### Anvil Setup
 
@@ -30,13 +28,14 @@ In order to use Anvil as a local blockchain for dev purposes, Forge needs to be 
 ### Forking Arbitrum Goerli
 
 1. Make sure ABI's reflect the same copy as the ones deployed on the Georli Network
-2. Determine the blocknumber inwhich new contracts were deployed (fork must be _after_ this blocknumber)
+2. Determine the blocknumber in which new contracts were deployed (fork must be _after_ this blocknumber)
 3. Forking Georli -> type the following into terminal to launch anvil fork of Georli: `anvil --fork-url <INSERT RPC URL> --fork-block-number <INSERT BLOCK NUMBER>`
 4. After running the fork use `ctrl + z` to pause and then type `bg` to run the fork in the background
 5. Run unit test by running `yarn test` through the command line
 
 ### Contract Deployments
 
+- 2023-11-06 (Arbitrum Goerli): ~53444156
 - 2023-08-10 (Arbitrum Goerli): ~33821949
 - 2023-08-02 (Arbitrum Goerli): ~32704676
 - 2023-06-09 (Arbitrum Goerli): ~25083922
