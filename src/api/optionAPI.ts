@@ -1,14 +1,21 @@
-import { BigNumberish, toBigInt } from 'ethers'
+import { BigNumberish, ZeroAddress, parseEther, toBigInt } from 'ethers'
 import { get, isEqual } from 'lodash'
 
 import { withCache } from '../cache'
 import { CacheTTL, WAD_DECIMALS, ZERO_BI } from '../constants'
-import { FillableQuote, PoolMinimal, Token } from '../entities'
+import {
+	FillableQuote,
+	OptionType,
+	Pool,
+	PoolMinimal,
+	Token,
+	VaultTradeSide,
+} from '../entities'
 import { BaseAPI } from './baseAPI'
 import { TokenOrAddress } from './tokenAPI'
 import { roundToNearest } from '../utils/round'
 import { parseBigInt, parseNumber } from '../utils'
-import { ONE_YEAR_MS, blackScholes } from '../'
+import { ONE_YEAR_MS, TokenPairOrId, WAD_BI, blackScholes } from '../'
 
 /**
  * This class provides an API for interacting with options in the Premia system.
@@ -202,6 +209,240 @@ export class OptionAPI extends BaseAPI {
 		})
 
 		return Math.abs(iv)
+	}
+
+	/**
+	 * Gets the most liquid option for the specified base token.
+	 * The liquidity is calculated using pool and vault liquidity.
+	 *
+	 * @returns {Promise<PoolMinimal | null>} The Pool representing the most liquid option or null if no options exist.
+	 */
+	@withCache(CacheTTL.HOURLY)
+	async getMostLiquidOptionForToken(
+		baseAddress: string,
+		options: {
+			isCall: boolean
+			isBuy: boolean
+			maturity?: BigNumberish
+			strike?: BigNumberish
+		}
+	): Promise<Pool | null> {
+		let pools = await this.premia.pools.getPools(baseAddress, false)
+
+		pools.filter((p) => p.isCall === options.isCall)
+
+		if (options.maturity) {
+			pools = pools.filter(
+				(p) => String(p.maturity) === String(options.maturity)
+			)
+		}
+
+		if (options.strike) {
+			pools = pools.filter((p) => String(p.strike) === String(options.strike))
+		}
+
+		if (options.isBuy) {
+			const vaults = (
+				await this.premia.vaults.getVaultsExtendedForToken(baseAddress, false)
+			).filter(
+				(v) =>
+					[VaultTradeSide.Sell, VaultTradeSide.Both].includes(v.side) &&
+					v.optionType === (options.isCall ? OptionType.CALL : OptionType.PUT)
+			)
+
+			const willTrade = await Promise.all(
+				vaults.map(async (vault) => {
+					if (!options.isBuy) return pools.map(() => false)
+
+					const vaultContract = this.premia.contracts.getVaultContract(
+						vault.address,
+						this.premia.multicallProvider
+					)
+
+					return await Promise.all(
+						pools.map(async (pool) => {
+							try {
+								const poolKey = await this.premia.pools.getPoolKeyFromAddress(
+									pool.address
+								)
+								const quote = await vaultContract.getQuote(
+									poolKey,
+									parseEther('0.0001'),
+									options.isBuy,
+									ZeroAddress
+								)
+								return quote > 0n
+							} catch (err) {
+								console.log('Vault + Pool failed: ', vault.name, pool.name, err)
+								return false
+							}
+						})
+					)
+				})
+			)
+
+			const vaultSizes = vaults.map((vault) => toBigInt(vault.totalAvailable))
+
+			return pools.reduce((prev: Pool | null, curr: Pool, poolIndex) => {
+				if (prev == null) return curr
+
+				const prevVaultSize = vaultSizes.reduce((a, b, index) => {
+					return willTrade[index][pools.indexOf(prev)] ? a + b : a
+				}, 0n)
+
+				const vaultSize = vaultSizes.reduce((a, b, index) => {
+					return willTrade[index][poolIndex] ? a + b : a
+				}, 0n)
+
+				const prevSize =
+					toBigInt((prev as Pool).shortLiquidity) +
+					(options.isCall
+						? prevVaultSize
+						: (prevVaultSize * WAD_BI) / toBigInt(prev.strike))
+				const currSize =
+					toBigInt(curr.shortLiquidity) +
+					(options.isCall
+						? vaultSize
+						: (vaultSize * WAD_BI) / toBigInt(curr.strike))
+
+				if (prev != null && prevSize > currSize) {
+					return prev
+				}
+
+				return curr
+			}, null)
+		} else {
+			return pools.reduce((prev: Pool | null, curr: Pool) => {
+				if (
+					prev != null &&
+					toBigInt((prev as Pool).longLiquidity) > toBigInt(curr.longLiquidity)
+				) {
+					return prev
+				}
+
+				return curr
+			}, null)
+		}
+	}
+
+	/**
+	 * Gets the most liquid option for the specified token pair.
+	 * The liquidity is calculated using pool and vault liquidity.
+	 *
+	 * @returns {Promise<PoolMinimal | null>} The Pool representing the most liquid option or null if no options exist.
+	 */
+	@withCache(CacheTTL.HOURLY)
+	async getMostLiquidOptionForTokenPair(
+		pair: TokenPairOrId,
+		options: {
+			isCall: boolean
+			isBuy: boolean
+			maturity?: BigNumberish
+			strike?: BigNumberish
+		}
+	): Promise<PoolMinimal | null> {
+		let [tokenPair, pools] = await Promise.all([
+			this.premia.pairs.getPair(pair),
+			this.premia.pools.getPoolsForPair(pair, false),
+		])
+
+		pools.filter((p) => p.isCall === options.isCall)
+
+		if (options.maturity) {
+			pools = pools.filter(
+				(p) => String(p.maturity) === String(options.maturity)
+			)
+		}
+
+		if (options.strike) {
+			pools = pools.filter((p) => String(p.strike) === String(options.strike))
+		}
+
+		if (options.isBuy) {
+			const vaults = (
+				await this.premia.vaults.getVaultsExtendedForToken(
+					tokenPair.base,
+					false
+				)
+			).filter(
+				(v) =>
+					[VaultTradeSide.Sell, VaultTradeSide.Both].includes(v.side) &&
+					v.optionType === (options.isCall ? OptionType.CALL : OptionType.PUT)
+			)
+
+			const willTrade = await Promise.all(
+				vaults.map(async (vault) => {
+					if (!options.isBuy) return pools.map(() => false)
+
+					const vaultContract = this.premia.contracts.getVaultContract(
+						vault.address,
+						this.premia.multicallProvider
+					)
+
+					return await Promise.all(
+						pools.map(async (pool) => {
+							try {
+								const poolKey = await this.premia.pools.getPoolKeyFromAddress(
+									pool.address
+								)
+								const quote = await vaultContract.getQuote(
+									poolKey,
+									parseEther('0.0001'),
+									options.isBuy,
+									ZeroAddress
+								)
+								return quote > 0n
+							} catch (err) {
+								console.log('Vault + Pool failed: ', vault.name, pool.name, err)
+								return false
+							}
+						})
+					)
+				})
+			)
+
+			const vaultSizes = vaults.map((vault) => toBigInt(vault.totalAvailable))
+
+			return pools.reduce((prev: Pool | null, curr: Pool, poolIndex) => {
+				if (prev == null) return curr
+
+				const prevVaultSize = vaultSizes.reduce((a, b, index) => {
+					return willTrade[index][pools.indexOf(prev)] ? a + b : a
+				}, 0n)
+
+				const vaultSize = vaultSizes.reduce((a, b, index) => {
+					return willTrade[index][poolIndex] ? a + b : a
+				}, 0n)
+
+				const prevSize =
+					toBigInt((prev as Pool).shortLiquidity) +
+					(options.isCall
+						? prevVaultSize
+						: (prevVaultSize * WAD_BI) / toBigInt(prev.strike))
+				const currSize =
+					toBigInt(curr.shortLiquidity) +
+					(options.isCall
+						? vaultSize
+						: (vaultSize * WAD_BI) / toBigInt(curr.strike))
+
+				if (prev != null && prevSize > currSize) {
+					return prev
+				}
+
+				return curr
+			}, null)
+		} else {
+			return pools.reduce((prev: Pool | null, curr: Pool) => {
+				if (
+					prev != null &&
+					toBigInt((prev as Pool).longLiquidity) > toBigInt(curr.longLiquidity)
+				) {
+					return prev
+				}
+
+				return curr
+			}, null)
+		}
 	}
 
 	/**
@@ -733,7 +974,7 @@ export class OptionAPI extends BaseAPI {
 		)
 
 		await Promise.all([
-			// @dev: WS API quotes design does not support multiple Redis channels subscription w/ single WS connection
+			/// @dev: WS API quotes design does not support multiple Redis channels subscription w/ single WS connection
 			this.premia.orders.cancelAllStreams(),
 			this.premia.pools.cancelQuoteStream(poolAddress),
 			this.premia.vaults.cancelQuoteStream(

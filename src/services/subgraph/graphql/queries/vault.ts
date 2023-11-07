@@ -4,6 +4,7 @@ import { addFields } from '../../../../utils/subgraph'
 import { TokenQuery } from './token'
 import { Token } from '../../../../entities/token'
 import PremiaSubgraph from '../../index'
+import { TokenOrAddress } from '../../../../api'
 
 export class VaultQuery {
 	static vaultId(address: string): string {
@@ -87,13 +88,14 @@ export class VaultQuery {
 	@addFields
 	static GetVaultsForToken(
 		subgraph: PremiaSubgraph,
-		token: Token
+		_token: TokenOrAddress
 	): DocumentNode {
+		const token = subgraph._parseTokenAddress(_token)
 		return gql`
         ${VaultFragment}
         
         {
-            vaults(where: { asset: "${TokenQuery.tokenId(token.address)}"}) {
+            vaults(where: { asset: "${TokenQuery.tokenId(token)}"}) {
                 ...Vault
             }
         }
@@ -103,13 +105,14 @@ export class VaultQuery {
 	@addFields
 	static GetVaultsExtendedForToken(
 		subgraph: PremiaSubgraph,
-		token: Token
+		_token: TokenOrAddress
 	): DocumentNode {
+		const token = subgraph._parseTokenAddress(_token)
 		return gql`
         ${VaultExtendedFragment}
 
         {
-            vaults(where: { asset: "${TokenQuery.tokenId(token.address)}" }) {
+            vaults(where: { asset: "${TokenQuery.tokenId(token)}" }) {
                 ...VaultExtended
             }
         }

@@ -28,7 +28,11 @@ import {
 	OrderbookStream__factory,
 	ISolidStateERC20,
 	ISolidStateERC20__factory,
-} from '../typechain'
+	IOptionPS,
+	IOptionPS__factory,
+	IOptionReward,
+	IOptionReward__factory,
+} from '@premia/v3-abi/typechain'
 import { BaseAPI } from './baseAPI'
 
 /**
@@ -92,6 +96,12 @@ export class ContractAPI extends BaseAPI {
 	 * The address of the `Referral` contract.
 	 */
 	referralAddress: string = Addresses[SupportedChainId.ARBITRUM].REFERRAL
+
+	/**
+	 * The address of the `OptionReward` contract.
+	 */
+	optionRewardAddress: string =
+		Addresses[SupportedChainId.ARBITRUM].OPTION_REWARD
 
 	/**
 	 * Connects to a pool contract at a given address using a provider.
@@ -333,12 +343,46 @@ export class ContractAPI extends BaseAPI {
 	 * If no provider is specified, it will default to using the signer or provider from the `premia` object.
 	 *
 	 * @param {Provider} [provider] - The provider to use for the connection. If not provided, the function defaults to using `this.premia.signer` or `this.premia.provider`.
-	 * @return {IVxPremia} The connected VxPremia contract instance.
+	 * @return {IVaultMining} The connected VxPremia contract instance.
 	 * @throws Will throw an error if the connection to the contract fails.
 	 */
 	getVaultMiningContract(provider?: Provider): IVaultMining {
 		return IVaultMining__factory.connect(
 			this.vaultMiningAddress,
+			provider ?? (this.premia.signer || this.premia.provider)
+		)
+	}
+
+	/**
+	 * Connects to the VxPremia contract using a provider.
+	 *
+	 * This function leverages the `OptionReward __factory` to connect to the OptionReward contract.
+	 * If no provider is specified, it will default to using the signer or provider from the `premia` object.
+	 *
+	 * @param {Provider} [provider] - The provider to use for the connection. If not provided, the function defaults to using `this.premia.signer` or `this.premia.provider`.
+	 * @return {IOptionReward} The connected OptionReward contract instance.
+	 * @throws Will throw an error if the connection to the contract fails.
+	 */
+	getOptionRewardContract(provider?: Provider): IOptionReward {
+		return IOptionReward__factory.connect(
+			this.optionRewardAddress,
+			provider ?? (this.premia.signer || this.premia.provider)
+		)
+	}
+
+	/**
+	 * Connects to a optionPS contract at a given address using a provider.
+	 *
+	 * This function uses the `IOptionPS__factory` to connect to the OptionPS contract on the blockchain.
+	 * If no provider is specified, it will default to using the signer or provider from the `premia` object.
+	 *
+	 * @param {Provider} [provider] - The provider to use for the connection. If not specified, the function defaults to using `this.premia.signer` or `this.premia.provider`.
+	 * @return {IOptionPS} The connected optionPS contract instance.
+	 * @throws Will throw an error if the connection to the contract fails.
+	 */
+	getOptionPSContract(optionPSAddress: string, provider?: Provider): IOptionPS {
+		return IOptionPS__factory.connect(
+			optionPSAddress,
 			provider ?? (this.premia.signer || this.premia.provider)
 		)
 	}

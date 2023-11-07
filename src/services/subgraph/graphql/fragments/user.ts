@@ -107,14 +107,9 @@ export const UserExtendedFragment = gql`
 // # }
 
 export const UserSnapshotFragment = gql`
-	${TransactionFragment}
-
 	fragment UserSnapshot on UserSnapshot {
 		timestamp
 		block
-		transaction {
-			...Transaction
-		}
 
 		claimableFeesETH
 		claimableFeesUSD

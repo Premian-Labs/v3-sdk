@@ -23,7 +23,6 @@ import {
 	TokenExtended,
 	TokenPair,
 	TokenPairExtended,
-	TokenPairMinimal,
 	Transaction,
 	User,
 	UserExtended,
@@ -64,7 +63,7 @@ import {
 import { BigNumberish, toBigInt } from 'ethers'
 import { get } from 'lodash'
 import { TokenInfo } from '@premia/pair-lists/src/types'
-import { TokenPairOrId, TokenPairOrInfo } from '../../api'
+import { TokenOrAddress, TokenPairOrId } from '../../api'
 
 /**
  * The PremiaSubgraph class is the entry point for interacting with the Premia V3 subgraph
@@ -186,9 +185,9 @@ export class PremiaSubgraph {
 		return get(response, 'data.pool') as PoolExtended
 	}
 
-	async getPools(baseAddress: string): Promise<Pool[]> {
+	async getPools(baseAddress: string, isExpired?: boolean): Promise<Pool[]> {
 		const response = await this.client.query({
-			query: PoolQuery.GetPools(this, baseAddress),
+			query: PoolQuery.GetPools(this, baseAddress, isExpired),
 		})
 
 		if (!response.data) {
@@ -200,9 +199,12 @@ export class PremiaSubgraph {
 		return get(response, 'data.pools', []) as Pool[]
 	}
 
-	async getPoolsExtended(baseAddress: string): Promise<PoolExtended[]> {
+	async getPoolsExtended(
+		baseAddress: string,
+		isExpired?: boolean
+	): Promise<PoolExtended[]> {
 		const response = await this.client.query({
-			query: PoolQuery.GetPoolsExtended(this, baseAddress),
+			query: PoolQuery.GetPoolsExtended(this, baseAddress, isExpired),
 		})
 
 		if (!response.data) {
@@ -291,9 +293,12 @@ export class PremiaSubgraph {
 		return get(response, 'data.pools', []) as Pool[]
 	}
 
-	async getPoolsForPair(pair: TokenPairMinimal): Promise<Pool[]> {
+	async getPoolsForPair(
+		pair: TokenPairOrId,
+		isExpired?: boolean
+	): Promise<Pool[]> {
 		const response = await this.client.query({
-			query: PoolQuery.GetPoolsForPair(this, pair),
+			query: PoolQuery.GetPoolsForPair(this, pair, isExpired),
 		})
 
 		if (!response.data) {
@@ -306,14 +311,15 @@ export class PremiaSubgraph {
 	}
 
 	async getPoolsExtendedForPair(
-		pair: TokenPairMinimal,
+		pair: TokenPairOrId,
 		options?: {
 			strike?: BigNumberish
 			maturity?: BigNumberish
+			isExpired?: boolean
 		}
 	): Promise<PoolExtended[]> {
 		const response = await this.client.query({
-			query: PoolQuery.GetPoolsExtendedForPair(this, pair),
+			query: PoolQuery.GetPoolsExtendedForPair(this, pair, options),
 		})
 
 		if (!response.data) {
@@ -322,15 +328,7 @@ export class PremiaSubgraph {
 			)
 		}
 
-		return get(response, 'data.pools', []).filter(
-			(pool: PoolExtended) =>
-				(!options ||
-					!options.strike ||
-					String(pool.strike) === String(options.strike)) &&
-				(!options ||
-					!options.maturity ||
-					String(pool.maturity) === String(options.maturity))
-		) as PoolExtended[]
+		return get(response, 'data.pools', []) as PoolExtended[]
 	}
 
 	async getTicksForPool(poolAddress: string): Promise<Tick[]> {
@@ -443,6 +441,22 @@ export class PremiaSubgraph {
 		return get(response, 'data.tokens') as TokenExtended[]
 	}
 
+	/**
+	 * Parses a token input to return a token address string.
+	 *
+	 * @param {TokenOrAddress} token - The token input which can be either a Token object or a string representing the address.
+	 * @returns {string} - The token address as a string.
+	 */
+	_parseTokenAddress(token: TokenOrAddress): string {
+		let tokenAddress: string
+		if (get(token, 'address')) {
+			tokenAddress = (token as Token).address
+		} else {
+			tokenAddress = token as string
+		}
+		return tokenAddress
+	}
+
 	_parsePairId(pair: TokenPairOrId): string {
 		let _pairId: string
 		if (get(pair, 'base')) {
@@ -481,7 +495,7 @@ export class PremiaSubgraph {
 		return _pair
 	}
 
-	async getPair(pair: TokenPairOrInfo): Promise<TokenPair> {
+	async getPair(pair: TokenPairOrId): Promise<TokenPair> {
 		const pairId = this._parsePairId(pair)
 		const response = await this.client.query({
 			query: TokenPairQuery.GetPair(this, pairId),
@@ -787,7 +801,7 @@ export class PremiaSubgraph {
 	}
 
 	async getVaultsForToken(
-		token: Token,
+		token: TokenOrAddress,
 		isQuote: boolean = false
 	): Promise<Vault[]> {
 		const response = await this.client.query({
@@ -797,7 +811,7 @@ export class PremiaSubgraph {
 	}
 
 	async getVaultsExtendedForToken(
-		token: Token,
+		token: TokenOrAddress,
 		isQuote: boolean = false
 	): Promise<VaultExtended[]> {
 		const response = await this.client.query({
@@ -958,15 +972,34 @@ export class PremiaSubgraph {
 		return get(response, 'data.optionPositions', []) as OptionPositionExtended[]
 	}
 
+	async getRewardOptionPositionsExtendedForUser(
+		owner: string,
+		timestamp?: number,
+		isOpen?: boolean
+	): Promise<OptionPositionExtended[]> {
+		const response = await this.client.query({
+			query: OptionPositionQuery.GetRewardOptionPositionsExtendedForUser(
+				this,
+				owner,
+				timestamp,
+				isOpen
+			),
+		})
+
+		return get(response, 'data.optionPositions', []) as OptionPositionExtended[]
+	}
+
 	async getLiquidityPositionsExtendedForUser(
 		owner: string,
-		orderType?: OrderType
+		orderType?: OrderType,
+		isOpen?: boolean
 	): Promise<LiquidityPositionExtended[]> {
 		const response = await this.client.query({
 			query: LiquidityPositionQuery.GetLiquidityPositionsExtendedForUser(
 				this,
 				owner,
-				orderType
+				orderType,
+				isOpen
 			),
 		})
 

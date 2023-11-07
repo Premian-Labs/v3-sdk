@@ -9,11 +9,13 @@ import { Token } from './token'
 export enum TokenType {
 	SHORT = 0,
 	LONG = 1,
+	LONG_EXERCISED = 2,
 }
 
 export enum TokenTypeString {
 	SHORT = 'SHORT',
 	LONG = 'LONG',
+	LONG_EXERCISED = 'LONG_EXERCISED',
 }
 
 export interface OptionPosition {
@@ -35,6 +37,9 @@ export interface OptionPosition {
 	closedAtBlock?: BigNumberish
 
 	size: BigNumberish
+	closedSize: BigNumberish
+	entryPrice: BigNumberish
+	closePrice: BigNumberish
 }
 
 export interface OptionPositionExtended extends OptionPosition {
@@ -42,9 +47,15 @@ export interface OptionPositionExtended extends OptionPosition {
 	option?: OptionPhysicallySettled
 	vault?: Vault
 
-	size: BigNumberish
 	sizeETH: BigNumberish
 	sizeUSD: BigNumberish
+
+	closedSizeETH: BigNumberish
+	closedSizeUSD: BigNumberish
+	entryPriceETH: BigNumberish
+	entryPriceUSD: BigNumberish
+	closePriceETH: BigNumberish
+	closePriceUSD: BigNumberish
 
 	deposits: BigNumberish
 	depositsETH: BigNumberish

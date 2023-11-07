@@ -74,7 +74,7 @@ export class TokenAPI extends BaseAPI {
 	async getTokenMinimal(address: string): Promise<TokenMinimal> {
 		const tokenContract = this.premia.contracts.getTokenContract(
 			address,
-			this.premia.multicallProvider as any
+			this.premia.multicallProvider
 		)
 		const [symbol, decimals] = await Promise.all([
 			tokenContract.symbol(),
@@ -173,7 +173,7 @@ export class TokenAPI extends BaseAPI {
 
 		const tokenContract = this.premia.contracts.getTokenContract(
 			address,
-			this.premia.multicallProvider as any
+			this.premia.multicallProvider
 		)
 		const [name, symbol, decimals, _priceETH, _priceUSD] = await Promise.all([
 			tokenContract.name(),

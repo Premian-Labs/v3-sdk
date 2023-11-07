@@ -95,7 +95,7 @@ describe('PremiaSubgraph', function (this: any) {
 
 	beforeEach(async () => {
 		subgraph = new PremiaSubgraph(
-			'https://api.thegraph.com/subgraphs/name/totop716/premia-v3'
+			'https://api.thegraph.com/subgraphs/name/premian-labs/premia-blue'
 		)
 	})
 

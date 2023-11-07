@@ -33,6 +33,9 @@ export const OptionPositionFragment = gql`
 		closedAtBlock
 
 		size
+		closedSize
+		entryPrice
+		closePrice
 	}
 `
 
@@ -57,9 +60,14 @@ export const OptionPositionExtendedFragment = gql`
 			...Vault
 		}
 
-		size
 		sizeETH
 		sizeUSD
+		closedSizeETH
+		closedSizeUSD
+		entryPriceETH
+		entryPriceUSD
+		closePriceETH
+		closePriceUSD
 
 		deposits
 		depositsETH

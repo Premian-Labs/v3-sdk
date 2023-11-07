@@ -71,7 +71,8 @@ export class LiquidityPositionQuery {
 	static GetLiquidityPositionsExtendedForUser(
 		subgraph: PremiaSubgraph,
 		owner: string,
-		orderType?: OrderType
+		orderType?: OrderType,
+		isOpen?: boolean
 	): DocumentNode {
 		let filter
 		if (orderType === undefined) {
@@ -86,13 +87,19 @@ export class LiquidityPositionQuery {
 			}
 		}
 
+		if (isOpen) {
+			filter += ', closedAt: null'
+		} else if (!isOpen && isOpen !== undefined) {
+			filter += ', closedAt_not: null'
+		}
+
 		return gql`
 			${LiquidityPositionExtendedFragment}
 
 			{
 				liquidityPositions(
 					where: {
-						owner: "${owner.toLowerCase()}",
+						owner: "${owner.toLowerCase()}"
 						${filter}
 					},
 					first: 1000, 

@@ -56,7 +56,9 @@ export class OptionPositionQuery {
 		if (isOpen == undefined) {
 			filter = ''
 		} else {
-			filter = isOpen ? ', closedAt: null' : ', closedAt_not: null'
+			filter = isOpen
+				? ', { closedAt: null }, { or: [{ pool_: { isExpiredOTM: false } }, { option_not: null }, { isBuy: false }] }'
+				: ', { or: [{ closedAt_not: null }, { pool_: { isExpiredOTM: true }, isBuy: true }] }'
 		}
 
 		return gql`
@@ -65,8 +67,41 @@ export class OptionPositionQuery {
 			{
 				optionPositions(
 					where: { 
-						owner: "${owner.toLowerCase()}"
-						${filter}
+						and: [
+							{ owner: "${owner.toLowerCase()}" }
+							${filter}
+						]
+					},
+					first: 1000, 
+					orderBy: createdAt, 
+					orderDirection: desc
+				) {
+					...OptionPositionExtended
+				}
+			}
+		`
+	}
+
+	@addFields
+	static GetRewardOptionPositionsExtendedForUser(
+		subgraph: PremiaSubgraph,
+		owner: string,
+		timestamp?: number,
+		isOpen?: boolean
+	): DocumentNode {
+		let filter = `owner: "${owner.toLowerCase()}", option_not: null`
+		if (isOpen !== undefined) {
+			filter += isOpen ? ', closedAt: null' : ', closedAt_not: null'
+		}
+		if (timestamp) {
+			filter += `, maturity_lte: ${timestamp}`
+		}
+		return gql`
+			${OptionPositionExtendedFragment}
+			{
+				optionPositions(
+					where: { 
+						 ${filter}
 					},
 					first: 1000, 
 					orderBy: createdAt, 

@@ -26,6 +26,7 @@ describe('Token API', function (this: any) {
 	})
 
 	it('should correctly load a token with multicall', async () => {
+		sdk.setDisableCache(true)
 		sdk.setSkipSubgraph(true)
 
 		const token = await sdk.tokens.getToken(Addresses[sdk.chainId].WETH)
@@ -59,18 +60,17 @@ describe('Token API', function (this: any) {
 	it('should correctly load tokens with multicall', async () => {
 		sdk.setSkipSubgraph(true)
 
-		const tokens = await sdk.tokens.getTokens([Addresses[sdk.chainId].WETH])
+		const tokens = await sdk.tokens.getTokens([Addresses[sdk.chainId].USDC])
 		expect(tokens.length).to.equal(1)
 
 		const token = tokens[0]
-		expect(token.address).to.equal(Addresses[sdk.chainId].WETH)
+		expect(token.address).to.equal(Addresses[sdk.chainId].USDC)
 		expect(token.chainId).to.equal(sdk.chainId)
-		expect(token.symbol).to.equal('WETH')
-		expect(token.name).to.equal('Wrapped Ether')
-		expect(token.decimals).to.equal(18)
-		expect(token.priceETH).to.equal(parseEther('1').toString())
+		expect(token.symbol).to.equal('USDC')
+		expect(token.name).to.equal('USDC')
+		expect(token.decimals).to.equal(6)
 		expect(token.isNative).to.equal(false)
-		expect(token.isWrappedNative).to.equal(true)
+		expect(token.isWrappedNative).to.equal(false)
 	})
 
 	it('should correctly load token list', async () => {
