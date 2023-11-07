@@ -2,9 +2,8 @@ on:
   push:
     branches:
       - master
-      - issue/no-version-update
-    # paths:
-      # - 'package.json'
+    paths:
+      - 'package.json'
 
 jobs:
   publish:
