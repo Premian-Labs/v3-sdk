@@ -9,7 +9,7 @@ dotenv.config()
 describe('SDK.initialize', function (this: any) {
 	this.timeout(15000)
 
-	const privateKey = process.env.PKEY_ETH_TEST
+	const privateKey = process.env.TESTNET_PRIVATE_KEY
 
 	it('should be able to be instantiated with no params and no browser provider', async () => {
 		const premia = await Premia.initialize()
