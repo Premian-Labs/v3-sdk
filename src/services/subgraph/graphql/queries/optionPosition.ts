@@ -57,8 +57,8 @@ export class OptionPositionQuery {
 			filter = ''
 		} else {
 			filter = isOpen
-				? ', { closedAt: null }, { or: [{ pool_: { isExpiredOTM: false } }, { option_not: null }] }'
-				: ', { or: [{ closedAt_not: null }, { pool_: { isExpiredOTM: true } }] }'
+				? ', { closedAt: null }, { or: [{ pool_: { isExpiredOTM: false } }, { option_not: null }, { isBuy: false }] }'
+				: ', { or: [{ closedAt_not: null }, { pool_: { isExpiredOTM: true }, isBuy: true }] }'
 		}
 
 		return gql`
