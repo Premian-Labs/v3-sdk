@@ -9,7 +9,7 @@ Pull requests are welcome!
 # Premia V3 SDK
 
 [![Tests](https://github.com/Premian-Labs/v3-sdk/workflows/test/badge.svg)](https://github.com/Premian-Labs/v3-sdk/actions?query=workflow%3Atest)
-[![Published](https://github.com/Premian_Labs/v3-sdk/workflows/publish/badge.svg)](https://github.com/Premian_Labs/v3-sdk/actions?query=workflow%3Apublish)
+[![Published](https://github.com/Premian-Labs/v3-sdk/workflows/publish/badge.svg)](https://github.com/Premian-Labs/v3-sdk/actions?query=workflow%3Apublish)
 [![npm version](https://img.shields.io/npm/v/@premia/v3-sdk/latest.svg)](https://www.npmjs.com/package/@premia/v3-sdk/v/latest)
 [![npm bundle size (scoped version)](https://img.shields.io/bundlephobia/minzip/@premia/v3-sdk/latest.svg)](https://bundlephobia.com/result?p=@premia/v3-sdk@latest)
 
