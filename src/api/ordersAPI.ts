@@ -94,7 +94,10 @@ export class OrdersAPI extends BaseAPI {
 		createdAt?: number,
 		referrer?: string
 	): Promise<FillableQuote> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			this.premia.multicallProvider
+		)
 		const price = toBigInt(quote.price)
 		const _size =
 			toBigInt(size) > toBigInt(quote.size)
