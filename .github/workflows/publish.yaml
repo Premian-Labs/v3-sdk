@@ -1,15 +1,34 @@
+name: publish
+
 on:
   push:
-    branches: master
+    branches:
+      - master
+    paths:
+      - 'package.json'
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Check for version change
+        id: version_changed
+        run: |
+          PACKAGE_VERSION=$(cat package.json | grep version | sed 's/.*"version": "\(.*\)".*/\1/')
+          echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> $GITHUB_ENV
+          git fetch --depth=1 origin ${{ github.event.before }}:old-master
+          OLD_PACKAGE_VERSION=$(git show old-master:package.json | grep version | sed 's/.*"version": "\(.*\)".*/\1/')
+          if [ "$PACKAGE_VERSION" != "$OLD_PACKAGE_VERSION" ]; then
+            echo "VERSION_CHANGED=true" >> $GITHUB_ENV
+          else
+            echo "VERSION_CHANGED=false" >> $GITHUB_ENV
+          fi
       - uses: actions/setup-node@v3
         with:
           node-version: '18'
       - run: yarn
       - run: echo //registry.npmjs.org/:_authToken=${{ secrets.NPM_PUBLISH_TOKEN }} >> .npmrc
-      - run: npm publish --access public
+      - name: Publish to npm
+        if: env.VERSION_CHANGED == 'true'
+        run: npm publish --access public

@@ -101,7 +101,9 @@ export class VaultAPI extends BaseAPI {
 	): Promise<FillableQuote | null> {
 		const _size = toBigInt(size)
 		const _minimumSize = minimumSize ? toBigInt(minimumSize) : _size
-		const vaultRegistry = this.premia.contracts.getVaultRegistryContract()
+		const vaultRegistry = this.premia.contracts.getVaultRegistryContract(
+			this.premia.multicallProvider
+		)
 
 		const poolKey = await this.premia.pools.getPoolKeyFromAddress(poolAddress)
 		const [_taker, vaults] = await Promise.all([
@@ -115,7 +117,10 @@ export class VaultAPI extends BaseAPI {
 
 		const quotes: (FillableQuote | null)[] = await Promise.all(
 			vaults.map(async (_vault) => {
-				const vault = this.premia.contracts.getVaultContract(_vault.vault)
+				const vault = this.premia.contracts.getVaultContract(
+					_vault.vault,
+					this.premia.multicallProvider
+				)
 
 				const supportedPairs = await vaultRegistry.getSupportedTokenPairs(
 					_vault.vault
@@ -215,7 +220,7 @@ export class VaultAPI extends BaseAPI {
 			options.poolAddress
 		)
 		const vaults = await this.premia.contracts
-			.getVaultRegistryContract()
+			.getVaultRegistryContract(this.premia.multicallProvider)
 			.getVaultsByFilter(
 				[poolKey.base],
 				this.tradeSide(!options.isBuy),
