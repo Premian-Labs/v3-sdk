@@ -24,7 +24,6 @@ import {
 	QuoteWithSignatureT,
 	Signature,
 	Token,
-	TokenPairMinimal,
 	TokenType,
 } from '../entities'
 import {
@@ -431,12 +430,17 @@ export class PoolAPI extends BaseAPI {
 		let _poolAddress = options?.poolAddress
 
 		if (!_poolAddress) {
-			const factoryContract = this.premia.contracts.getPoolFactoryContract()
+			const factoryContract = this.premia.contracts.getPoolFactoryContract(
+				this.premia.multicallProvider
+			)
 			const response = await factoryContract.getPoolAddress(quote.poolKey)
 			_poolAddress = response.pool
 		}
 
-		const pool = this.premia.contracts.getPoolContract(_poolAddress)
+		const pool = this.premia.contracts.getPoolContract(
+			_poolAddress,
+			this.premia.multicallProvider
+		)
 
 		try {
 			const response = await pool.isQuoteOBValid(
@@ -490,7 +494,10 @@ export class PoolAPI extends BaseAPI {
 		maxSlippagePercent?: Number
 	): Promise<FillableQuote> {
 		const _size = toBigInt(size)
-		const pool = this.premia.contracts.getPoolContract(poolAddress)
+		const pool = this.premia.contracts.getPoolContract(
+			poolAddress,
+			this.premia.multicallProvider
+		)
 		const [poolKey, quote] = await Promise.all([
 			this.getPoolKeyFromAddress(poolAddress),
 			pool.getQuoteAMM(taker ?? ZeroAddress, _size, isBuy),
