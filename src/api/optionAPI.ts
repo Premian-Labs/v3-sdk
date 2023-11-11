@@ -197,18 +197,27 @@ export class OptionAPI extends BaseAPI {
 		price: BigNumberish,
 		spotPrice: BigNumberish
 	) {
+
+		const underlying = parseNumber(spotPrice)
+		let strike =  parseNumber(pool.strike)
+
+		// when underlying === strike, natural log ln(strike/underlying) = 0
+		// this terminates bisection numerical method for backwards IV calculation
+		// implemented in @uqee/black-scholes library
+		if (underlying === strike) strike = strike * 1.001
+
 		const iv = blackScholes.sigma({
 			price: pool.isCall
 				? parseNumber(price) * parseNumber(spotPrice)
 				: parseNumber(price) * parseNumber(pool.strike),
 			rate: 0,
-			strike: parseNumber(pool.strike),
+			strike: strike,
 			time: (Number(pool.maturity) * 1000 - Date.now()) / ONE_YEAR_MS,
 			type: pool.isCall ? 'call' : 'put',
-			underlying: parseNumber(spotPrice),
+			underlying: underlying,
 		})
 
-		return Math.abs(iv)
+		return iv
 	}
 
 	/**

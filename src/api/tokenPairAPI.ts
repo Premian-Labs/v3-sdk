@@ -8,9 +8,9 @@ import { TokenPair, TokenPairExtended, TokenPairMinimal } from '../entities'
 import { BaseAPI } from './baseAPI'
 
 export const blackScholes = new BlackScholes({
-	priceToSigmaMethod: 'newton-raphson',
-	priceToSigmaNRIteractions: 1000,
+	priceToSigmaMethod: 'bisection',
 	priceToSigmaAccuracy: 1e-2,
+	priceToSigmaBRight: 4
 })
 export const ONE_YEAR_MS = 1000 * 60 * 60 * 24 * 365
 
