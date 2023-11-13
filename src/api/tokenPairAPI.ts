@@ -7,10 +7,12 @@ import { CacheTTL } from '../constants'
 import { TokenPair, TokenPairExtended, TokenPairMinimal } from '../entities'
 import { BaseAPI } from './baseAPI'
 
+// Newton-Raphoson method fails for low vega options (near dated or deep OTM-ITM)
+// So we use a slower, but more universal bisection
 export const blackScholes = new BlackScholes({
-	priceToSigmaMethod: 'newton-raphson',
-	priceToSigmaNRIteractions: 1000,
+	priceToSigmaMethod: 'bisection',
 	priceToSigmaAccuracy: 1e-2,
+	priceToSigmaBRight: 4
 })
 export const ONE_YEAR_MS = 1000 * 60 * 60 * 24 * 365
 
