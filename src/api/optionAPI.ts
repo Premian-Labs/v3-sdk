@@ -466,6 +466,7 @@ export class OptionAPI extends BaseAPI {
 		minimumSize?: BigNumberish
 		referrer?: string
 		taker?: string
+		showErrors?: boolean
 	}): Promise<FillableQuote> {
 		const [bestRfqQuote, bestPoolQuote, bestVaultQuote] = await Promise.all([
 			this.premia.orders
@@ -477,7 +478,13 @@ export class OptionAPI extends BaseAPI {
 					options.referrer,
 					options.taker
 				)
-				.catch(),
+				.catch((e) => {
+					if (options.showErrors) {
+						console.error('Error getting orderbook quote', e)
+					}
+
+					return null
+				}),
 
 			this.premia.pools
 				.quote(
@@ -488,7 +495,10 @@ export class OptionAPI extends BaseAPI {
 					options.taker
 				)
 				.catch((e) => {
-					console.error('Error in getting pool quote', e)
+					if (options.showErrors) {
+						console.error('Error getting pool quote', e)
+					}
+
 					return null
 				}),
 
@@ -501,7 +511,13 @@ export class OptionAPI extends BaseAPI {
 					options.referrer,
 					options.taker
 				)
-				.catch(),
+				.catch((e) => {
+					if (options.showErrors) {
+						console.error('Error getting vault quote', e)
+					}
+
+					return null
+				}),
 		])
 
 		const quotes = [bestRfqQuote, bestPoolQuote, bestVaultQuote].filter(
