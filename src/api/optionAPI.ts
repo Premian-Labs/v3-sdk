@@ -197,7 +197,6 @@ export class OptionAPI extends BaseAPI {
 		price: BigNumberish,
 		spotPrice: BigNumberish
 	) {
-
 		const underlying = parseNumber(spotPrice)
 		const strike = parseNumber(pool.strike)
 
