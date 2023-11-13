@@ -11,7 +11,7 @@ export function removeLeadingZeros(number: String) {
 }
 
 function toFixed(x: any) {
-	if (Math.abs(x) < 1.0) {
+	if (Math.abs(Number(x)) < 1.0) {
 		const e = parseInt(x.toString().split('e-')[1])
 		if (e) {
 			x *= Math.pow(10, e - 1)
@@ -34,7 +34,7 @@ export function parseBigInt(
 ): bigint {
 	const floatString = isNaN(Number(float))
 		? String(float ?? 0)
-		: String(toFixed(Number(float)))
+		: String(toFixed(float))
 
 	let [left, right] = floatString.split('.')
 
@@ -49,7 +49,7 @@ export function parseBigInt(
 
 export function parseNumber(
 	bn: BigNumberish,
-	decimals: number = Number(18n)
+	decimals: number = Number(WAD_DECIMALS)
 ): number {
 	const isNegative = bn.toString().startsWith('-')
 	const str = bn.toString().replace('-', '')
