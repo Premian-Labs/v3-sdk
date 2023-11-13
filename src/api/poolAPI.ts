@@ -552,6 +552,7 @@ export class PoolAPI extends BaseAPI {
 			minimumSize?: BigNumberish
 			referrer?: string
 			taker?: string
+			showErrors?: boolean
 		},
 		callback: (quote: FillableQuote | null) => void
 	): Promise<void> {
@@ -567,7 +568,10 @@ export class PoolAPI extends BaseAPI {
 			).catch()
 			callback(bestQuote)
 		} catch (e) {
-			console.error('Error getting quote from pool: ', e)
+			if (options.showErrors) {
+				console.error('Error getting quote from pool: ', e)
+			}
+
 			callback(null)
 		}
 
@@ -582,7 +586,10 @@ export class PoolAPI extends BaseAPI {
 				).catch()
 				callback(quote)
 			} catch (e) {
-				console.error('Error getting quote from pool: ', e)
+				if (options.showErrors) {
+					console.error('Error getting quote from pool: ', e)
+				}
+
 				callback(null)
 			}
 		})

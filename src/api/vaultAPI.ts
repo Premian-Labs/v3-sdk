@@ -97,7 +97,8 @@ export class VaultAPI extends BaseAPI {
 		minimumSize?: BigNumberish,
 		referrer?: string,
 		taker?: string,
-		maxSlippagePercent?: Number
+		maxSlippagePercent?: Number,
+		showErrors?: boolean
 	): Promise<FillableQuote | null> {
 		const _size = toBigInt(size)
 		const _minimumSize = minimumSize ? toBigInt(minimumSize) : _size
@@ -137,7 +138,10 @@ export class VaultAPI extends BaseAPI {
 				const quote = await vault
 					.getQuote(poolKey, _size, isBuy, _taker)
 					.catch((err) => {
-						console.error('Error getting vault quote', err)
+						if (showErrors) {
+							console.error('Error getting vault quote', err)
+						}
+
 						return null
 					})
 
