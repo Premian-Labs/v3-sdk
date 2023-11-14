@@ -231,11 +231,12 @@ export class OptionAPI extends BaseAPI {
 			isBuy: boolean
 			maturity?: BigNumberish
 			strike?: BigNumberish
+			showErrors?: boolean
 		}
 	): Promise<Pool | null> {
 		let pools = await this.premia.pools.getPools(baseAddress, false)
 
-		pools.filter((p) => p.isCall === options.isCall)
+		pools = pools.filter((p) => p.isCall === options.isCall)
 
 		if (options.maturity) {
 			pools = pools.filter(
@@ -279,7 +280,15 @@ export class OptionAPI extends BaseAPI {
 								)
 								return quote > 0n
 							} catch (err) {
-								console.log('Vault + Pool failed: ', vault.name, pool.name, err)
+								if (options.showErrors) {
+									console.log(
+										'Vault + Pool failed: ',
+										vault.name,
+										pool.name,
+										err
+									)
+								}
+
 								return false
 							}
 						})
@@ -345,6 +354,7 @@ export class OptionAPI extends BaseAPI {
 			isBuy: boolean
 			maturity?: BigNumberish
 			strike?: BigNumberish
+			showErrors?: boolean
 		}
 	): Promise<PoolMinimal | null> {
 		let [tokenPair, pools] = await Promise.all([
@@ -352,7 +362,7 @@ export class OptionAPI extends BaseAPI {
 			this.premia.pools.getPoolsForPair(pair, false),
 		])
 
-		pools.filter((p) => p.isCall === options.isCall)
+		pools = pools.filter((p) => p.isCall === options.isCall)
 
 		if (options.maturity) {
 			pools = pools.filter(
@@ -399,7 +409,15 @@ export class OptionAPI extends BaseAPI {
 								)
 								return quote > 0n
 							} catch (err) {
-								console.log('Vault + Pool failed: ', vault.name, pool.name, err)
+								if (options.showErrors) {
+									console.log(
+										'Vault + Pool failed: ',
+										vault.name,
+										pool.name,
+										err
+									)
+								}
+
 								return false
 							}
 						})
