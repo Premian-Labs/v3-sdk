@@ -462,6 +462,11 @@ export class OptionAPI extends BaseAPI {
 	 * @param {BigNumberish} [options.minimumSize] - The minimum size of the trade (optional).
 	 * @param {string} [options.referrer] - The address of the referrer (optional).
 	 * @param {string} [options.taker] - The address of the taker (optional).
+	 * @param {number} [options.maxSlippagePercent] - The maximum slippage percent (optional).
+	 * @param {boolean} [options.showErrors] - Whether to show errors (optional).
+	 * @param {boolean} [options.showPoolErrors] - Whether to show pool errors (optional).
+	 * @param {boolean} [options.showOrderbookErrors] - Whether to show orderbook errors (optional).
+	 * @param {boolean} [options.showVaultErrors] - Whether to show vault errors (optional).
 	 * @returns {Promise<FillableQuote | null>} - A promise that resolves to the best quote.
 	 */
 	@withCache(CacheTTL.SECOND)
@@ -472,6 +477,11 @@ export class OptionAPI extends BaseAPI {
 		minimumSize?: BigNumberish
 		referrer?: string
 		taker?: string
+		maxSlippagePercent?: number
+		showErrors?: boolean
+		showPoolErrors?: boolean
+		showOrderbookErrors?: boolean
+		showVaultErrors?: boolean
 	}): Promise<FillableQuote> {
 		const [bestRfqQuote, bestPoolQuote, bestVaultQuote] = await Promise.all([
 			this.premia.orders
@@ -483,7 +493,13 @@ export class OptionAPI extends BaseAPI {
 					options.referrer,
 					options.taker
 				)
-				.catch(),
+				.catch((e) => {
+					if (options.showErrors || options.showOrderbookErrors) {
+						console.error('Error getting orderbook quote', e)
+					}
+
+					return null
+				}),
 
 			this.premia.pools
 				.quote(
@@ -491,10 +507,14 @@ export class OptionAPI extends BaseAPI {
 					options.size,
 					options.isBuy,
 					options.referrer,
-					options.taker
+					options.taker,
+					options.maxSlippagePercent
 				)
 				.catch((e) => {
-					console.error('Error in getting pool quote', e)
+					if (options.showErrors || options.showPoolErrors) {
+						console.error('Error getting pool quote', e)
+					}
+
 					return null
 				}),
 
@@ -505,9 +525,17 @@ export class OptionAPI extends BaseAPI {
 					options.isBuy,
 					options.minimumSize,
 					options.referrer,
-					options.taker
+					options.taker,
+					options.maxSlippagePercent,
+					options.showVaultErrors
 				)
-				.catch(),
+				.catch((e) => {
+					if (options.showErrors || options.showVaultErrors) {
+						console.error('Error getting vault quote', e)
+					}
+
+					return null
+				}),
 		])
 
 		const quotes = [bestRfqQuote, bestPoolQuote, bestVaultQuote].filter(
