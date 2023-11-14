@@ -139,7 +139,14 @@ export class VaultAPI extends BaseAPI {
 					.getQuote(poolKey, _size, isBuy, _taker)
 					.catch((err) => {
 						if (showErrors) {
-							console.error('Error getting vault quote', err)
+							console.error(
+								'Error getting vault quote with args:',
+								poolKey,
+								_size,
+								isBuy,
+								_taker,
+								err
+							)
 						}
 
 						return null
