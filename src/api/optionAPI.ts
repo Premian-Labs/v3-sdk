@@ -15,7 +15,13 @@ import { BaseAPI } from './baseAPI'
 import { TokenOrAddress } from './tokenAPI'
 import { roundToNearest } from '../utils/round'
 import { parseBigInt, parseNumber } from '../utils'
-import { ONE_YEAR_MS, TokenPairOrId, WAD_BI, blackScholes } from '../'
+import {
+	Addresses,
+	ONE_YEAR_MS,
+	TokenPairOrId,
+	WAD_BI,
+	blackScholes,
+} from '../'
 
 /**
  * This class provides an API for interacting with options in the Premia system.
@@ -249,9 +255,15 @@ export class OptionAPI extends BaseAPI {
 		}
 
 		if (options.isBuy) {
-			const vaults = (
-				await this.premia.vaults.getVaultsExtendedForToken(baseAddress, false)
-			).filter(
+			const token = options.isCall
+				? baseAddress
+				: Addresses[this.premia.chainId].USDC
+
+			const prefilter = await this.premia.vaults.getVaultsExtendedForToken(
+				token
+			)
+
+			const vaults = prefilter.filter(
 				(v) =>
 					[VaultTradeSide.Sell, VaultTradeSide.Both].includes(v.side) &&
 					v.optionType === (options.isCall ? OptionType.CALL : OptionType.PUT)
@@ -375,12 +387,13 @@ export class OptionAPI extends BaseAPI {
 		}
 
 		if (options.isBuy) {
-			const vaults = (
-				await this.premia.vaults.getVaultsExtendedForToken(
-					tokenPair.base,
-					false
-				)
-			).filter(
+			const token = options.isCall ? tokenPair.base : tokenPair.quote
+
+			const prefilter = await this.premia.vaults.getVaultsExtendedForToken(
+				token
+			)
+
+			const vaults = prefilter.filter(
 				(v) =>
 					[VaultTradeSide.Sell, VaultTradeSide.Both].includes(v.side) &&
 					v.optionType === (options.isCall ? OptionType.CALL : OptionType.PUT)
