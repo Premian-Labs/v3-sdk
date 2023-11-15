@@ -21,6 +21,7 @@ import {
 	TokenPairOrId,
 	WAD_BI,
 	blackScholes,
+	convertDecimals,
 } from '../'
 
 /**
@@ -308,7 +309,13 @@ export class OptionAPI extends BaseAPI {
 				})
 			)
 
-			const vaultSizes = vaults.map((vault) => toBigInt(vault.totalAvailable))
+			const vaultSizes = vaults.map((vault) =>
+				convertDecimals(
+					toBigInt(vault.totalAvailable),
+					vault.asset.decimals,
+					WAD_DECIMALS
+				)
+			)
 
 			return pools.reduce((prev: Pool | null, curr: Pool, poolIndex) => {
 				if (prev == null) return curr
@@ -438,7 +445,13 @@ export class OptionAPI extends BaseAPI {
 				})
 			)
 
-			const vaultSizes = vaults.map((vault) => toBigInt(vault.totalAvailable))
+			const vaultSizes = vaults.map((vault) =>
+				convertDecimals(
+					toBigInt(vault.totalAvailable),
+					vault.asset.decimals,
+					WAD_DECIMALS
+				)
+			)
 
 			return pools.reduce((prev: Pool | null, curr: Pool, poolIndex) => {
 				if (prev == null) return curr
