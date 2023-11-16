@@ -128,20 +128,33 @@ export class OptionAPI extends BaseAPI {
 	}
 
 	/**
-	 * Calculates the increment to use for strike prices based on the spot price.
+	 * Calculates the increment to use for strike prices based on the spot (or reference) price.
 	 *
-	 * @param {BigNumberish} spotPrice - The spot price.
+	 * @param {BigNumberish} spotPrice - The spot (or reference) price.
 	 * @param {number} decimals - The number of decimal places for the price (defaults to WAD_DECIMALS).
 	 * @returns {bigint} - The increment for the strike prices.
 	 */
 	getStrikeIncrement(
 		spotPrice: BigNumberish,
-		decimals: number = Number(WAD_DECIMALS)
+		decimals: number | bigint = WAD_DECIMALS
 	): bigint {
-		const price = parseNumber(spotPrice, decimals)
+		const _decimals = Number(decimals)
+		const price = parseNumber(spotPrice, _decimals)
 		const exponent = Math.floor(Math.log10(price))
 		const multiplier = price >= 5 * 10 ** exponent ? 5 : 1
-		return parseBigInt(multiplier * 10 ** (exponent - 1), decimals)
+
+		if (exponent - 1 < 0) {
+			return (
+				(toBigInt(multiplier) * toBigInt(10) ** toBigInt(decimals)) /
+				toBigInt(10) ** toBigInt(Math.abs(exponent - 1))
+			)
+		}
+
+		return (
+			toBigInt(multiplier) *
+			toBigInt(10) ** toBigInt(decimals) *
+			toBigInt(10) ** toBigInt(exponent - 1)
+		)
 	}
 
 	/**
