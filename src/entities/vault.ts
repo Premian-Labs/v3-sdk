@@ -1,9 +1,10 @@
 import { BigNumberish } from 'ethers'
-
 import { IVault } from '@premia/v3-abi/typechain/IVault'
+
 import { OptionType } from './option'
 import { Token, TokenMinimal } from './token'
 import { VaultRegistry } from './vaultRegistry'
+import { TokenPair } from './tokenPair'
 
 export enum VaultTradeSide {
 	Buy = 'Buy',
@@ -27,6 +28,8 @@ export interface Vault {
 }
 
 export interface VaultExtended extends Vault {
+	supportedPairs: TokenPair[]
+
 	totalDeposited: BigNumberish
 	totalDepositedUSD: BigNumberish
 	totalDepositedETH: BigNumberish

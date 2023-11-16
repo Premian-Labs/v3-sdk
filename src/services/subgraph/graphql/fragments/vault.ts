@@ -2,6 +2,7 @@ import { gql } from '@apollo/client/core'
 
 import { TokenFragment, TokenMinimalFragment } from './token'
 import { VaultRegistryFragment } from './vaultRegistry'
+import { TokenPairFragment } from './tokenPair'
 
 export const VaultFragment = gql`
 	${TokenFragment}
@@ -28,9 +29,14 @@ export const VaultFragment = gql`
 
 export const VaultExtendedFragment = gql`
 	${VaultFragment}
+	${TokenPairFragment}
 
 	fragment VaultExtended on Vault {
 		...Vault
+
+		supportedPairs {
+			...TokenPair
+		}
 
 		totalDeposited
 		totalDepositedUSD
