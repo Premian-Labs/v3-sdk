@@ -52,7 +52,7 @@ export function parseNumber(
 	decimals: number = Number(WAD_DECIMALS)
 ): number {
 	const isNegative = bn.toString().startsWith('-')
-	const str = bn.toString().replace('-', '')
+	const str = String(toFixed(bn)).replace('-', '')
 	const left =
 		str.length >= decimals ? str.substring(0, str.length - decimals) : 0
 
