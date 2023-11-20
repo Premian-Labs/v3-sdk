@@ -208,9 +208,14 @@ export class OrderbookV1 {
 
 		if (response.status !== 200 && response.status !== 201) {
 			console.error('Request failed: ', response.data)
-			let error = new Error(`Failed to publish quotes: ${response.statusText}`)
-			Object.assign(error, { data: response.data, status: response.status })
-			throw error
+
+			const error = new Error(
+				`Failed to publish quotes: ${response.statusText}`
+			)
+			throw Object.assign(error, {
+				data: response.data,
+				status: response.status,
+			})
 		}
 
 		return response.data
