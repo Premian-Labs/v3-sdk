@@ -239,19 +239,19 @@ export class OrderbookV1 {
 					: requestParams.quoteTokens.includes(quote.poolKey.quote)
 			)
 
-		if (requestParams.groupBy === 'MATURITY' && requestParams.strike) {
+		if (requestParams.groupBy === 'maturity' && requestParams.strike) {
 			filteredQuotes = filteredQuotes.filter(
 				(quote) => toBigInt(quote.poolKey.strike) === requestParams.strike
 			)
 		}
 
-		if (requestParams.groupBy === 'STRIKE' && requestParams.maturity) {
+		if (requestParams.groupBy === 'strike' && requestParams.maturity) {
 			filteredQuotes = filteredQuotes.filter(
 				(quote) => Number(quote.poolKey.maturity) === requestParams.maturity
 			)
 		}
 
-		if (requestParams.groupBy === 'MATURITY') {
+		if (requestParams.groupBy === 'maturity') {
 			return chain(filteredQuotes)
 				.groupBy((quote) => quote.poolKey.maturity)
 				.mapValues((quotes) =>
@@ -265,7 +265,7 @@ export class OrderbookV1 {
 				.value()
 		}
 
-		if (requestParams.groupBy === 'STRIKE') {
+		if (requestParams.groupBy === 'strike') {
 			return chain(filteredQuotes)
 				.groupBy((quote) => quote.poolKey.strike)
 				.mapValues((quotes) =>
