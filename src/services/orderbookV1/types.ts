@@ -1,4 +1,5 @@
-import { OrderbookQuote} from '../../entities'
+import { OrderbookQuote } from '../../entities'
+import { BigNumberish } from 'ethers'
 
 export type ChannelType = 'QUOTES' | 'RFQ'
 export interface WSFilterMessage {
@@ -66,4 +67,31 @@ export interface WSErrorMessage {
 	type: 'ERROR'
 	body: null
 	message: string
+}
+
+export interface LiquiditySummaryRequest {
+	baseToken: string
+	isCall: boolean
+	side: 'bid' | 'ask'
+	quoteTokens: string[]
+	provider?: string
+}
+export interface GroupByMaturityRequest extends LiquiditySummaryRequest {
+	strike?: BigInt
+	groupBy: 'maturity'
+}
+
+export interface GroupByStrikeRequest extends LiquiditySummaryRequest {
+	maturity?: number
+	groupBy: 'strike'
+}
+
+export interface GroupByMaturityResponse {
+	maturity: number
+	totalValueLockedUSD: BigInt
+}
+
+export interface GroupByStrikeResponse {
+	strike: BigInt
+	totalValueLockedUSD: BigInt
 }

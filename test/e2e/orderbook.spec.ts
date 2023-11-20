@@ -13,6 +13,8 @@ import {
 	QuoteSaltOptionalT,
 	QuoteWithSignature,
 	signData,
+	GroupByMaturityResponse,
+	GroupByStrikeResponse,
 } from '../../src'
 import PoolFactoryABI from '../../abi/IPoolFactory.json'
 import PoolTradeABI from '../../abi/IPool.json'
@@ -661,7 +663,40 @@ describe('OrderbookV1', () => {
 	it('should return all public quotes for a given market sorted by ts', async () => {
 		// get all quotes which is sorted by timestamp not price
 		const orders = await orderbook.getOrders(poolAddress)
+		expect(orders.validQuotes).not.to.be.empty
 		expect(isTsSorted(orders.validQuotes)).to.eq(true)
+	})
+
+	it('should group available orders by maturity and by strike', async () => {
+		const TVLByMaturity = (await orderbook.getAvailableLiquidity({
+			groupBy: 'maturity',
+			isCall: true,
+			baseToken: baseAddress,
+			side: 'ask',
+			strike: parseEther(strike.toString()),
+			quoteTokens: [quoteAddress],
+		})) as GroupByMaturityResponse[]
+
+		expect(TVLByMaturity).not.to.be.empty
+		expect(TVLByMaturity.every((summary) => summary.totalValueLockedUSD > 0n))
+			.to.be.true
+		expect(
+			TVLByMaturity.some((summary) => summary.maturity === poolKey.maturity)
+		).to.be.true
+
+		const TVLByStrike = (await orderbook.getAvailableLiquidity({
+			groupBy: 'strike',
+			isCall: true,
+			baseToken: baseAddress,
+			side: 'ask',
+			quoteTokens: [quoteAddress],
+		})) as GroupByStrikeResponse[]
+
+		expect(TVLByStrike).not.to.be.empty
+		expect(TVLByStrike.every((summary) => summary.totalValueLockedUSD > 0n)).to
+			.be.true
+		expect(TVLByStrike.some((summary) => summary.strike === poolKey.strike)).to
+			.be.true
 	})
 
 	it('should properly prevent duplication of orders', async () => {

@@ -7,11 +7,15 @@ import {
 	SerializedQuoteSaltOptional,
 	OrderbookQuote,
 	PublishQuoteResponse,
-	GetOrdersResponse
+	GetOrdersResponse,
 } from '../../entities'
 import {
 	AuthMessage,
 	ChannelType,
+	GroupByMaturityRequest,
+	GroupByMaturityResponse,
+	GroupByStrikeRequest,
+	GroupByStrikeResponse,
 	WSDeleteQuoteMessage,
 	WSErrorMessage,
 	WSFilterMessage,
@@ -21,6 +25,8 @@ import {
 	WSRFQRequest,
 	WSUnsubscribeMessage,
 } from './types'
+import { chain, groupBy, isEmpty, sumBy } from 'lodash'
+import { toBigInt } from 'ethers'
 
 export class OrderbookV1 {
 	/**
@@ -111,15 +117,15 @@ export class OrderbookV1 {
 		poolAddress: string,
 		size: string,
 		side: 'bid' | 'ask',
-		provider?: string ,
+		provider?: string,
 		taker?: string,
 		chainId: string = String(this.chainId)
 	): Promise<OrderbookQuote[]> {
 		const _poolAddress = `poolAddress=${poolAddress}`
 		const _size = `&size=${size}`
 		const _side = `&side=${side}`
-		const _provider = provider ? `&provider=${provider}`: ''
-		const _taker = taker ? `&taker=${taker}`: ''
+		const _provider = provider ? `&provider=${provider}` : ''
+		const _taker = taker ? `&taker=${taker}` : ''
 		const _chainId = `&chainId=${chainId}`
 		const url = `${this.uri}/quotes?${_poolAddress}${_size}${_side}${_provider}${_taker}${_chainId}`
 
@@ -147,10 +153,10 @@ export class OrderbookV1 {
 		side?: 'bid' | 'ask',
 		provider?: string,
 		chainId: string = String(this.chainId)
-	): Promise <GetOrdersResponse> {
-		const _poolAddress = poolAddress ? `poolAddress=${poolAddress}`: ''
-		const _size = size ? `&size=${size}`: ''
-		const _side = side ? `&side=${side}`: ''
+	): Promise<GetOrdersResponse> {
+		const _poolAddress = poolAddress ? `poolAddress=${poolAddress}` : ''
+		const _size = size ? `&size=${size}` : ''
+		const _side = side ? `&side=${side}` : ''
 		const _provider = provider ? `&provider=${provider}` : ''
 		const _chainId = `&chainId=${chainId}`
 		const url = `${this.uri}/orders?${_poolAddress}${_size}${_side}${_provider}${_chainId}`
@@ -165,8 +171,8 @@ export class OrderbookV1 {
 					'x-apikey': this.apiKey,
 				},
 				validateStatus: function (status) {
-					return status < 500;
-				}
+					return status < 500
+				},
 			})
 
 			if (response.status !== 200) {
@@ -185,7 +191,9 @@ export class OrderbookV1 {
 		}
 	}
 
-	async publishQuotes(quotes: QuoteWithSignatureT[]): Promise<PublishQuoteResponse> {
+	async publishQuotes(
+		quotes: QuoteWithSignatureT[]
+	): Promise<PublishQuoteResponse> {
 		const _quotes = this.serializeQuotesWithSignature(quotes)
 
 		const url = `${this.uri}/quotes`
@@ -194,18 +202,89 @@ export class OrderbookV1 {
 				'x-apikey': this.apiKey,
 			},
 			validateStatus: function (status) {
-				return status < 500;
-			}
+				return status < 500
+			},
 		})
 
 		if (response.status !== 200 && response.status !== 201) {
 			console.error('Request failed: ', response.data)
-			let error = new Error(`Failed to publish quotes: ${response.statusText}`);
-			Object.assign(error, { data: response.data, status: response.status });
-			throw error;
+
+			const error = new Error(
+				`Failed to publish quotes: ${response.statusText}`
+			)
+			throw Object.assign(error, {
+				data: response.data,
+				status: response.status,
+			})
 		}
 
 		return response.data
+	}
+
+	async getAvailableLiquidity(
+		requestParams: GroupByMaturityRequest | GroupByStrikeRequest
+	): Promise<GroupByMaturityResponse[] | GroupByStrikeResponse[]> {
+		const _provider = requestParams.provider
+			? `&provider=${requestParams.provider}`
+			: ''
+		const url = `${this.uri}/orders?&side=${requestParams.side}&${_provider}&chainId=${this.chainId}`
+
+		const orders: GetOrdersResponse = await this.getRequest(url)
+		const validQuotes = orders.validQuotes
+
+		let filteredQuotes = validQuotes
+			.filter(
+				(quote) =>
+					quote.poolKey.isCallPool === requestParams.isCall &&
+					quote.poolKey.base === requestParams.baseToken
+			)
+			.filter((quote) =>
+				isEmpty(requestParams.quoteTokens)
+					? true
+					: requestParams.quoteTokens.includes(quote.poolKey.quote)
+			)
+
+		if (requestParams.groupBy === 'maturity' && requestParams.strike) {
+			filteredQuotes = filteredQuotes.filter(
+				(quote) => toBigInt(quote.poolKey.strike) === requestParams.strike
+			)
+		}
+
+		if (requestParams.groupBy === 'strike' && requestParams.maturity) {
+			filteredQuotes = filteredQuotes.filter(
+				(quote) => Number(quote.poolKey.maturity) === requestParams.maturity
+			)
+		}
+
+		if (requestParams.groupBy === 'maturity') {
+			return chain(filteredQuotes)
+				.groupBy((quote) => quote.poolKey.maturity)
+				.mapValues((quotes) =>
+					sumBy(quotes, (quote) => Number(quote.fillableSize))
+				)
+				.toPairs()
+				.map(([maturity, sum]) => ({
+					maturity: Number(maturity),
+					totalValueLockedUSD: BigInt(sum),
+				}))
+				.value()
+		}
+
+		if (requestParams.groupBy === 'strike') {
+			return chain(filteredQuotes)
+				.groupBy((quote) => quote.poolKey.strike)
+				.mapValues((quotes) =>
+					sumBy(quotes, (quote) => Number(quote.fillableSize))
+				)
+				.toPairs()
+				.map(([strike, sum]) => ({
+					strike: BigInt(strike),
+					totalValueLockedUSD: BigInt(sum),
+				}))
+				.value()
+		}
+
+		throw new Error('Invalid groupBy params!')
 	}
 
 	async connect(callback?: (data: WSInfoMessage | WSErrorMessage) => void) {
