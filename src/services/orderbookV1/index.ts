@@ -260,7 +260,7 @@ export class OrderbookV1 {
 				.toPairs()
 				.map(([maturity, sum]) => ({
 					maturity: Number(maturity),
-					totalValueLockedUSD: toBigInt(sum),
+					totalValueLockedUSD: BigInt(sum),
 				}))
 				.value()
 		}
@@ -273,8 +273,8 @@ export class OrderbookV1 {
 				)
 				.toPairs()
 				.map(([strike, sum]) => ({
-					strike: toBigInt(strike),
-					totalValueLockedUSD: toBigInt(sum),
+					strike: BigInt(strike),
+					totalValueLockedUSD: BigInt(sum),
 				}))
 				.value()
 		}
