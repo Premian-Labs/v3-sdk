@@ -1,69 +1,62 @@
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
+import weekOfYear from 'dayjs/plugin/weekOfYear'
 
 dayjs.extend(utc)
+dayjs.extend(isSameOrBefore)
+dayjs.extend(isSameOrAfter)
+dayjs.extend(weekOfYear)
 
 export const FRIDAY = 5
 
 export function nextYearOfMaturities(): dayjs.Dayjs[] {
-	const maturities: dayjs.Dayjs[] = []
-	const now = dayjs().utc()
+	const maturities = []
 
-	// Dailies
-	let today = now.clone().startOf('day').hour(8)
-	let tomorrow = today.clone().add(1, 'day')
-	let twoDays = today.clone().add(2, 'day')
+	const today = dayjs().utc().startOf('day')
+	const nextYear = today.add(1, 'year')
 
-	// Weeklies
-	let friday = now.clone().startOf('day').hour(8).day(FRIDAY)
-	if (now.day() >= FRIDAY) {
-		friday = friday.add(1, 'week')
+	const tomorrow = today.add(1, 'day').add(8, 'hours')
+	const afterTomorrow = today.add(2, 'days').add(8, 'hours')
+
+	let nextFriday = today.day(FRIDAY).add(8, 'hours')
+	if (today.day() > FRIDAY) {
+		nextFriday = nextFriday.add(1, 'week')
 	}
-	const secondFriday = friday.clone().add(1, 'week')
-	const thirdFriday = friday.clone().add(2, 'week')
-	const fourthFriday = friday.clone().add(3, 'week')
-	const fifthFriday = friday.clone().add(4, 'week')
 
-	// Monthlies
-	const currentMonth = now.month()
-	const months = []
-	for (let i = 1; i <= 12; ++i) {
-		let monthly = now
-			.clone()
-			.month(currentMonth + i)
+	maturities.push(tomorrow, afterTomorrow)
+
+	if (!nextFriday.isSame(tomorrow) && !nextFriday.isSame(afterTomorrow))
+		maturities.push(nextFriday)
+
+	const next2ndFriday = nextFriday.add(1, 'week')
+	const next3rdFriday = nextFriday.add(2, 'weeks')
+	const next4thFriday = nextFriday.add(3, 'weeks')
+
+	maturities.push(next2ndFriday)
+
+	if (next3rdFriday.diff(today, 'day') < 30) maturities.push(next3rdFriday)
+	if (next4thFriday.diff(today, 'day') < 30) maturities.push(next4thFriday)
+
+	let increment = 1
+	let monthlyPointer = today.startOf('month').add(increment, 'month')
+
+	while (monthlyPointer.isBefore(nextYear, 'month')) {
+		const lastDay = today
 			.startOf('month')
-			.hour(8)
-			.day(FRIDAY)
-		if (monthly.date() > 7) {
-			monthly = monthly.subtract(1, 'week')
-		}
-		while (monthly.month() === currentMonth + i) {
-			monthly = monthly.add(1, 'week')
-		}
-		monthly = monthly.subtract(1, 'week')
-		months.push(monthly)
-	}
+			.add(increment, 'month')
+			.endOf('month')
+			.startOf('day')
 
-	// Check and push to maturities
-	if (today.isAfter(now)) {
-		maturities.push(today)
-	}
-	if (tomorrow.isAfter(now)) {
-		maturities.push(tomorrow)
-	}
-	maturities.push(twoDays)
+		const lastFriday8AM = lastDay
+			.subtract((lastDay.day() + 2) % 7, 'days')
+			.add(8, 'hours')
 
-	const fridays = [friday, secondFriday, thirdFriday, fourthFriday, fifthFriday]
-	fridays.forEach((fri: dayjs.Dayjs) => {
-		if (!maturities.find((maturity) => maturity.isSame(fri))) {
-			maturities.push(fri)
-		}
-	})
+		monthlyPointer = today.startOf('month').add(increment, 'month')
 
-	for (let monthly of months) {
-		if (!maturities.find((maturity) => maturity.isSame(monthly))) {
-			maturities.push(monthly)
-		}
+		increment++
+		maturities.push(lastFriday8AM)
 	}
 
 	return maturities

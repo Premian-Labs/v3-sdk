@@ -1,7 +1,8 @@
 import 'mock-local-storage'
 import { expect } from 'chai'
+import dayjs from 'dayjs'
 
-import { nextYearOfMaturities, parseBigInt } from '../../src'
+import { FRIDAY, nextYearOfMaturities, parseBigInt } from '../../src'
 
 describe('Utils API', function (this: any) {
 	this.timeout(30000)
@@ -10,7 +11,17 @@ describe('Utils API', function (this: any) {
 		const maturities = nextYearOfMaturities()
 		expect(maturities).to.not.be.empty
 
-		for (let maturity of maturities) {
+		for (let i = 0; i < maturities.length; i++) {
+			const maturity = maturities[i]
+
+			if (i >= 2) {
+				expect(maturity.day()).to.equal(FRIDAY)
+			}
+
+			if (i >= 6) {
+				expect(maturity.date()).to.be.greaterThan(22)
+			}
+
 			expect(maturity.isUTC()).to.be.true
 			expect(maturity.hour()).to.equal(8)
 			expect(maturity.minute()).to.equal(0)
