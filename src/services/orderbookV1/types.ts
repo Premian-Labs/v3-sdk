@@ -78,12 +78,12 @@ export interface LiquiditySummaryRequest {
 }
 export interface GroupByMaturityRequest extends LiquiditySummaryRequest {
 	strike?: BigInt
-	groupBy: 'MATURITY'
+	groupBy: 'maturity'
 }
 
 export interface GroupByStrikeRequest extends LiquiditySummaryRequest {
 	maturity?: number
-	groupBy: 'STRIKE'
+	groupBy: 'strike'
 }
 
 export interface GroupByMaturityResponse {
