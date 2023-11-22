@@ -6,7 +6,7 @@ import { Addresses, parseBigInt, Premia } from '../../src'
 describe('Option API', function (this: any) {
 	let sdk: Premia
 
-	this.timeout(15000)
+	this.timeout(30000)
 
 	beforeEach(async () => {
 		sdk = await Premia.initialize({ useTestnet: true, disableCache: false })
