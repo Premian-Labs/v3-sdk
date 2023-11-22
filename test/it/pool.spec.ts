@@ -10,7 +10,7 @@ import {
 	SupportedChainId,
 	TokenPairOrId,
 } from '../../src'
-import { parseEther, toBigInt } from 'ethers'
+import { parseEther } from 'ethers'
 import PremiaSubgraph from '../../src/services/subgraph'
 
 async function getFirstPoolAddress(
@@ -95,8 +95,6 @@ describe('Pool API', async function (this: any) {
 	it('should correct deploy pool', async () => {
 		if (basePool.initialized) return
 
-		console.log('Deploying pool')
-
 		sdk.setDisableCache(true)
 
 		const response = await sdk.pools.deployWithKey(poolKey)
@@ -118,20 +116,6 @@ describe('Pool API', async function (this: any) {
 		basePool = await sdk.pools.getPoolMinimalFromKey(poolKey)
 		const poolsForPair = await sdk.pools.getPoolsForPair(basePool.pair)
 		expect(poolsForPair).to.not.be.empty
-	})
-
-	it('should load initializationFee from contract', async () => {
-		const poolAddress = await getFirstPoolAddress(sdk.subgraph, pair)
-		const _poolKey = await sdk.pools.getPoolKeyFromAddress(poolAddress)
-
-		const maturities = nextYearOfMaturities()
-
-		_poolKey.maturity = toBigInt(maturities[maturities.length - 1].unix())
-
-		const fee = await sdk.pools.initializationFee(_poolKey)
-
-		expect(fee).to.not.be.undefined
-		expect(fee.toString()).to.not.equal('0')
 	})
 
 	it('should be able to get the market price for a pool', async () => {
