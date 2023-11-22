@@ -1,7 +1,7 @@
 import { BigNumberish, parseEther, toBigInt, ZeroAddress } from 'ethers'
 import { expect } from 'chai'
 import sinon from 'sinon'
-import moment from 'moment/moment'
+import dayjs from 'dayjs'
 
 import {
 	Addresses,
@@ -75,11 +75,14 @@ describe('PricingAPI', function (this: any) {
 		)
 
 		const block = await premia.provider.getBlock('latest')
-		const maturity = moment((block?.timestamp ?? 0) * 1000)
+		const maturity = dayjs((block?.timestamp ?? 0) * 1000)
 			.utcOffset(0)
 			.add(7, 'd')
 			.day(5)
-			.set({ hour: 8, minute: 0, second: 0, millisecond: 0 })
+			.set('hour', 8)
+			.set('minute', 0)
+			.set('second', 0)
+			.set('millisecond', 0)
 		const maturitySec = maturity.valueOf() / 1000
 
 		poolKey = {
