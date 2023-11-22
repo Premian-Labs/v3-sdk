@@ -28,10 +28,12 @@ import {
 	Wallet,
 	ZeroAddress,
 } from 'ethers'
-import moment from 'moment'
+import dayjs from 'dayjs'
 import Ajv from 'ajv'
 import { omit } from 'lodash'
 import * as Dotenv from 'dotenv'
+import utc from 'dayjs/plugin/utc'
+dayjs.extend(utc)
 
 Dotenv.config()
 const {
@@ -124,11 +126,14 @@ const validatePostQuotes = ajv.compile({
 })
 
 const strike = 1800
-const maturity = moment()
+const maturity = dayjs()
 	.utcOffset(0)
 	.add(7, 'd')
 	.day(5)
-	.set({ hour: 8, minute: 0, second: 0, millisecond: 0 })
+	.set('hour', 8)
+	.set('minute', 0)
+	.set('second', 0)
+	.set('millisecond', 0)
 
 const maturitySec = maturity.valueOf() / 1000
 
@@ -447,7 +452,7 @@ describe('OrderbookV1', () => {
 				quote.size === quote.fillableSize &&
 				quote.quoteId === publishedQuote.quoteId
 		).length
-		const timestamp = moment.utc().unix()
+		const timestamp = dayjs.utc().unix()
 		const deadlineCheck = quotes.every((quote) => quote.deadline > timestamp)
 
 		expect(deadlineCheck).to.eq(true)

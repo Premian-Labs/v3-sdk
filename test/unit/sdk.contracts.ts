@@ -1,5 +1,5 @@
 import { BigNumberish, parseEther } from 'ethers'
-import moment from 'moment'
+import dayjs from 'dayjs'
 import { expect } from 'chai'
 
 import {
@@ -59,11 +59,14 @@ describe('ContractsAPI', function (this: any) {
 		)
 
 		const block = await premia.provider.getBlock('latest')
-		const maturity = moment((block?.timestamp ?? 0) * 1000)
+		const maturity = dayjs((block?.timestamp ?? 0) * 1000)
 			.utcOffset(0)
 			.add(7, 'd')
 			.day(5)
-			.set({ hour: 8, minute: 0, second: 0, millisecond: 0 })
+			.set('hour', 8)
+			.set('minute', 0)
+			.set('second', 0)
+			.set('millisecond', 0)
 		const maturitySec = maturity.valueOf() / 1000
 
 		const strike = 1800
