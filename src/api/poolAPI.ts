@@ -312,12 +312,14 @@ export class PoolAPI extends BaseAPI {
 
 	/**
 	 * Returns the fee charged to initialize a pool corresponding to the supplied PoolKey.
+	 *
+	 * @deprecated To be removed in next major version. Initilization fee is no longer charged.
+	 *
 	 * @param key {PoolKey} The relevant pool key.
 	 * @returns {Promise<bigint>} Promise containing the
 	 */
 	async initializationFee(key: PoolKey): Promise<bigint> {
-		const factory = await this.premia.contracts.getPoolFactoryContract()
-		return factory.initializationFee(key)
+		return Promise.resolve(0n)
 	}
 
 	/**
@@ -863,10 +865,7 @@ export class PoolAPI extends BaseAPI {
 	 */
 	async encodeDeployWithKey(key: PoolKey): Promise<ContractTransaction> {
 		const factory = this.premia.contracts.getPoolFactoryContract()
-		const value = await factory.initializationFee(key)
-		return factory.deployPool.populateTransaction(key, {
-			value: value + value / 10n, // Add 5% to fix rounding errors, it will be refunded
-		})
+		return factory.deployPool.populateTransaction(key)
 	}
 
 	/**
@@ -883,9 +882,7 @@ export class PoolAPI extends BaseAPI {
 			throw new Error('Pool is already deployed.')
 		}
 
-		return factory.deployPool(key, {
-			value: parseEther('1'), // Possibly fix later, is there a better estimate?
-		})
+		return factory.deployPool(key)
 	}
 
 	/**
