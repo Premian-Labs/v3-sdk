@@ -10,6 +10,16 @@ import { IVaultMining } from '@premia/v3-abi/typechain'
  */
 export class MiningAPI extends BaseAPI {
 	/**
+	 * Returns a promise containing vote multipler for a vault.
+	 * @param vault {string} The address of the vault.
+	 * @returns {Promise<bigint>} Promise vote multiplier for a vault.
+	 */
+	async getVoteMultiplier({ vault }: { vault: string }): Promise<bigint> {
+		const vaultMiningContract = this.premia.contracts.getVaultMiningContract()
+		return vaultMiningContract.getVoteMultiplier(vault)
+	}
+
+	/**
 	 * Returns a promise containing the amount of pending user rewards for a vault.
 	 * @param user {string} The address of the user.
 	 * @param vault {string} The addres of individual vault.

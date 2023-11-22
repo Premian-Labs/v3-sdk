@@ -703,10 +703,10 @@
   resolved "https://registry.yarnpkg.com/@premia/pair-lists/-/pair-lists-0.1.0.tgz#4fd399211c2e22796073a98adbc4304e69acc167"
   integrity sha512-qj1MrT6YCC4vNe4dBc19h1HX5ZbuejpZYSsE1oODf7s5QCKE+lADCJndqq6NwxuU8mRjJXHZOb+GEtgfImrCGA==
 
-"@premia/v3-abi@^1.1.2":
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/@premia/v3-abi/-/v3-abi-1.1.2.tgz#8ef8ae7e505883eb6d8f74623cf508085794ae52"
-  integrity sha512-zxXYd7hL6NRmUPhxyG3rVA5BSsGtnHCQXcT1WrIx0CO8MRnQnc4b8bZgYMRfnJcyg6tRkYRSgJtJ5crSxnfGgg==
+"@premia/v3-abi@^1.2.1":
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/@premia/v3-abi/-/v3-abi-1.2.1.tgz#34953284badb95a2bd2311ad895ea1c917d6cf0a"
+  integrity sha512-CsXfhKcQoQple4BushP1Vl6Fj8AZewEyKzpBSwsZGOsagG18v4SvzvZqj0sxwULxJi8tO721iPQO8Uu5it+ckA==
   dependencies:
     ethers "^6.8.1"
 
@@ -2980,11 +2980,6 @@ module-error@^1.0.1, module-error@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/module-error/-/module-error-1.0.2.tgz#8d1a48897ca883f47a45816d4fb3e3c6ba404d86"
   integrity sha512-0yuvsqSCv8LbaOKhnsQ/T5JhyFlCYLPXK3U2sgV10zoKQwzs/MyfuQUOZQ1V/6OCOJsK/TRgNVrPuPDqtdMFtA==
-
-moment@^2.29.4:
-  version "2.29.4"
-  resolved "https://registry.yarnpkg.com/moment/-/moment-2.29.4.tgz#3dbe052889fe7c1b2ed966fcb3a77328964ef108"
-  integrity sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==
 
 mri@^1.1.5:
   version "1.2.0"
