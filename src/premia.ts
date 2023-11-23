@@ -838,7 +838,8 @@ export class Premia {
 	 */
 	async cancelAllStreams(): Promise<void> {
 		this.orders.cancelAllStreams()
-		this.provider?.removeAllListeners()
+		this.options.cancelAllStreams()
+		this.cancelAllEventStreams()
 	}
 
 	/**
