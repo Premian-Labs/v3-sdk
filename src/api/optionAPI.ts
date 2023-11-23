@@ -819,6 +819,12 @@ export class OptionAPI extends BaseAPI {
 		callback: (quote: FillableQuote | null) => void
 	): Promise<void> {
 		const bestQuotes: { [type: string]: FillableQuote | null } = {}
+		const index = this.streamIndex
+
+		const callbackIfNotStale = (quote: FillableQuote | null) => {
+			if (this.streamIndex > index) return
+			callback(quote)
+		}
 
 		await Promise.all([
 			this.premia.orders.streamQuotes(options, (quote) => {
@@ -831,7 +837,7 @@ export class OptionAPI extends BaseAPI {
 						options.minimumSize
 					) === quote
 				) {
-					callback(quote)
+					callbackIfNotStale(quote)
 				}
 			}),
 
@@ -845,7 +851,7 @@ export class OptionAPI extends BaseAPI {
 						options.minimumSize
 					) === quote
 				) {
-					callback(quote)
+					callbackIfNotStale(quote)
 				}
 			}),
 
@@ -859,7 +865,7 @@ export class OptionAPI extends BaseAPI {
 						options.minimumSize
 					) === quote
 				) {
-					callback(quote)
+					callbackIfNotStale(quote)
 				}
 			}),
 		])
@@ -1064,6 +1070,8 @@ export class OptionAPI extends BaseAPI {
 			poolAddress
 		)
 
+		this.streamIndex += 1
+
 		await Promise.all([
 			/// @dev: WS API quotes design does not support multiple Redis channels subscription w/ single WS connection
 			this.premia.orders.cancelAllStreams(),
@@ -1082,6 +1090,11 @@ export class OptionAPI extends BaseAPI {
 	 * @returns {Promise<void>}
 	 */
 	async cancelAllStreams(): Promise<void> {
-		return this.premia.cancelAllStreams()
+		this.streamIndex += 1
+
+		await this.premia.pools.cancelAllStreams()
+		await this.premia.vaults.cancelAllStreams()
+		await this.premia.orders.cancelAllStreams()
+		await this.premia.cancelAllEventStreams()
 	}
 }

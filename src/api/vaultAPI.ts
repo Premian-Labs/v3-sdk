@@ -227,6 +227,13 @@ export class VaultAPI extends BaseAPI {
 		},
 		callback: (quote: FillableQuote | null) => void
 	): Promise<void> {
+		const index = this.streamIndex
+
+		const callbackIfNotStale = (quote: FillableQuote | null) => {
+			if (this.streamIndex > index) return
+			callback(quote)
+		}
+
 		const poolKey = await this.premia.pools.getPoolKeyFromAddress(
 			options.poolAddress
 		)
@@ -248,10 +255,10 @@ export class VaultAPI extends BaseAPI {
 				options.taker
 			)
 
-			callback(bestQuote)
+			callbackIfNotStale(bestQuote)
 		} catch (err) {
 			console.error('Error streaming vault quote: ', err)
-			callback(null)
+			callbackIfNotStale(null)
 		}
 
 		for (const _vault of vaults) {
@@ -267,10 +274,10 @@ export class VaultAPI extends BaseAPI {
 						options.referrer,
 						options.taker
 					)
-					callback(quote)
+					callbackIfNotStale(quote)
 				} catch (err) {
 					console.error('Error streaming vault quote: ', err)
-					callback(null)
+					callbackIfNotStale(null)
 				}
 			})
 		}
