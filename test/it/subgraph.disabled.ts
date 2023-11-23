@@ -9,7 +9,7 @@ import {
 	TokenPairQuery,
 } from '../../src'
 import { expect } from 'chai'
-import moment from 'moment/moment'
+import dayjs from 'dayjs'
 import { get } from 'lodash'
 
 async function getFirstPoolAddress(
@@ -359,13 +359,13 @@ describe('PremiaSubgraph', function (this: any) {
 		})
 
 		it('#getUserSnapshots', async () => {
-			const now = moment().utcOffset(0).valueOf()
+			const now = dayjs().utcOffset(0).valueOf()
 			const snapshots = await subgraph.getUserSnapshots(defaultUser, 0, now)
 			expect(snapshots.length).to.be.greaterThan(0)
 		})
 
 		it('#getUserSnapshotsExtended', async () => {
-			const now = moment().utcOffset(0).valueOf()
+			const now = dayjs().utcOffset(0).valueOf()
 			const snapshots = await subgraph.getUserSnapshotsExtended(
 				defaultUser,
 				0,
@@ -393,7 +393,7 @@ describe('PremiaSubgraph', function (this: any) {
 		})
 
 		it('#getUserSnapshot', async () => {
-			const now = moment().utcOffset(0).valueOf()
+			const now = dayjs().utcOffset(0).valueOf()
 			const snapshots = await subgraph.getUserSnapshots(defaultUser, 0, now)
 
 			const snapshot = await subgraph.getUserSnapshot(
@@ -405,7 +405,7 @@ describe('PremiaSubgraph', function (this: any) {
 		})
 
 		it('#getUserSnapshotExtended', async () => {
-			const now = moment().utcOffset(0).valueOf()
+			const now = dayjs().utcOffset(0).valueOf()
 			const snapshots = await subgraph.getUserSnapshots(defaultUser, 0, now)
 
 			let snapshot = await subgraph.getUserSnapshotExtended(
