@@ -8,7 +8,15 @@ import Premia from '../premia'
  * @property {Premia} premia - An instance of the Premia SDK.
  */
 export abstract class BaseAPI {
+	/**
+	 * The Premia SDK instance.
+	 */
 	public readonly premia: Premia
+
+	/**
+	 * The current index of quote streams. Used to cancel stale streams.
+	 */
+	protected streamIndex: number = 0
 
 	/**
 	 * Construct a new BaseAPI object.
@@ -16,5 +24,14 @@ export abstract class BaseAPI {
 	 */
 	constructor(premia: Premia) {
 		this.premia = premia
+	}
+
+	/**
+	 * Cancels all ongoing streams.
+	 *
+	 * @returns {Promise<void>}
+	 */
+	public async cancelAllStreams(): Promise<void> {
+		this.streamIndex += 1
 	}
 }
