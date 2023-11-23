@@ -57,6 +57,28 @@ export class MiningAPI extends BaseAPI {
 	}
 
 	/**
+	 * Returns a promise containing amount of user rewards.
+	 * @param vault {string} The address of vault.
+	 * @param user {string} The address of the user.
+	 * @returns {Promise<bigint>} Promise amount of pending dual mining rewards.
+	 */
+	async getDualMiningRewards({
+		vault,
+		user,
+	}: {
+		vault: string
+		user: string
+	}): Promise<bigint> {
+		const vaultMiningContract = this.premia.contracts.getVaultMiningContract()
+		const miningPools = await vaultMiningContract.getDualMiningPools(vault)
+		const dualMiningContract = this.premia.contracts.getDualMiningContract(
+			miningPools[0]
+		)
+		const pendingRewards = await dualMiningContract.getPendingUserRewards(user)
+		return pendingRewards
+	}
+
+	/**
 	 * Returns strike and maturity before claiming premia option rewards.
 	 * @returns {Promise<[bigint, bigint] & {strike: bigint, maturity: bigint}>} A promise that resolves to the strike and maturity for premia option rewards.
 	 */

@@ -32,6 +32,8 @@ import {
 	IOptionPS__factory,
 	IOptionReward,
 	IOptionReward__factory,
+	IDualMining,
+	IDualMining__factory,
 } from '@premia/v3-abi/typechain'
 import { BaseAPI } from './baseAPI'
 
@@ -376,6 +378,7 @@ export class ContractAPI extends BaseAPI {
 	 * This function uses the `IOptionPS__factory` to connect to the OptionPS contract on the blockchain.
 	 * If no provider is specified, it will default to using the signer or provider from the `premia` object.
 	 *
+	 * @param {string} optionPSAddress - The address of the OptionPS contract to connect to.
 	 * @param {Provider} [provider] - The provider to use for the connection. If not specified, the function defaults to using `this.premia.signer` or `this.premia.provider`.
 	 * @return {IOptionPS} The connected optionPS contract instance.
 	 * @throws Will throw an error if the connection to the contract fails.
@@ -383,6 +386,27 @@ export class ContractAPI extends BaseAPI {
 	getOptionPSContract(optionPSAddress: string, provider?: Provider): IOptionPS {
 		return IOptionPS__factory.connect(
 			optionPSAddress,
+			provider ?? (this.premia.signer || this.premia.provider)
+		)
+	}
+
+	/**
+	 * Connects to a optionPS contract at a given address using a provider.
+	 *
+	 * This function uses the `IDualMining__factory` to connect to the dual mining contract on the blockchain.
+	 * If no provider is specified, it will default to using the signer or provider from the `premia` object.
+	 *
+	 * @param {string} dualMiningAddress - The address of the dual mining contract to connect to.
+	 * @param {Provider} [provider] - The provider to use for the connection. If not specified, the function defaults to using `this.premia.signer` or `this.premia.provider`.
+	 * @return {IDualMining} The connected dual mining contract instance.
+	 * @throws Will throw an error if the connection to the contract fails.
+	 */
+	getDualMiningContract(
+		dualMiningAddress: string,
+		provider?: Provider
+	): IDualMining {
+		return IDualMining__factory.connect(
+			dualMiningAddress,
 			provider ?? (this.premia.signer || this.premia.provider)
 		)
 	}
