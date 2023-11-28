@@ -286,6 +286,10 @@ export class Premia {
 	 * The `SetSignerParams` field used to instantiate the SDK.
 	 */
 	signerCredentials?: { phrase?: string; privateKey?: string }
+	/**
+	 * The address of the signer, if a signer is set.
+	 */
+	signerAddress?: string
 
 	/**
 	 * The ethers.js signer instance used for transacting with the orderbook contract.
@@ -298,6 +302,10 @@ export class Premia {
 	 * The `SetSignerParams` field used to instantiate the SDK.
 	 */
 	orderbookSignerCredentials?: { phrase?: string; privateKey?: string }
+	/**
+	 * The address of the orderbook signer, if an orderbook signer is set.
+	 */
+	orderbookSignerAddress?: string
 
 	/**
 	 * @inheritdoc {@link PremiaConfig.useTestnet}
@@ -730,6 +738,10 @@ export class Premia {
 			} catch (e) {}
 		}
 
+		if (this.signer) {
+			this.signerAddress = await this.signer.getAddress()
+		}
+
 		if (orderbookSigner) {
 			this.orderbookSigner = orderbookSigner
 		} else if (orderbookPrivateKey) {
@@ -748,6 +760,10 @@ export class Premia {
 			try {
 				this.orderbookSigner = await this.orderbookProvider.getSigner()
 			} catch (e) {}
+		}
+
+		if (this.orderbookSigner) {
+			this.orderbookSignerAddress = await this.orderbookSigner.getAddress()
 		}
 	}
 
@@ -779,6 +795,18 @@ export class Premia {
 		} else if (phrase) {
 			this.signer = Wallet.fromPhrase(phrase, this.provider)
 			this.signerCredentials = { phrase }
+		} else if (this.provider instanceof JsonRpcProvider) {
+			try {
+				this.provider.getSigner().then((signer) => {
+					this.signer = signer
+				})
+			} catch (e) {}
+		}
+
+		if (this.signer) {
+			this.signer.getAddress().then((signerAddress) => {
+				this.signerAddress = signerAddress
+			})
 		}
 
 		if (orderbookSigner) {
@@ -795,6 +823,18 @@ export class Premia {
 				this.orderbookProvider
 			)
 			this.orderbookSignerCredentials = { phrase: orderbookPhrase }
+		} else if (this.orderbookProvider instanceof JsonRpcProvider) {
+			try {
+				this.orderbookProvider.getSigner().then((orderbookSigner) => {
+					this.orderbookSigner = orderbookSigner
+				})
+			} catch (e) {}
+		}
+
+		if (this.orderbookSigner) {
+			this.orderbookSigner.getAddress().then((orderbookSignerAddress) => {
+				this.orderbookSignerAddress = orderbookSignerAddress
+			})
 		}
 	}
 
