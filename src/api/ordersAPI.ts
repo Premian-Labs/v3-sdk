@@ -274,6 +274,12 @@ export class OrdersAPI extends BaseAPI {
 		callback: (quote: FillableQuote | null) => void
 	): Promise<void> {
 		let bestQuote: FillableQuote | null = null
+		const index = this.streamIndex
+
+		const callbackIfNotStale = (quote: FillableQuote | null) => {
+			if (this.streamIndex > index) return
+			callback(quote)
+		}
 
 		try {
 			let bestQuote = await this.quote(
@@ -285,10 +291,10 @@ export class OrdersAPI extends BaseAPI {
 				options.taker
 			)
 
-			callback(bestQuote)
+			callbackIfNotStale(bestQuote)
 		} catch (error) {
 			console.error('Error streaming OB quote: ', error)
-			callback(null)
+			callbackIfNotStale(null)
 		}
 
 		await this.premia.orderbook.subscribe(
@@ -319,7 +325,7 @@ export class OrdersAPI extends BaseAPI {
 							quote.createdAt,
 							options.referrer
 						)
-						callback(bestQuote)
+						callbackIfNotStale(bestQuote)
 					} else {
 						const better = this.premia.pricing.better(
 							quote,
@@ -336,7 +342,7 @@ export class OrdersAPI extends BaseAPI {
 								quote.createdAt,
 								options.referrer
 							)
-							callback(bestQuote)
+							callbackIfNotStale(bestQuote)
 						}
 					}
 				}
@@ -358,7 +364,9 @@ export class OrdersAPI extends BaseAPI {
 	 *
 	 * @returns {Promise<void>}
 	 */
-	cancelAllStreams() {
+	async cancelAllStreams() {
+		this.streamIndex += 1
+
 		this.premia.orderbook.unsubscribe('QUOTES')
 		this.premia.orderbook.unsubscribe('RFQ')
 	}

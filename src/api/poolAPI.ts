@@ -559,6 +559,12 @@ export class PoolAPI extends BaseAPI {
 		callback: (quote: FillableQuote | null) => void
 	): Promise<void> {
 		const pool = this.premia.contracts.getPoolContract(options.poolAddress)
+		const index = this.streamIndex
+
+		const callbackIfNotStale = (quote: FillableQuote | null) => {
+			if (this.streamIndex > index) return
+			callback(quote)
+		}
 
 		try {
 			const bestQuote = await this.quote(
@@ -568,16 +574,19 @@ export class PoolAPI extends BaseAPI {
 				options.referrer,
 				options.taker
 			).catch()
-			callback(bestQuote)
+
+			callbackIfNotStale(bestQuote)
 		} catch (e) {
 			if (options.showErrors) {
 				console.error('Error getting quote from pool: ', e)
 			}
 
-			callback(null)
+			callbackIfNotStale(null)
 		}
 
 		pool.on(pool.filters.Trade, async () => {
+			if (this.streamIndex > index) return
+
 			try {
 				const quote = await this.quote(
 					options.poolAddress,
@@ -586,13 +595,14 @@ export class PoolAPI extends BaseAPI {
 					options.referrer,
 					options.taker
 				).catch()
-				callback(quote)
+
+				callbackIfNotStale(quote)
 			} catch (e) {
 				if (options.showErrors) {
 					console.error('Error getting quote from pool: ', e)
 				}
 
-				callback(null)
+				callbackIfNotStale(null)
 			}
 		})
 	}
