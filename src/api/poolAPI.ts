@@ -483,7 +483,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param {boolean} isBuy - Whether it's a buy or sell.
 	 * @param {string} [referrer] - The address of the referrer.
 	 * @param {string} [taker] - The address of the taker.
-	 * @param {Number} [maxSlippagePercent] - The maximum slippage percent.
+	 * @param {number} [maxSlippagePercent] - The maximum slippage percent.
 	 * @returns {Promise<FillableQuote>} A promise that resolves to the fillable quote.
 	 */
 	@withCache(CacheTTL.SECOND)
@@ -493,7 +493,7 @@ export class PoolAPI extends BaseAPI {
 		isBuy: boolean,
 		referrer?: string,
 		taker?: string,
-		maxSlippagePercent?: Number
+		maxSlippagePercent?: number
 	): Promise<FillableQuote> {
 		const _size = toBigInt(size)
 		const pool = this.premia.contracts.getPoolContract(
@@ -543,6 +543,11 @@ export class PoolAPI extends BaseAPI {
 	 * @param {string} options.poolAddress - The address of the pool.
 	 * @param {BigNumberish} options.size - The size of the quote.
 	 * @param {boolean} options.isBuy - Whether it's a buy or sell.
+	 * @param {BigNumberish} [options.minimumSize] - The minimum size of the quote.
+	 * @param {string} [options.referrer] - The address of the referrer.
+	 * @param {string} [options.taker] - The address of the taker.
+	 * @param {number} [options.maxSlippagePercent] - The maximum slippage percent.
+	 * @param {boolean} [options.showErrors] - Whether to show errors in the console.
 	 * @param {(quote: FillableQuote | null) => void} callback - The callback function to handle each new quote.
 	 * @returns {Promise<void>}
 	 */
@@ -554,6 +559,7 @@ export class PoolAPI extends BaseAPI {
 			minimumSize?: BigNumberish
 			referrer?: string
 			taker?: string
+			maxSlippagePercent?: number
 			showErrors?: boolean
 		},
 		callback: (quote: FillableQuote | null) => void
@@ -572,7 +578,8 @@ export class PoolAPI extends BaseAPI {
 				options.size,
 				options.isBuy,
 				options.referrer,
-				options.taker
+				options.taker,
+				options.maxSlippagePercent
 			).catch()
 
 			callbackIfNotStale(bestQuote)
@@ -593,7 +600,8 @@ export class PoolAPI extends BaseAPI {
 					options.size,
 					options.isBuy,
 					options.referrer,
-					options.taker
+					options.taker,
+					options.maxSlippagePercent
 				).catch()
 
 				callbackIfNotStale(quote)
