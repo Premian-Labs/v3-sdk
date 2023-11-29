@@ -156,14 +156,10 @@ export class VaultAPI extends BaseAPI {
 
 				if (!quote) return null
 
-				console.log('Quote: ', quote)
-
 				/// @dev quote already includes the taker fee
 				const premiumLimit = maxSlippagePercent
 					? this.premia.pricing.premiumLimit(quote, maxSlippagePercent, isBuy)
 					: quote
-
-				console.log('Post-slippage: ', premiumLimit)
 
 				const takerFee = await this.premia.pools.takerFee(
 					poolAddress,
