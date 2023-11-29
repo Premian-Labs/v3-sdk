@@ -26,12 +26,13 @@ import {
 	ReferralAPI,
 	OptionPSAPI,
 	OptionRewardAPI,
+	MiningAPI,
+	GasAPI,
 } from './api'
 import { Addresses, SupportedChainId } from './constants'
 import { Coingecko, OrderbookV1 } from './services'
 import cache from './cache'
 import PremiaSubgraph from './services/subgraph'
-import { MiningAPI } from './api/miningAPI'
 
 export interface SetProviderParams {
 	/**
@@ -433,6 +434,13 @@ export class Premia {
 	 * @defaultValue {@link MiningAPI}
 	 */
 	mining: MiningAPI = new MiningAPI(this)
+
+	/**
+	 * The API used to interact with gas for Premia V3.
+	 *
+	 * @defaultValue {@link GasAPI}
+	 */
+	gas: GasAPI = new GasAPI(this)
 
 	/**
 	 * The API used to interact with optionPS for Premia V3.
