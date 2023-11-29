@@ -76,3 +76,4 @@ node_modules
 cache
 
 .npmrc
+.DS_Store
