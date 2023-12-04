@@ -6,6 +6,7 @@ import {
 	UserPortfolioFragment,
 	UserSnapshotExtendedFragment,
 	UserSnapshotFragment,
+	TradingCompetitionUserFragment,
 } from '../fragments'
 import { addFields } from '../../../../utils/subgraph'
 import { BigNumberish } from 'ethers'
@@ -18,6 +19,22 @@ export class UserQuery {
 
 	static snapshotId(address: string, timestamp: BigNumberish): string {
 		return address.toLowerCase() + ':' + timestamp.toString()
+	}
+
+	@addFields
+	static GetTradingCompetitionUser(
+		subgraph: PremiaSubgraph,
+		address: string
+	): DocumentNode {
+		return gql`
+        ${TradingCompetitionUserFragment}
+
+        {
+            tradingCompetitionUser(id: "${this.userId(address)}") {
+                ...TradingCompetitionUser
+            }
+        }
+    `
 	}
 
 	@addFields

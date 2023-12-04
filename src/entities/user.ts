@@ -169,3 +169,14 @@ export interface UserSnapshotExtended extends UserSnapshot {
 	feesPaidETH: BigNumberish
 	feesPaidUSD: BigNumberish
 }
+
+export interface TradingCompetitionUser {
+	address: string
+
+	optionDepositsETH: BigNumberish
+	optionDepositsUSD: BigNumberish
+	optionProfitLossETH: BigNumberish
+	optionProfitLossUSD: BigNumberish
+	optionProfitLossETHPercent: BigNumberish
+	optionProfitLossUSDPercent: BigNumberish
+}
