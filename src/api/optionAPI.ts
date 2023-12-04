@@ -804,6 +804,7 @@ export class OptionAPI extends BaseAPI {
 	 * @param {BigNumberish} [options.minimumSize] - The minimum size of the trade (optional).
 	 * @param {string} [options.referrer] - The address of the referrer (optional).
 	 * @param {string} [options.taker] - The address of the taker (optional).
+	 * @param {number} [options.maxSlippagePercent] - The maximum slippage percent (optional).
 	 * @param {function} callback - Function to be called when a new best quote is available.
 	 * @returns {Promise<void>}
 	 */
@@ -815,6 +816,7 @@ export class OptionAPI extends BaseAPI {
 			minimumSize?: BigNumberish
 			referrer?: string
 			taker?: string
+			maxSlippagePercent?: number
 		},
 		callback: (quote: FillableQuote | null) => void
 	): Promise<void> {
@@ -884,6 +886,7 @@ export class OptionAPI extends BaseAPI {
 	 * @param {BigNumberish} [options.minimumSize] - The minimum size of the trade (optional).
 	 * @param {string} [options.referrer] - The address of the referrer (optional).
 	 * @param {string} [options.taker] - The address of the taker (optional).
+	 * @param {number} [options.maxSlippagePercent] - The maximum slippage percent (optional).
 	 * @param {string} [options.priceOracle] - The address of the price oracle (optional).
 	 * @param {string[]} [options.quoteTokens] - Array of quote tokens' addresses (optional).
 	 * @param {function} callback - Function to be called when new quotes are available.
@@ -900,6 +903,7 @@ export class OptionAPI extends BaseAPI {
 			minimumSize?: BigNumberish
 			referrer?: string
 			taker?: string
+			maxSlippagePercent?: number
 			priceOracle?: string
 			quoteTokens?: string[]
 		},
@@ -927,6 +931,7 @@ export class OptionAPI extends BaseAPI {
 						minimumSize: options.minimumSize,
 						referrer: options.referrer,
 						taker: options.taker,
+						maxSlippagePercent: options.maxSlippagePercent,
 					},
 					async (quote) => {
 						quotesByPool[pool.address] = quote
@@ -963,6 +968,7 @@ export class OptionAPI extends BaseAPI {
 	 * @param {BigNumberish} [options.minimumSize] - The minimum size of the trade (optional).
 	 * @param {string} [options.referrer] - The address of the referrer (optional).
 	 * @param {string} [options.taker] - The address of the taker (optional).
+	 * @param {number} [options.maxSlippagePercent] - The maximum slippage percent (optional).
 	 * @param {string} [options.priceOracle] - The address of the price oracle (optional).
 	 * @param {string[]} [options.quoteTokens] - Array of quote tokens' addresses (optional).
 	 * @param {function} callback - Function to be called when new quotes are available.
@@ -979,6 +985,7 @@ export class OptionAPI extends BaseAPI {
 			minimumSize?: BigNumberish
 			referrer?: string
 			taker?: string
+			maxSlippagePercent?: number
 			priceOracle?: string
 			quoteTokens?: string[]
 		},
@@ -1027,6 +1034,7 @@ export class OptionAPI extends BaseAPI {
 					minimumSize: options.minimumSize,
 					referrer: options.referrer,
 					taker: options.taker,
+					maxSlippagePercent: options.maxSlippagePercent,
 				}
 
 				if (!quotesByPool[pool.address]) {

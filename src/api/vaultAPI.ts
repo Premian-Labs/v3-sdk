@@ -85,7 +85,9 @@ export class VaultAPI extends BaseAPI {
 	 * @param {string} isBuy - Whether the quote is a buy quote.
 	 * @param {string} minimumSize - The minimum size of the quote to stream. Only quotes with a size greater than or equal to this will be emitted.
 	 * @param {string} referrer - The referrer address to use for the quote.
-	 * @param {Number} maxSlippagePercent - The maximum slippage percent to use for the quote.
+	 * @param {string} taker - The taker address to use for the quote.
+	 * @param {number} maxSlippagePercent - The maximum slippage percent to use for the quote.
+	 * @param {boolean} showErrors - Whether to show errors in the console.
 	 *
 	 * @returns {Promise<FillableQuote | null>} A promise that resolves to the best quote for the given pool.
 	 */
@@ -97,7 +99,7 @@ export class VaultAPI extends BaseAPI {
 		minimumSize?: BigNumberish,
 		referrer?: string,
 		taker?: string,
-		maxSlippagePercent?: Number,
+		maxSlippagePercent?: number,
 		showErrors?: boolean
 	): Promise<FillableQuote | null> {
 		const _size = toBigInt(size)
@@ -212,6 +214,10 @@ export class VaultAPI extends BaseAPI {
 	 * @param {BigNumberish} options.size - The size of the quote to stream.
 	 * @param {boolean} options.isBuy - Whether the quote is a buy quote.
 	 * @param {BigNumberish} options.minimumSize - The minimum size of the quote to stream. Only quotes with a size greater than or equal to this will be emitted.
+	 * @param {string} options.referrer - The referrer address to use for the quote.
+	 * @param {string} options.taker - The taker address to use for the quote.
+	 * @param {number} options.maxSlippagePercent - The maximum slippage percent to use for the quote.
+	 * @param {boolean} options.showErrors - Whether to show errors in the console.
 	 * @param {string} callback - The callback to call when a new quote is emitted.
 	 *
 	 * @returns {Promise<void>} A promise that resolves when the quote stream has been started.
@@ -224,6 +230,8 @@ export class VaultAPI extends BaseAPI {
 			minimumSize?: BigNumberish
 			referrer?: string
 			taker?: string
+			maxSlippagePercent?: number
+			showErrors?: boolean
 		},
 		callback: (quote: FillableQuote | null) => void
 	): Promise<void> {
@@ -252,7 +260,9 @@ export class VaultAPI extends BaseAPI {
 				options.isBuy,
 				options.minimumSize,
 				options.referrer,
-				options.taker
+				options.taker,
+				options.maxSlippagePercent,
+				options.showErrors
 			)
 
 			callbackIfNotStale(bestQuote)
@@ -272,7 +282,9 @@ export class VaultAPI extends BaseAPI {
 						options.isBuy,
 						options.minimumSize,
 						options.referrer,
-						options.taker
+						options.taker,
+						options.maxSlippagePercent,
+						options.showErrors
 					)
 					callbackIfNotStale(quote)
 				} catch (err) {
