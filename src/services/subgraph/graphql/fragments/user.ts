@@ -241,3 +241,17 @@ export const UserPortfolioExtendedFragment = gql`
 		}
 	}
 `
+
+export const TradingCompetitionUserFragment = gql`
+	fragment TradingCompetitionUser on TradingCompetitionUser {
+		id
+		address
+
+		optionDepositsETH
+		optionDepositsUSD
+		optionProfitLossETH
+		optionProfitLossUSD
+		optionProfitLossETHPercent
+		optionProfitLossUSDPercent
+	}
+`

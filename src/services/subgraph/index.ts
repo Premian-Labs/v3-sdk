@@ -24,6 +24,7 @@ import {
 	TokenPair,
 	TokenPairExtended,
 	Transaction,
+	TradingCompetitionUser,
 	User,
 	UserExtended,
 	UserPortfolio,
@@ -637,6 +638,18 @@ export class PremiaSubgraph {
 			),
 		})
 		return get(response, 'data.vaultTransactions') as VaultTransaction[]
+	}
+
+	async getTradingCompetitionUser(
+		address: string
+	): Promise<TradingCompetitionUser> {
+		const response = await this.client.query({
+			query: UserQuery.GetTradingCompetitionUser(this, address),
+		})
+		return get(
+			response,
+			'data.tradingCompetitionUser'
+		) as TradingCompetitionUser
 	}
 
 	async getUser(address: string): Promise<User> {
