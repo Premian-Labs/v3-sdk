@@ -1,15 +1,8 @@
 import { BigNumberish, formatUnits, toBigInt } from 'ethers'
 import { MIN_TICK_DISTANCE, WAD_DECIMALS } from '../constants'
 import { parseNumber } from './parse'
-import { OrderType, TokenType } from '../entities'
-
-export interface TokenIdParams {
-	version?: number
-	orderType: OrderType
-	operator: string
-	upper: bigint
-	lower: bigint
-}
+import { TokenType } from '../entities'
+import { TokenIdParams } from "./type";
 
 export interface PositionTokenIdParams {
 	tokenType: TokenType
@@ -122,15 +115,3 @@ export function formatTokenIdPosition({
 
 	return tokenId
 }
-
-/*
-
-let tokenId = BigNumber.from(version).shl(252);
-tokenId = tokenId.add(BigNumber.from(orderType.valueOf()).shl(180));
-tokenId = tokenId.add(BigNumber.from(operator).shl(20));
-tokenId = tokenId.add(upper.div(MIN_TICK_DISTANCE).shl(10));
-tokenId = tokenId.add(lower.div(MIN_TICK_DISTANCE));
-
-return tokenId;
-
-*/
