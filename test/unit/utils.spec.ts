@@ -82,7 +82,7 @@ describe('Utils', () => {
 			}
 		]
 		tests.forEach((test) => {
-			it(``, () => {
+			it('should format token id successfully', () => {
 				let output = formatTokenId(test.input)
 				expect(output).to.eq(test.output.tokenId)
 			})
@@ -102,7 +102,7 @@ describe('Utils', () => {
 			}
 		]
 		tests.forEach((test) => {
-			it(``, () => {
+			it('should parse token id successfully', () => {
 				let output = parseTokenId(test.input.tokenId)
 				expect(output.version).to.eq(test.output.version)
 				expect(output.orderType).to.eq(test.output.orderType)
