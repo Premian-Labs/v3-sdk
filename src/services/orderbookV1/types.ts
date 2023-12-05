@@ -1,7 +1,13 @@
-import { OrderbookQuote } from '../../entities'
-import { BigNumberish } from 'ethers'
+import { OrderbookQuote, PoolKey } from '../../entities'
 
 export type ChannelType = 'QUOTES' | 'RFQ'
+
+export interface AuthMessage {
+	type: 'AUTH'
+	apiKey: string
+	body: null
+}
+
 export interface WSFilterMessage {
 	type: 'FILTER'
 	channel: ChannelType
@@ -9,7 +15,7 @@ export interface WSFilterMessage {
 		poolAddress?: string
 		side?: 'bid' | 'ask'
 		chainId: string
-		size?: string // bigint string representation
+		size?: string
 		taker?: string
 		provider?: string
 	}
@@ -21,30 +27,15 @@ export interface WSUnsubscribeMessage {
 	body: null
 }
 
-export interface WSRFQRequest {
-	type: 'RFQ'
-	body: {
-		poolAddress: string
-		side: 'bid' | 'ask'
-		chainId: string
-		size: string // bigint string representation
-		taker: string
-	}
-}
-
-export interface AuthMessage {
-	type: 'AUTH'
-	apiKey: string
-	body: null
-}
-
 export interface WSRFQMessage {
 	type: 'RFQ'
-	poolAddress: string
-	side: 'bid' | 'ask'
-	chainId: string
-	size: string
-	taker: string
+	body: {
+		poolKey: PoolKey
+		side: 'bid' | 'ask'
+		chainId: string
+		size: string
+		taker: string
+	}
 }
 
 export interface WSPostQuoteMessage {

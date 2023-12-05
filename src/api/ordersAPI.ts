@@ -23,7 +23,6 @@ import {
 	QuoteWithSignature,
 	QuoteWithSignatureT,
 	OrderbookQuote,
-	SerializedIndexedQuote,
 	SerializedQuote,
 	SignatureDomain,
 } from '../entities'
@@ -220,17 +219,6 @@ export class OrdersAPI extends BaseAPI {
 		referrer?: string,
 		taker?: string
 	): Promise<FillableQuote | null> {
-		await this.premia.orderbook.publishRFQ({
-			type: 'RFQ',
-			body: {
-				poolAddress: poolAddress,
-				side: isBuy ? 'bid' : 'ask',
-				chainId: this.premia.chainId.toString(),
-				size: size.toString(),
-				taker: taker ?? ZeroAddress,
-			},
-		})
-
 		let quotes = await this.premia.orderbook.getQuotes(
 			poolAddress,
 			size.toString(),
@@ -289,14 +277,27 @@ export class OrdersAPI extends BaseAPI {
 		}
 
 		try {
-			let bestQuote = await this.quote(
-				options.poolAddress,
-				options.size,
-				options.isBuy,
-				options.minimumSize,
-				options.referrer,
-				options.taker
+			const poolKey = await this.premia.pools.getPoolKeyFromAddress(
+				options.poolAddress
 			)
+
+			let [, bestQuote] = await Promise.all([
+				this.premia.orderbook.publishRFQ({
+					poolKey,
+					side: options.isBuy ? 'bid' : 'ask',
+					chainId: this.premia.chainId.toString(),
+					size: options.size.toString(),
+					taker: options.taker ?? ZeroAddress,
+				}),
+				this.quote(
+					options.poolAddress,
+					options.size,
+					options.isBuy,
+					options.minimumSize,
+					options.referrer,
+					options.taker
+				),
+			])
 
 			callbackIfNotStale(bestQuote)
 		} catch (error) {
