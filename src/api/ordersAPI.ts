@@ -52,8 +52,14 @@ export class OrdersAPI extends BaseAPI {
 	): Promise<OrderbookQuote | null> {
 		const bestQuotes = quotes.slice().sort((a, b) => {
 			const betterQuote = this.premia.pricing.better(
-				a,
-				b,
+				{
+					...a,
+					size: a.fillableSize,
+				},
+				{
+					...b,
+					size: b.fillableSize,
+				},
 				size,
 				minimumSize
 			) as QuoteWithSignatureT
@@ -82,7 +88,7 @@ export class OrdersAPI extends BaseAPI {
 	 * @private
 	 * @param {string} poolAddress - The address of the pool.
 	 * @param {BigNumberish} size - The size of the trade.
-	 * @param {QuoteWithSignatureT} quote - The quote to be converted.
+	 * @param {OrderbookQuote} quote - The orderbook quote to be converted.
 	 * @param {number} [createdAt] - The timestamp of the quote's creation (optional).
 	 * @param {string} [referrer] - The address of the referrer (optional).
 	 * @returns {Promise<FillableQuote>} - A promise resolving to the fillable quote.
@@ -90,7 +96,7 @@ export class OrdersAPI extends BaseAPI {
 	private async tradeQuoteToFillable(
 		poolAddress: string,
 		size: BigNumberish,
-		quote: QuoteWithSignatureT,
+		quote: OrderbookQuote,
 		createdAt?: number,
 		referrer?: string
 	): Promise<FillableQuote> {
@@ -100,8 +106,8 @@ export class OrdersAPI extends BaseAPI {
 		)
 		const price = toBigInt(quote.price)
 		const _size =
-			toBigInt(size) > toBigInt(quote.size)
-				? toBigInt(quote.size)
+			toBigInt(size) > toBigInt(quote.fillableSize)
+				? toBigInt(quote.fillableSize)
 				: toBigInt(size)
 		const normalizedPremium = (_size * price) / WAD_BI
 
@@ -149,7 +155,15 @@ export class OrdersAPI extends BaseAPI {
 			approvalAmount,
 			to: poolAddress,
 			data: poolContract.interface.encodeFunctionData('fillQuoteOB', [
-				quote,
+				{
+					provider: quote.provider,
+					taker: quote.taker,
+					price: quote.price,
+					size: quote.size,
+					isBuy: quote.isBuy,
+					deadline: quote.deadline,
+					salt: quote.salt,
+				},
 				_size,
 				Signature.from(quote.signature),
 				this.premia.pools.toReferrer(referrer),
@@ -228,14 +242,7 @@ export class OrdersAPI extends BaseAPI {
 			return null
 		}
 
-		quotes = quotes.map((quote) => ({ ...quote, size: quote.fillableSize }))
-
-		const bestQuote: SerializedIndexedQuote | null = (await this.bestQuote(
-			quotes,
-			size,
-			minimumSize,
-			taker
-		)) as SerializedIndexedQuote | null
+		const bestQuote = await this.bestQuote(quotes, size, minimumSize, taker)
 
 		if (bestQuote === null) {
 			return null
@@ -245,7 +252,7 @@ export class OrdersAPI extends BaseAPI {
 			poolAddress,
 			size,
 			bestQuote,
-			bestQuote.createdAt,
+			bestQuote.ts,
 			referrer
 		)
 	}
@@ -309,12 +316,12 @@ export class OrdersAPI extends BaseAPI {
 			},
 			async (message) => {
 				if (message.type == 'POST_QUOTE') {
-					const quote = (await this.bestQuote(
+					const quote = await this.bestQuote(
 						[message.body],
 						options.size,
 						options.minimumSize,
 						options.taker
-					)) as SerializedIndexedQuote | null
+					)
 					if (quote === null) return
 
 					if (bestQuote === null) {
@@ -322,7 +329,7 @@ export class OrdersAPI extends BaseAPI {
 							options.poolAddress,
 							options.size,
 							quote,
-							quote.createdAt,
+							quote.ts,
 							options.referrer
 						)
 						callbackIfNotStale(bestQuote)
@@ -339,7 +346,7 @@ export class OrdersAPI extends BaseAPI {
 								options.poolAddress,
 								options.size,
 								quote,
-								quote.createdAt,
+								quote.ts,
 								options.referrer
 							)
 							callbackIfNotStale(bestQuote)
