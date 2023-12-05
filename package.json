@@ -41,7 +41,7 @@
 	"dependencies": {
 		"@apollo/client": "^3.7.10",
 		"@premia/pair-lists": "^0.1.0",
-		"@premia/v3-abi": "^1.2.1",
+		"@premia/v3-abi": "^1.2.4",
 		"@typechain/ethers-v6": "^0.5.0",
 		"@types/sinon": "^10.0.14",
 		"@types/ws": "^8.5.5",
