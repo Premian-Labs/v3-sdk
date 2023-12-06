@@ -4,7 +4,6 @@ import {
 	ContractTransactionResponse,
 	FixedNumber,
 	getAddress,
-	parseEther,
 	toBigInt,
 	ZeroAddress,
 } from 'ethers'
