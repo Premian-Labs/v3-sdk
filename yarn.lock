@@ -703,10 +703,10 @@
   resolved "https://registry.yarnpkg.com/@premia/pair-lists/-/pair-lists-0.1.0.tgz#4fd399211c2e22796073a98adbc4304e69acc167"
   integrity sha512-qj1MrT6YCC4vNe4dBc19h1HX5ZbuejpZYSsE1oODf7s5QCKE+lADCJndqq6NwxuU8mRjJXHZOb+GEtgfImrCGA==
 
-"@premia/v3-abi@^1.2.4":
-  version "1.2.4"
-  resolved "https://registry.yarnpkg.com/@premia/v3-abi/-/v3-abi-1.2.4.tgz#924bfd4588ee66e6686960b8e58abd78b8b1784f"
-  integrity sha512-8yuJ1CZ/slri9Dz5G9Sszl25t5rpwc3O8ZNjzyZ1hXUNT3rJ01LeezFgqdW/myA+KcfesEknwwSPQNpUXo2W8Q==
+"@premia/v3-abi@^1.2.5":
+  version "1.2.5"
+  resolved "https://registry.yarnpkg.com/@premia/v3-abi/-/v3-abi-1.2.5.tgz#e1487f3ce7d7ad8b609ea0e0cd7e77234ab54558"
+  integrity sha512-pSjE0jKq3W+kV8B1PODUg4wxKst8DAXAznENEY4caJkvCn88zJnrCEqZ8NNzggGMBoxybyumneIWQBn/3lS1hg==
   dependencies:
     ethers "^6.8.1"
 
