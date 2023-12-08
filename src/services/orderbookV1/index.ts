@@ -22,10 +22,9 @@ import {
 	WSInfoMessage,
 	WSPostQuoteMessage,
 	WSRFQMessage,
-	WSRFQRequest,
 	WSUnsubscribeMessage,
 } from './types'
-import { chain, groupBy, isEmpty, sumBy } from 'lodash'
+import { chain, isEmpty, sumBy } from 'lodash'
 import { toBigInt } from 'ethers'
 
 export class OrderbookV1 {
@@ -419,11 +418,11 @@ export class OrderbookV1 {
 	}
 
 	async publishRFQ(
-		message: WSRFQRequest,
+		messageBody: WSRFQMessage['body'],
 		callback?: (data: WSInfoMessage | WSErrorMessage) => void
 	) {
 		if (await this.connectIfNotConnected(callback)) {
-			this.ws?.send(JSON.stringify(message))
+			this.ws?.send(JSON.stringify({ type: 'RFQ', body: messageBody }))
 
 			if (callback) {
 				this.ws!.onmessage = (event) =>
