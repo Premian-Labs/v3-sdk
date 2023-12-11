@@ -27,6 +27,8 @@ export interface PoolMinimal {
 	isCall: boolean
 	strike: BigNumberish
 	maturity: BigNumberish
+
+	spotPrice: BigNumberish
 }
 
 export interface Pool extends PoolMinimal {
@@ -45,8 +47,6 @@ export interface Pool extends PoolMinimal {
 	marketPrice24h: BigNumberish
 	liquidityRate: BigNumberish
 	currentTick: BigNumberish
-
-	spotPrice: BigNumberish
 
 	longLiquidity: BigNumberish
 	shortLiquidity: BigNumberish

@@ -111,7 +111,7 @@ export class OrdersAPI extends BaseAPI {
 		const normalizedPremium = (_size * price) / WAD_BI
 
 		const [pool, takerFee] = await Promise.all([
-			this.premia.pools.getPool(poolAddress),
+			this.premia.pools.getPoolMinimal(poolAddress),
 			this.premia.pools.takerFee(
 				poolAddress,
 				_size,
@@ -144,12 +144,12 @@ export class OrdersAPI extends BaseAPI {
 		return {
 			...quote,
 			createdAt,
+			pool,
 			deadline: toBigInt(quote.deadline),
 			price: convertedPrice,
 			salt: toBigInt(quote.salt),
 			size: _size,
 			takerFee,
-			poolAddress,
 			approvalTarget: Addresses[this.premia.chainId].ERC20_ROUTER,
 			approvalAmount,
 			to: poolAddress,

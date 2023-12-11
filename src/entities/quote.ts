@@ -1,6 +1,6 @@
 import { BigNumberish, BytesLike } from 'ethers'
 
-import { PoolKey } from './pool'
+import { PoolKey, PoolMinimal } from './pool'
 import { Signature } from './signature'
 
 export type QuoteT = Quote | SerializedQuote
@@ -76,8 +76,8 @@ export interface SerializedIndexedQuote extends SerializedQuoteWithSignature {
 
 export interface FillableQuote extends QuoteSaltOptional {
 	createdAt?: number
+	pool: PoolMinimal
 	takerFee: BigNumberish
-	poolAddress: string
 	approvalTarget: string
 	approvalAmount: BigNumberish
 	to: string

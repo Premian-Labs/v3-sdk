@@ -28,6 +28,8 @@ export const PoolMinimalFragment = gql`
 		isCall
 		strike
 		maturity
+
+		spotPrice
 	}
 `
 
@@ -72,8 +74,6 @@ export const PoolFragment = gql`
 		marketPrice24h
 		liquidityRate
 		currentTick
-
-		spotPrice
 
 		longLiquidity
 		shortLiquidity
