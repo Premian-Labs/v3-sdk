@@ -495,13 +495,14 @@ export class PoolAPI extends BaseAPI {
 		maxSlippagePercent?: number
 	): Promise<FillableQuote> {
 		const _size = toBigInt(size)
-		const pool = this.premia.contracts.getPoolContract(
+		const poolContract = this.premia.contracts.getPoolContract(
 			poolAddress,
 			this.premia.multicallProvider
 		)
-		const [poolKey, quote] = await Promise.all([
+		const [poolKey, quote, pool] = await Promise.all([
 			this.getPoolKeyFromAddress(poolAddress),
-			pool.getQuoteAMM(taker ?? ZeroAddress, _size, isBuy),
+			poolContract.getQuoteAMM(taker ?? ZeroAddress, _size, isBuy),
+			this.getPoolMinimal(poolAddress),
 		])
 		const premiumLimit = maxSlippagePercent
 			? this.premia.pricing.premiumLimit(
@@ -512,8 +513,8 @@ export class PoolAPI extends BaseAPI {
 			: quote.premiumNet
 
 		return {
+			pool,
 			poolKey,
-			poolAddress,
 			provider: poolAddress,
 			taker: ZeroAddress,
 			price: (quote.premiumNet * WAD_BI) / _size,
@@ -526,7 +527,7 @@ export class PoolAPI extends BaseAPI {
 				? premiumLimit
 				: _size - premiumLimit + quote.takerFee,
 			to: poolAddress,
-			data: pool.interface.encodeFunctionData('trade', [
+			data: poolContract.interface.encodeFunctionData('trade', [
 				_size,
 				isBuy,
 				premiumLimit,
@@ -655,24 +656,27 @@ export class PoolAPI extends BaseAPI {
 	@withCache(CacheTTL.DAILY)
 	async getPoolMinimalFromKey(key: PoolKey): Promise<PoolMinimal> {
 		const address = await this.getPoolAddress(key)
-		let initialized = false
 
+		let initialized = false
 		try {
 			const poolContract = this.premia.contracts.getPoolContract(address)
 			const deployed = await poolContract.getDeployedCode()
 			initialized = deployed !== null
 		} catch (err) {}
 
-		const oracleContract = await this.premia.contracts.getOracleAdapterContract(
+		const oracleContract = this.premia.contracts.getOracleAdapterContract(
 			key.oracleAdapter
 		)
-		const [base, quote, basePricingPath, quotePricingPath] = await Promise.all([
-			this.premia.tokens.getTokenMinimal(key.base),
-			this.premia.tokens.getTokenMinimal(key.quote),
+		const [base, quote, basePricingPath, quotePricingPath, spotPrice] =
+			await Promise.all([
+				this.premia.tokens.getTokenMinimal(key.base),
+				this.premia.tokens.getTokenMinimal(key.quote),
 
-			oracleContract.describePricingPath(key.base),
-			oracleContract.describePricingPath(key.quote),
-		])
+				oracleContract.describePricingPath(key.base),
+				oracleContract.describePricingPath(key.quote),
+
+				this.spotPrice(address),
+			])
 		const baseAdapterType = Object.keys(AdapterType)[
 			Number(basePricingPath.adapterType)
 		] as AdapterType
@@ -699,6 +703,8 @@ export class PoolAPI extends BaseAPI {
 			isCall: key.isCallPool,
 			strike: key.strike,
 			maturity: key.maturity,
+
+			spotPrice,
 		}
 	}
 

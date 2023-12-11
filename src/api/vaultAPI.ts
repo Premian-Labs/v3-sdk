@@ -8,18 +8,17 @@ import {
 } from 'ethers'
 
 import { withCache } from '../cache'
-import { CacheTTL, WAD_BI, WAD_DECIMALS, ZERO_BI } from '../constants'
+import { CacheTTL, WAD_BI, ZERO_BI } from '../constants'
 import {
 	FillableQuote,
 	PoolKey,
-	Token,
 	Vault,
 	VaultExtended,
 	VaultPosition,
 	VaultPositionExtended,
 } from '../entities'
 import { BaseAPI } from './baseAPI'
-import { convertDecimals, formatBigInt, sendTransaction } from '../utils'
+import { sendTransaction } from '../utils'
 import { TokenOrAddress } from './tokenAPI'
 
 export class VaultAPI extends BaseAPI {
@@ -109,13 +108,14 @@ export class VaultAPI extends BaseAPI {
 		)
 
 		const poolKey = await this.premia.pools.getPoolKeyFromAddress(poolAddress)
-		const [_taker, vaults] = await Promise.all([
+		const [_taker, vaults, pool] = await Promise.all([
 			taker ?? this.premia.signer?.getAddress() ?? ZeroAddress,
 			vaultRegistry.getVaultsByFilter(
 				[poolKey.isCallPool ? poolKey.base : poolKey.quote],
 				this.tradeSide(!isBuy),
 				this.optionType(poolKey.isCallPool)
 			),
+			this.premia.pools.getPoolMinimal(poolAddress),
 		])
 
 		const quotes: (FillableQuote | null)[] = await Promise.all(
@@ -173,8 +173,8 @@ export class VaultAPI extends BaseAPI {
 				const price = ((quote - takerFee) * WAD_BI) / _size
 
 				return {
+					pool,
 					poolKey,
-					poolAddress,
 					provider: _vault.vault,
 					taker: _taker,
 					price,
@@ -199,11 +199,7 @@ export class VaultAPI extends BaseAPI {
 			return []
 		})
 
-		return this.premia.pricing.best(
-			quotes as FillableQuote[],
-			size,
-			_minimumSize
-		) as FillableQuote
+		return this.premia.pricing.best(quotes, size, _minimumSize) as FillableQuote
 	}
 
 	/**
