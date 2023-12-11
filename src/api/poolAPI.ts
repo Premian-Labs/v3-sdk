@@ -96,15 +96,19 @@ export class PoolAPI extends BaseAPI {
 	 * The reference oracle for the pool is used to calculate the spot price.
 	 *
 	 * @param {string} poolAddress - The address of the pool.
+	 * @param {Object} [poolSettings] - The pool settings. If not provided, they are fetched from the pool contract.
 	 * @returns {Promise<bigint>} - Returns a promise that resolves to the spot price.
 	 */
-	async spotPrice(poolAddress: string): Promise<bigint> {
+	async spotPrice(
+		poolAddress: string,
+		poolSettings?: { base: string; quote: string; oracleAdapter: string }
+	): Promise<bigint> {
 		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
-		const poolSettings = await poolContract.getPoolSettings()
+		const _poolSettings = poolSettings ?? (await poolContract.getPoolSettings())
 		const oracleContract = this.premia.contracts.getOracleAdapterContract(
-			poolSettings.oracleAdapter
+			_poolSettings.oracleAdapter
 		)
-		return oracleContract.getPrice(poolSettings.base, poolSettings.quote)
+		return oracleContract.getPrice(_poolSettings.base, _poolSettings.quote)
 	}
 
 	/**
@@ -665,7 +669,11 @@ export class PoolAPI extends BaseAPI {
 				oracleContract.describePricingPath(key.base),
 				oracleContract.describePricingPath(key.quote),
 
-				this.spotPrice(address),
+				this.spotPrice(address, {
+					base: key.base,
+					quote: key.quote,
+					oracleAdapter: key.oracleAdapter,
+				}),
 			])
 		const baseAdapterType = Object.keys(AdapterType)[
 			Number(basePricingPath.adapterType)
