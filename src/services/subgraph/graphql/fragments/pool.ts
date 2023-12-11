@@ -75,6 +75,8 @@ export const PoolFragment = gql`
 		liquidityRate
 		currentTick
 
+		spotPrice
+
 		longLiquidity
 		shortLiquidity
 		openInterest
