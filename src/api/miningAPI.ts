@@ -71,11 +71,16 @@ export class MiningAPI extends BaseAPI {
 	}): Promise<bigint> {
 		const vaultMiningContract = this.premia.contracts.getVaultMiningContract()
 		const miningPools = await vaultMiningContract.getDualMiningPools(vault)
-		const dualMiningContract = this.premia.contracts.getDualMiningContract(
-			miningPools[0]
-		)
-		const pendingRewards = await dualMiningContract.getPendingUserRewards(user)
-		return pendingRewards
+		let miningRewards = 0n
+		for (const miningPool of miningPools) {
+			const dualMiningContract =
+				this.premia.contracts.getDualMiningContract(miningPool)
+			const pendingRewards = await dualMiningContract.getPendingUserRewards(
+				user
+			)
+			miningRewards += pendingRewards
+		}
+		return miningRewards
 	}
 
 	/**
