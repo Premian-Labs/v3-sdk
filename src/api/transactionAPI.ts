@@ -1,6 +1,4 @@
-import { withCache } from '../cache'
 import { Transaction, VaultTransaction } from '../entities'
-import { CacheTTL } from '../constants'
 import { BaseAPI } from './baseAPI'
 
 /**
@@ -20,7 +18,6 @@ export class TransactionAPI extends BaseAPI {
 	 *
 	 * @remark Uses caching with a one-minute time-to-live.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getTransaction(hash: string): Promise<Transaction> {
 		return this.premia.subgraph.getTransaction(hash)
 	}
@@ -44,7 +41,6 @@ export class TransactionAPI extends BaseAPI {
 	 *
 	 * @remark Uses caching with a one-minute time-to-live.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getTransactions(
 		filter: string,
 		search: string,
@@ -84,7 +80,6 @@ export class TransactionAPI extends BaseAPI {
 	 *
 	 * @remark Uses caching with a one-minute time-to-live.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getVaultTransaction(hash: string): Promise<VaultTransaction> {
 		return this.premia.subgraph.getVaultTransaction(hash)
 	}
@@ -109,7 +104,6 @@ export class TransactionAPI extends BaseAPI {
 	 *
 	 * @remark Uses caching with a one-minute time-to-live.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getVaultTransactions(
 		filter: string,
 		search: string,

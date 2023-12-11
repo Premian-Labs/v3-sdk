@@ -5,8 +5,6 @@ import {
 	toBigInt,
 } from 'ethers'
 
-import { withCache } from '../cache'
-import { CacheTTL } from '../constants'
 import {
 	ActionAuthorization,
 	LiquidityPositionExtended,
@@ -31,57 +29,52 @@ import { BaseAPI } from './baseAPI'
  */
 export class UserAPI extends BaseAPI {
 	/**
-	 * Fetches a User based on the provided address and caches the result for a day.
+	 * Fetches a User based on the provided address.
 	 *
 	 * @param {string} address - The address of the User to fetch.
 	 * @returns {Promise<User>} A promise that resolves to a User object.
 	 */
-	@withCache(CacheTTL.DAILY)
 	async getUser(address: string): Promise<User> {
 		return this.premia.subgraph.getUser(address)
 	}
 
 	/**
-	 * Fetches an extended User based on the provided address and caches the result for a minute.
+	 * Fetches an extended User based on the provided address.
 	 *
 	 * @param {string} address - The address of the User to fetch.
 	 * @returns {Promise<UserExtended>} A promise that resolves to a UserExtended object.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getUserExtended(address: string): Promise<UserExtended> {
 		return this.premia.subgraph.getUserExtended(address)
 	}
 
 	/**
-	 * Fetches multiple Users based on the provided addresses and caches the result for a day.
+	 * Fetches multiple Users based on the provided addresses.
 	 *
 	 * @param {string[]} addresses - An array of addresses of Users to fetch.
 	 * @returns {Promise<User[]>} A promise that resolves to an array of User objects.
 	 */
-	@withCache(CacheTTL.DAILY)
 	async getUsers(addresses: string[]): Promise<User[]> {
 		return this.premia.subgraph.getUsers(addresses)
 	}
 
 	/**
-	 * Fetches multiple extended Users based on the provided addresses and caches the result for a minute.
+	 * Fetches multiple extended Users based on the provided addresses.
 	 *
 	 * @param {string[]} addresses - An array of addresses of Users to fetch.
 	 * @returns {Promise<UserExtended[]>} A promise that resolves to an array of UserExtended objects.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getUsersExtended(addresses: string[]): Promise<UserExtended[]> {
 		return this.premia.subgraph.getUsersExtended(addresses)
 	}
 
 	/**
-	 * Fetches a UserSnapshot for a specific User at a specific timestamp and caches the result for a day.
+	 * Fetches a UserSnapshot for a specific User at a specific timestamp.
 	 *
 	 * @param {string} address - The address of the User to fetch the snapshot for.
 	 * @param {BigNumberish} timestamp - The timestamp for the snapshot.
 	 * @returns {Promise<UserSnapshot>} A promise that resolves to a UserSnapshot object.
 	 */
-	@withCache(CacheTTL.DAILY)
 	async getUserSnapshot(
 		address: string,
 		timestamp: BigNumberish
@@ -90,13 +83,12 @@ export class UserAPI extends BaseAPI {
 	}
 
 	/**
-	 * Fetches an extended snapshot of a User at a specified timestamp and caches the result for a minute.
+	 * Fetches an extended snapshot of a User at a specified timestamp.
 	 *
 	 * @param {string} address - The address of the User to fetch.
 	 * @param {BigNumberish} timestamp - The timestamp of the User snapshot.
 	 * @returns {Promise<UserSnapshotExtended>} A promise that resolves to a UserSnapshotExtended object.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getUserSnapshotExtended(
 		address: string,
 		timestamp: BigNumberish
@@ -105,7 +97,7 @@ export class UserAPI extends BaseAPI {
 	}
 
 	/**
-	 * Fetches multiple snapshots of a User within a specified time frame and caches the result for a day.
+	 * Fetches multiple snapshots of a User within a specified time frame.
 	 *
 	 * @method getUserSnapshots
 	 * @param {string} address - The address of the User to fetch.
@@ -117,7 +109,6 @@ export class UserAPI extends BaseAPI {
 	 * @param {number} [skip=0] - The number of snapshots to skip. Default is 0.
 	 * @returns {Promise<UserSnapshot[]>} A promise that resolves to an array of UserSnapshot objects.
 	 */
-	@withCache(CacheTTL.DAILY)
 	async getUserSnapshots(
 		address: string,
 		startTime: BigNumberish,
@@ -139,7 +130,7 @@ export class UserAPI extends BaseAPI {
 	}
 
 	/**
-	 * Fetches multiple extended snapshots of a User within a specified time frame and caches the result for a minute.
+	 * Fetches multiple extended snapshots of a User within a specified time frame.
 	 *
 	 * @param {string} address - The address of the User to fetch.
 	 * @param {BigNumberish} startTime - The start time of the time frame.
@@ -150,7 +141,6 @@ export class UserAPI extends BaseAPI {
 	 * @param {number} [skip=0] - The number of snapshots to skip. Default is 0.
 	 * @returns {Promise<UserSnapshotExtended[]>} A promise that resolves to an array of UserSnapshotExtended objects.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getUserSnapshotsExtended(
 		address: string,
 		startTime: BigNumberish,
@@ -172,23 +162,21 @@ export class UserAPI extends BaseAPI {
 	}
 
 	/**
-	 * Fetches a portfolio of a User and caches the result for a day.
+	 * Fetches a portfolio of a User.
 	 *
 	 * @param {string} address - The address of the User to fetch.
 	 * @returns {Promise<UserPortfolio>} A promise that resolves to a UserPortfolio object.
 	 */
-	@withCache(CacheTTL.DAILY)
 	async getUserPortfolio(address: string): Promise<UserPortfolio> {
 		return this.premia.subgraph.getUserPortfolio(address)
 	}
 
 	/**
-	 * Fetches an extended portfolio of a User and caches the result for a minute.
+	 * Fetches an extended portfolio of a User.
 	 *
 	 * @param {string} address - The address of the User to fetch.
 	 * @returns {Promise<UserPortfolioExtended>} A promise that resolves to a UserPortfolioExtended object.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getUserPortfolioExtended(
 		address: string
 	): Promise<UserPortfolioExtended> {
@@ -258,7 +246,6 @@ export class UserAPI extends BaseAPI {
 	 * @param {string} address - The address of the User to fetch settings for.
 	 * @returns {Promise<bigint>} A promise that resolves to a user's authorized cost setting.
 	 */
-	@withCache(CacheTTL.SECOND)
 	getAuthorizedCost(address: string): Promise<bigint> {
 		const settingsContract = this.premia.contracts.getUserSettingsContract()
 		return settingsContract.getAuthorizedCost(address)
@@ -301,7 +288,6 @@ export class UserAPI extends BaseAPI {
 	 * @param {string} operator - The address of the Operator to fetch authorizations for.
 	 * @returns {Promise<bigint>} A promise that resolves to a user's authorized actions for a specific operator.
 	 */
-	@withCache(CacheTTL.SECOND)
 	getActionAuthorization(
 		user: string,
 		operator: string

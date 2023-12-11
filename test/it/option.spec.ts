@@ -9,7 +9,7 @@ describe('Option API', function (this: any) {
 	this.timeout(30000)
 
 	beforeEach(async () => {
-		sdk = await Premia.initialize({ useTestnet: true, disableCache: false })
+		sdk = await Premia.initialize({ useTestnet: true })
 	})
 
 	it('should get the correct strike increment', async () => {

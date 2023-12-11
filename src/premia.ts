@@ -31,7 +31,6 @@ import {
 } from './api'
 import { Addresses, SupportedChainId } from './constants'
 import { Coingecko, OrderbookV1 } from './services'
-import cache from './cache'
 import PremiaSubgraph from './services/subgraph'
 
 export interface SetProviderParams {
@@ -162,13 +161,6 @@ export interface PremiaConfig
 	 * @see https://www.coingecko.com/api/documentations/v3
 	 */
 	coingeckoProApiKey?: string
-
-	/**
-	 * A flag to disable usage of the default cache.
-	 *
-	 * @defaultValue {@link Premia.disableCache}
-	 */
-	disableCache?: boolean
 
 	/**
 	 * A flag to disable usage of the subgraph, and instead use smart contract data where available.
@@ -317,11 +309,6 @@ export class Premia {
 	 * @inheritdoc {@link PremiaConfig.chainId}
 	 */
 	chainId: number
-
-	/**
-	 * @inheritdoc {@link PremiaConfig.disableCache}
-	 */
-	disableCache!: boolean
 
 	/**
 	 * @inheritdoc {@link PremiaConfig.skipSubgraph}
@@ -487,7 +474,6 @@ export class Premia {
 
 		// Setup subgraph client
 		this.skipSubgraph = config.skipSubgraph
-		this.setDisableCache(config.disableCache)
 
 		this.subgraph = new PremiaSubgraph(config.subgraphUri)
 
@@ -585,7 +571,6 @@ export class Premia {
 				config.useTestnet === false ? '' : 'test.'
 			}quotes.premia.finance`,
 			coingeckoBaseUri: 'https://api.coingecko.com/api/v3',
-			disableCache: false,
 			skipSubgraph: false,
 			subgraphUri: config.useTestnet
 				? 'https://api.thegraph.com/subgraphs/name/premian-labs/premia-blue-arbitrum-goerli'
@@ -610,14 +595,6 @@ export class Premia {
 			Addresses[merged.chainId as keyof typeof Addresses].VAULT_MINING
 
 		return merged
-	}
-
-	/**
-	 * @param [disableCache] - {@link PremiaConfig.disableCache}
-	 */
-	setDisableCache(disableCache: PremiaConfig['disableCache']) {
-		this.disableCache = disableCache ?? this.disableCache
-		cache.disabled = this.disableCache
 	}
 
 	/**
@@ -917,7 +894,6 @@ export class Premia {
 			orderbookPhrase: this.orderbookSignerCredentials?.phrase,
 			subgraphUri: this.subgraph.uri,
 			skipSubgraph: this.skipSubgraph,
-			disableCache: this.disableCache,
 			apiKey: this.apiKey,
 			apiBaseUri: this.apiBaseUri,
 			apiWsUri: this.apiWsUri,

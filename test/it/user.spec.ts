@@ -11,7 +11,7 @@ describe('User API', function (this: any) {
 	this.timeout(30000)
 
 	beforeEach(async () => {
-		sdk = await Premia.initialize({ useTestnet: true, disableCache: false })
+		sdk = await Premia.initialize({ useTestnet: true })
 	})
 
 	it('should load the user', async () => {

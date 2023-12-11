@@ -8,7 +8,6 @@ import {
 	ZeroAddress,
 } from 'ethers'
 
-import { withCache } from '../cache'
 import {
 	AdapterType,
 	FillableQuote,
@@ -25,14 +24,7 @@ import {
 	Token,
 	TokenType,
 } from '../entities'
-import {
-	Addresses,
-	CacheTTL,
-	Fees,
-	WAD_BI,
-	WAD_DECIMALS,
-	ZERO_BI,
-} from '../constants'
+import { Addresses, Fees, WAD_BI, WAD_DECIMALS, ZERO_BI } from '../constants'
 import { Position } from '@premia/v3-abi/typechain/IPool'
 import { BaseAPI } from './baseAPI'
 import { convertDecimals, formatTokenId, sendTransaction } from '../utils'
@@ -485,7 +477,6 @@ export class PoolAPI extends BaseAPI {
 	 * @param {number} [maxSlippagePercent] - The maximum slippage percent.
 	 * @returns {Promise<FillableQuote>} A promise that resolves to the fillable quote.
 	 */
-	@withCache(CacheTTL.SECOND)
 	async quote(
 		poolAddress: string,
 		size: BigNumberish,
@@ -653,7 +644,6 @@ export class PoolAPI extends BaseAPI {
 	 * @param key {PoolKey} The relevant PoolKey.
 	 * @returns {Promise<PoolMinimal>} Promise containing PoolMinimal.
 	 */
-	@withCache(CacheTTL.DAILY)
 	async getPoolMinimalFromKey(key: PoolKey): Promise<PoolMinimal> {
 		const address = await this.getPoolAddress(key)
 
@@ -714,53 +704,48 @@ export class PoolAPI extends BaseAPI {
 	 * @param address {string} The relevant contract address.
 	 * @returns {Promise<PoolMinimal>} Promise containing PoolMinimal.
 	 */
-	@withCache(CacheTTL.DAILY)
 	async getPoolMinimal(address: string): Promise<PoolMinimal> {
 		return this.premia.subgraph.getPoolMinimal(address)
 	}
 
 	/**
-	 * Retrieves the pool information given its address. Cached daily.
+	 * Retrieves the pool information given its address.
 	 *
 	 * @param {string} address - The address of the pool.
 	 * @returns {Promise<Pool>} A promise that resolves to a `Pool` object.
 	 */
-	@withCache(CacheTTL.DAILY)
 	async getPool(address: string): Promise<Pool> {
 		return this.premia.subgraph.getPool(address)
 	}
 
 	/**
-	 * Retrieves extended pool information given its address. Cached per minute.
+	 * Retrieves extended pool information given its address.
 	 *
 	 * @param {string} address - The address of the Pool contract.
 	 * @returns {Promise<PoolExtended>} A promise that resolves to a `PoolExtended` objects.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getPoolExtended(address: string): Promise<PoolExtended> {
 		return this.premia.subgraph.getPoolExtended(address)
 	}
 
 	/**
-	 * Retrieves pools based on the base address. Cached daily.
+	 * Retrieves pools based on the base address.
 	 *
 	 * @param {string} baseAddress - The address of the base token.
 	 * @param {boolean} isExpired - A filter for [non-] expired pools.
 	 * @returns {Promise<Pool[]>} A promise that resolves to an array of `Pool` objects.
 	 */
-	@withCache(CacheTTL.DAILY)
 	async getPools(baseAddress: string, isExpired?: boolean): Promise<Pool[]> {
 		return this.premia.subgraph.getPools(baseAddress, isExpired)
 	}
 
 	/**
-	 * Retrieves extended pools based on the base address. Cached daily.
+	 * Retrieves extended pools based on the base address.
 	 *
 	 * @param {string} baseAddress - The address of the base token.
 	 * @param {boolean} isExpired - A filter for [non-] expired pools.
 	 * @returns {Promise<PoolExtended[]>} A promise that resolves to an array of `PoolExtended` objects.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getPoolsExtended(
 		baseAddress: string,
 		isExpired?: boolean
@@ -769,13 +754,12 @@ export class PoolAPI extends BaseAPI {
 	}
 
 	/**
-	 * Retrieves pools for a given token. Cached daily.
+	 * Retrieves pools for a given token.
 	 *
 	 * @param {Token} token - The token information.
 	 * @param {boolean} [isQuote=false] - A flag to indicate if the token is quote token.
 	 * @returns {Promise<Pool[]>} A promise that resolves to an array of `Pool` objects.
 	 */
-	@withCache(CacheTTL.DAILY)
 	async getPoolsForToken(
 		token: Token,
 		isQuote: boolean = false
@@ -784,13 +768,12 @@ export class PoolAPI extends BaseAPI {
 	}
 
 	/**
-	 * Retrieves extended pools for a given token. Cached per minute.
+	 * Retrieves extended pools for a given token.
 	 *
 	 * @param {Token} token - The token information.
 	 * @param {boolean} [isQuote=false] - A flag to indicate if the token is quote token.
 	 * @returns {Promise<PoolExtended[]>} A promise that resolves to an array of `PoolExtended` objects.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getPoolsExtendedForToken(
 		token: Token,
 		isQuote: boolean = false
@@ -799,13 +782,12 @@ export class PoolAPI extends BaseAPI {
 	}
 
 	/**
-	 * Retrieves pools for a given token pair. Cached daily.
+	 * Retrieves pools for a given token pair.
 	 *
 	 * @param {TokenPairOrId} pair - The token pair or pair id.
 	 * @param {boolean} isExpired - A filter for [non-] expired pools.
 	 * @returns {Promise<Pool[]>} A promise that resolves to an array of `Pool` objects.
 	 */
-	@withCache(CacheTTL.DAILY)
 	async getPoolsForPair(
 		pair: TokenPairOrId,
 		isExpired?: boolean
@@ -814,13 +796,12 @@ export class PoolAPI extends BaseAPI {
 	}
 
 	/**
-	 * Retrieves extended pools for a given token pair. Cached per minute.
+	 * Retrieves extended pools for a given token pair.
 	 *
 	 * @param {TokenPairOrId} pair - The token pair or pair id.
 	 * @param {boolean} isExpired - A filter for [non-] expired pools.
 	 * @returns {Promise<PoolExtended[]>} A promise that resolves to an array of `PoolExtended` objects.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getPoolsExtendedForPair(
 		pair: TokenPairOrId,
 		isExpired?: boolean
