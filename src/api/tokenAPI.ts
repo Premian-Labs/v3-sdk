@@ -1,8 +1,7 @@
 import { TokenInfo } from '@premia/pair-lists/src/types'
 
-import { withCache } from '../cache'
 import { Token, TokenExtended, TokenMinimal } from '../entities'
-import { Addresses, CacheTTL, WAD_DECIMALS } from '../constants'
+import { Addresses, WAD_DECIMALS } from '../constants'
 import { BaseAPI } from './baseAPI'
 import { CoingeckoTokenId } from '../services'
 import { parseBigInt } from '../utils'
@@ -42,7 +41,6 @@ export class TokenAPI extends BaseAPI {
 	 *
 	 * This function retrieves the spot price for a given token from the underlying data source.
 	 * If the token's USD price is not available, an error is thrown.
-	 * This function is cached for a minute to prevent frequent API calls.
 	 *
 	 * @param {string} address - The address of the token for which to fetch the spot price.
 	 *
@@ -50,7 +48,6 @@ export class TokenAPI extends BaseAPI {
 	 *
 	 * @throws {Error} An error if the USD price for the token is not found.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getSpotPrice(address: string): Promise<bigint> {
 		const token = await this.getToken(address)
 
@@ -70,7 +67,6 @@ export class TokenAPI extends BaseAPI {
 	 *
 	 * @returns {Promise<TokenMinimal>} A promise that resolves to an object containing the token's address, symbol, and decimals.
 	 */
-	@withCache()
 	async getTokenMinimal(address: string): Promise<TokenMinimal> {
 		const tokenContract = this.premia.contracts.getTokenContract(
 			address,
@@ -98,7 +94,6 @@ export class TokenAPI extends BaseAPI {
 	 *
 	 * @throws Will throw an error if the token information cannot be fetched from either the subgraph, coingecko, or token contract.
 	 */
-	@withCache(CacheTTL.HOURLY)
 	async getToken(address: string): Promise<Token> {
 		if (!this.premia.skipSubgraph) {
 			try {
@@ -215,7 +210,6 @@ export class TokenAPI extends BaseAPI {
 	 *
 	 * @returns {Promise<TokenExtended>} A promise that resolves to an object containing the extended information of the token.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getTokenExtended(address: string): Promise<TokenExtended> {
 		return this.premia.subgraph.getTokenExtended(address)
 	}
@@ -231,7 +225,6 @@ export class TokenAPI extends BaseAPI {
 	 *
 	 * @returns {Promise<Token[]>} A promise that resolves to an array containing the information of the tokens.
 	 */
-	@withCache(CacheTTL.HOURLY)
 	async getTokens(tokens: string[]): Promise<Token[]> {
 		if (!this.premia.skipSubgraph) {
 			try {
@@ -261,7 +254,6 @@ export class TokenAPI extends BaseAPI {
 	 * @returns {Promise<TokenExtended[]>} A promise that resolves to an array containing the extended
 	 * information of the specified tokens.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getTokensExtended(tokens: string[]): Promise<TokenExtended[]> {
 		return this.premia.subgraph.getTokensExtended(tokens)
 	}
@@ -279,7 +271,6 @@ export class TokenAPI extends BaseAPI {
 	 *
 	 * @throws Will throw an error if the subgraph fails to load.
 	 */
-	@withCache(CacheTTL.HOURLY)
 	async getTokenList(tokenList: TokenInfo[]): Promise<Token[]> {
 		if (!this.premia.skipSubgraph) {
 			try {
@@ -315,7 +306,6 @@ export class TokenAPI extends BaseAPI {
 	 *
 	 * @returns {Promise<TokenExtended[]>} A promise that resolves to an array containing the extended information of the specified tokens.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getTokenListExtended(tokenList: TokenInfo[]): Promise<TokenExtended[]> {
 		return this.premia.subgraph.getTokenListExtended(tokenList)
 	}

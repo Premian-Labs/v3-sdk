@@ -1,20 +1,17 @@
 import { DefaultOptions } from '@apollo/client/core'
 import { parseBigInt } from './utils'
 
-import { arbitrum, arbitrumGoerli, arbitrumNova } from '@premia/v3-abi/deployment'
+import {
+	arbitrum,
+	arbitrumGoerli,
+	arbitrumNova,
+} from '@premia/v3-abi/deployment'
 
 export enum SupportedChainId {
 	// Testnet,
 	ARBITRUM_GOERLI = 421613,
 	ARBITRUM = 42161,
 	ARBITRUM_NOVA = 42170,
-}
-
-export enum CacheTTL {
-	DAILY = 86400,
-	HOURLY = 3600,
-	MINUTE = 60,
-	SECOND = 1,
 }
 
 export const Fees = {

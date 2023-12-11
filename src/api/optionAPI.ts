@@ -1,8 +1,7 @@
 import { BigNumberish, toBigInt } from 'ethers'
 import { get, isEqual } from 'lodash'
 
-import { withCache } from '../cache'
-import { CacheTTL, WAD_DECIMALS, ZERO_BI } from '../constants'
+import { WAD_DECIMALS, ZERO_BI } from '../constants'
 import { FillableQuote, PoolMinimal, Token } from '../entities'
 import { BaseAPI } from './baseAPI'
 import { TokenOrAddress } from './tokenAPI'
@@ -225,7 +224,6 @@ export class OptionAPI extends BaseAPI {
 
 	/**
 	 * Provides the best quote available from different sources (RFQ, Pool, Vault) based on the provided options.
-	 * The method is cached for a second to improve performance.
 	 *
 	 * @param {Object} options - Quote options object.
 	 * @param {string} options.poolAddress - The pool's address.
@@ -241,7 +239,6 @@ export class OptionAPI extends BaseAPI {
 	 * @param {boolean} [options.showVaultErrors] - Whether to show vault errors (optional).
 	 * @returns {Promise<FillableQuote | null>} - A promise that resolves to the best quote.
 	 */
-	@withCache(CacheTTL.SECOND)
 	async quote(options: {
 		poolAddress: string
 		size: BigNumberish
@@ -323,7 +320,6 @@ export class OptionAPI extends BaseAPI {
 
 	/**
 	 * Provides the best quotes available for each pool that matches the provided options.
-	 * The method is cached for a second to improve performance.
 	 *
 	 * @param {Object} options - Multi-quote options object.
 	 * @param {TokenOrAddress} options.token - The token object or address.
@@ -339,7 +335,6 @@ export class OptionAPI extends BaseAPI {
 	 * @param {string} [options.taker] - The address of the taker (optional).
 	 * @returns {Promise<(FillableQuote | null)[]>} - A promise that resolves to an array of the best quotes.
 	 */
-	@withCache(CacheTTL.SECOND)
 	async multiQuote(options: {
 		token: TokenOrAddress
 		strike: BigNumberish
@@ -385,7 +380,6 @@ export class OptionAPI extends BaseAPI {
 
 	/**
 	 * Provides the best quotes available from each provider (RFQ, Pool, Vault) for each pool that matches the provided options.
-	 * The method is cached for a second to improve performance.
 	 *
 	 * @param {Object} options - Quotes by provider options object.
 	 * @param {TokenOrAddress} options.token - The token object or address.
@@ -401,7 +395,6 @@ export class OptionAPI extends BaseAPI {
 	 * @param {string} [options.taker] - The address of the taker (optional).
 	 * @returns {Promise<{ [provider: string]: (FillableQuote | null)[] }>} - A promise that resolves to an object where each key is a provider and the value is an array of the best quotes.
 	 */
-	@withCache(CacheTTL.SECOND)
 	async quotesByProvider(options: {
 		token: TokenOrAddress
 		strike: BigNumberish

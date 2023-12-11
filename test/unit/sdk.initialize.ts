@@ -14,7 +14,6 @@ describe('SDK.initialize', function (this: any) {
 	it('should be able to be instantiated with no params and no browser provider', async () => {
 		const premia = await Premia.initialize()
 
-		expect(premia.disableCache).eq(false)
 		expect(premia.skipSubgraph).eq(false)
 		expect(premia.subgraph.uri).eq(
 			'https://api.thegraph.com/subgraphs/name/premian-labs/premia-blue'
@@ -46,7 +45,6 @@ describe('SDK.initialize', function (this: any) {
 			useTestnet: true,
 		})
 
-		expect(premia.disableCache).eq(false)
 		expect(premia.skipSubgraph).eq(false)
 		expect(premia.subgraph.uri).eq(
 			'https://api.thegraph.com/subgraphs/name/premian-labs/premia-blue-arbitrum-goerli'
@@ -87,7 +85,6 @@ describe('SDK.initialize', function (this: any) {
 		expect(premia.orderbookProvider).instanceOf(JsonRpcProvider)
 		expect(premia.signer).instanceOf(Wallet)
 
-		expect(premia.disableCache).eq(false)
 		expect(premia.skipSubgraph).eq(false)
 		expect(premia.subgraph.uri).eq(
 			'https://api.thegraph.com/subgraphs/name/totop716/premia-v3'
@@ -125,7 +122,6 @@ describe('SDK.initialize', function (this: any) {
 		expect(premia.orderbookProvider).instanceOf(JsonRpcProvider)
 		expect(premia.signer).instanceOf(Wallet)
 
-		expect(premia.disableCache).eq(false)
 		expect(premia.skipSubgraph).eq(false)
 		expect(premia.subgraph.uri).eq(
 			'https://api.thegraph.com/subgraphs/name/premian-labs/premia-blue'
@@ -164,7 +160,6 @@ describe('SDK.initialize', function (this: any) {
 		expect(premia.orderbookProvider).instanceOf(JsonRpcProvider)
 		expect(premia.signer).instanceOf(Wallet)
 
-		expect(premia.disableCache).eq(false)
 		expect(premia.skipSubgraph).eq(false)
 		expect(premia.subgraph.uri).eq(
 			'https://api.thegraph.com/subgraphs/name/premian-labs/premia-blue-arbitrum-goerli'
