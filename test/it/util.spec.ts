@@ -1,6 +1,4 @@
-import 'mock-local-storage'
 import { expect } from 'chai'
-import dayjs from 'dayjs'
 
 import { FRIDAY, nextYearOfMaturities, parseBigInt } from '../../src'
 
