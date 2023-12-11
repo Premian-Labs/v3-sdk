@@ -1,4 +1,3 @@
-import 'mock-local-storage'
 import { expect } from 'chai'
 import { parseEther } from 'ethers'
 
