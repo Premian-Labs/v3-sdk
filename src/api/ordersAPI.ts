@@ -12,9 +12,8 @@ import {
 import { isEqual } from 'lodash'
 
 import { BaseAPI } from './baseAPI'
-import { withCache } from '../cache'
 import { convertDecimals, signData } from '../utils'
-import { Addresses, CacheTTL, WAD_BI, WAD_DECIMALS } from '../constants'
+import { Addresses, WAD_BI, WAD_DECIMALS } from '../constants'
 import {
 	EIP712Domain,
 	FillableQuote,
@@ -210,7 +209,6 @@ export class OrdersAPI extends BaseAPI {
 	 * @param {string} [taker] - The address of the taker (optional).
 	 * @returns {Promise<FillableQuote | null>} - The best fillable quote, or null if no quotes available.
 	 */
-	@withCache(CacheTTL.SECOND)
 	async quote(
 		poolAddress: string,
 		size: BigNumberish,

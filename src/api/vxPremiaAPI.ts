@@ -1,17 +1,4 @@
-import { withCache } from '../cache'
-import { CacheTTL } from '../constants'
-import { BaseAPI } from './baseAPI'
 import {
-	Signature,
-	StakeHistory,
-	UserStake,
-	VaultVote,
-	Vote,
-	VoteHistory,
-	VoteVersion,
-} from '../entities'
-import {
-	AbiCoder,
 	BigNumberish,
 	BytesLike,
 	ContractTransaction,
@@ -22,6 +9,17 @@ import {
 	PremiaStakingStorage,
 	VxPremiaStorage,
 } from '@premia/v3-abi/typechain/IVxPremia'
+
+import { BaseAPI } from './baseAPI'
+import {
+	Signature,
+	StakeHistory,
+	UserStake,
+	VaultVote,
+	Vote,
+	VoteHistory,
+	VoteVersion,
+} from '../entities'
 import { sendTransaction } from '../utils'
 
 /**
@@ -29,9 +27,6 @@ import { sendTransaction } from '../utils'
  * This class provides additional functionalities specific to the Premia Protocol.
  * This class exposes methods to interact with the Premia Protocol's user-related functionalities such as vault votes,
  * user stakes, stake histories and voting histories.
- *
- * Note: Several methods in this class use a caching mechanism (`@withCache`) to store recent responses,
- * thereby reducing latency and load on subsequent requests for the same data.
  *
  * @extends BaseAPI
  */
@@ -44,7 +39,6 @@ export class VxPremiaAPI extends BaseAPI {
 	 * @param {number} [skip=0] - The number of records to skip.
 	 * @returns {Promise<VaultVote[]>} A promise that resolves to an array of vault votes.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getVaultVotes(
 		user: string,
 		first: number = 100,
@@ -63,7 +57,6 @@ export class VxPremiaAPI extends BaseAPI {
 	 * @param {number} [skip=0] - The number of records to skip.
 	 * @returns {Promise<VaultVote[]>} A promise that resolves to an array of vault votes.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getUserVaultVotesFromTimestamp(
 		user: string,
 		timestampFrom: number,

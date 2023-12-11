@@ -7,8 +7,7 @@ import {
 	ZeroAddress,
 } from 'ethers'
 
-import { withCache } from '../cache'
-import { CacheTTL, WAD_BI, ZERO_BI } from '../constants'
+import { WAD_BI, ZERO_BI } from '../constants'
 import {
 	FillableQuote,
 	PoolKey,
@@ -90,7 +89,6 @@ export class VaultAPI extends BaseAPI {
 	 *
 	 * @returns {Promise<FillableQuote | null>} A promise that resolves to the best quote for the given pool.
 	 */
-	@withCache(CacheTTL.SECOND)
 	async quote(
 		poolAddress: string,
 		size: BigNumberish,
@@ -322,15 +320,11 @@ export class VaultAPI extends BaseAPI {
 	/**
 	 * Retrieves information for a specific vault using its address.
 	 *
-	 * This function is cached, meaning that if it is called multiple times within a daily period,
-	 * it will only perform the operation once and then return the cached result for subsequent calls.
-	 *
 	 * @param {string} address - The address of the vault for which information should be retrieved.
 	 *
 	 * @returns {Promise<VaultExtended>} A promise that resolves to a VaultExtended object, containing information about
 	 *                                   the vault at the specified address.
 	 */
-	@withCache(CacheTTL.DAILY)
 	async getVault(address: string): Promise<Vault> {
 		return this.premia.subgraph.getVault(address)
 	}
@@ -338,15 +332,11 @@ export class VaultAPI extends BaseAPI {
 	/**
 	 * Retrieves extended information for a specific vault using its address.
 	 *
-	 * This function is cached, meaning that if it is called multiple times within a one minute period,
-	 * it will only perform the operation once and then return the cached result for subsequent calls.
-	 *
 	 * @param {string} address - The address of the vault for which extended information should be retrieved.
 	 *
 	 * @returns {Promise<VaultExtended>} A promise that resolves to a VaultExtended object, containing
 	 *                                   detailed information about the vault at the specified address.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getVaultExtended(address: string): Promise<VaultExtended> {
 		return this.premia.subgraph.getVaultExtended(address)
 	}
@@ -354,13 +344,9 @@ export class VaultAPI extends BaseAPI {
 	/**
 	 * Retrieves information for all vaults.
 	 *
-	 * This function is cached, meaning that if it is called multiple times within a daily period,
-	 * it will only perform the operation once and then return the cached result for subsequent calls.
-	 *
 	 * @returns {Promise<VaultExtended[]>} A promise that resolves to an array of VaultExtended objects, each containing information
 	 *                             about a vault.
 	 */
-	@withCache(CacheTTL.DAILY)
 	async getAllVaultsExtended(): Promise<VaultExtended[]> {
 		return this.premia.subgraph.getAllVaultsExtended()
 	}
@@ -368,15 +354,11 @@ export class VaultAPI extends BaseAPI {
 	/**
 	 * Retrieves extended information for all vaults associated with a given token address.
 	 *
-	 * This function is cached, meaning that if it is called multiple times within a daily period,
-	 * it will only perform the operation once and then return the cached result for subsequent calls.
-	 *
 	 * @param {string} tokenAddress - The base token address for which vaults should be retrieved.
 	 *
 	 * @returns {Promise<Vault[]>} A promise that resolves to an array of Vault objects, each containing information
 	 *                             about a vault associated with the given base address.
 	 */
-	@withCache(CacheTTL.DAILY)
 	async getVaults(tokenAddress: string): Promise<Vault[]> {
 		return this.premia.subgraph.getVaultsExtended(tokenAddress)
 	}
@@ -384,15 +366,11 @@ export class VaultAPI extends BaseAPI {
 	/**
 	 * Retrieves information for all vaults associated with a given token address.
 	 *
-	 * This function is cached, meaning that if it is called multiple times within a one minute period,
-	 * it will only perform the operation once and then return the cached result for subsequent calls.
-	 *
 	 * @param {string} tokenAddress - The base token address for which vaults should be retrieved.
 	 *
 	 * @returns {Promise<VaultExtended[]>} A promise that resolves to an array of VaultExtended objects, each containing
 	 *                                     detailed information about a vault associated with the given base address.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getVaultsExtended(tokenAddress: string): Promise<VaultExtended[]> {
 		return this.premia.subgraph.getVaultsExtended(tokenAddress)
 	}
@@ -400,16 +378,12 @@ export class VaultAPI extends BaseAPI {
 	/**
 	 * Retrieves information for all vaults associated with a given token.
 	 *
-	 * This function is cached, meaning that if it is called multiple times within a daily period,
-	 * it will only perform the operation once and then return the cached result for subsequent calls.
-	 *
 	 * @param {TokenOrAddress} token - The token or token address for which vaults should be retrieved.
 	 * @param {boolean} isQuote - Optional parameter that indicates whether the token is a quote token. Default is false.
 	 *
 	 * @returns {Promise<Vault[]>} A promise that resolves to an array of Vault objects, each containing information
 	 *                             about a vault associated with the given token.
 	 */
-	@withCache(CacheTTL.DAILY)
 	async getVaultsForToken(
 		token: TokenOrAddress,
 		isQuote: boolean = false
@@ -420,16 +394,12 @@ export class VaultAPI extends BaseAPI {
 	/**
 	 * Retrieves extended information for all vaults associated with a given token.
 	 *
-	 * This function is cached, meaning that if it is called multiple times within a one minute period,
-	 * it will only perform the operation once and then return the cached result for subsequent calls.
-	 *
 	 * @param {TokenOrAddress} token - The token or token address for which vaults should be retrieved.
 	 * @param {boolean} isQuote - Optional parameter that indicates whether the token is a quote token. Default is false.
 	 *
 	 * @returns {Promise<VaultExtended[]>} A promise that resolves to an array of VaultExtended objects, each containing
 	 *                                     detailed information about a vault associated with the given token.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getVaultsExtendedForToken(
 		token: TokenOrAddress,
 		isQuote: boolean = false
@@ -440,14 +410,10 @@ export class VaultAPI extends BaseAPI {
 	/**
 	 * Retrieves the vault position for a specific owner and pool.
 	 *
-	 * This function is cached, meaning that if it is called multiple times within a one-minute period,
-	 * it will only perform the operation once and then return the cached result for subsequent calls.
-	 *
 	 * @param {string} owner - The address of an owner with shares in the vault.
 	 * @param {string} vaultAddress - The address of the vault.
 	 * @returns {Promise<VaultPosition>} A promise that resolves to a VaultPosition object containing details about the owner's position in the specified vault.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getVaultPosition(
 		owner: string,
 		vaultAddress: string
@@ -458,14 +424,10 @@ export class VaultAPI extends BaseAPI {
 	/**
 	 * Retrieves the extended vault position for a specific owner and pool.
 	 *
-	 * This function is cached, meaning that if it is called multiple times within a one-minute period,
-	 * it will only perform the operation once and then return the cached result for subsequent calls.
-	 *
 	 * @param {string} owner - The address of an owner with shares in the vault.
 	 * @param {string} vaultAddress - The address of the vault.
 	 * @returns {Promise<VaultPositionExtended>} A promise that resolves to a VaultPositionExtended object containing extended details about the owner's position in the specified vault.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getVaultPositionExtended(
 		owner: string,
 		vaultAddress: string
@@ -476,14 +438,10 @@ export class VaultAPI extends BaseAPI {
 	/**
 	 * Retrieves the vault positions for a specific owner.
 	 *
-	 * This function is cached, meaning that if it is called multiple times within a one-minute period,
-	 * it will only perform the operation once and then return the cached result for subsequent calls.
-	 *
 	 * @param {string} owner - The address of an owner with shares in the vault.
 	 * @returns {Promise<VaultPosition>} A promise that resolves to an array of VaultPositionExtended objects, each containing
 	 *                                   detailed information about a vault position associated with the given owner.
 	 */
-	@withCache(CacheTTL.MINUTE)
 	async getVaultPositionsExtendedForUser(
 		owner: string
 	): Promise<VaultPositionExtended[]> {

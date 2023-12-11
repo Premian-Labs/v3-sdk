@@ -63,7 +63,6 @@ describe('Pool API', async function (this: any) {
 	beforeEach(async () => {
 		sdk = await Premia.initialize({
 			useTestnet: true,
-			disableCache: false,
 			privateKey: process.env.TESTNET_PRIVATE_KEY,
 		})
 
@@ -95,8 +94,6 @@ describe('Pool API', async function (this: any) {
 	it('should correct deploy pool', async () => {
 		if (basePool.initialized) return
 
-		sdk.setDisableCache(true)
-
 		const response = await sdk.pools.deployWithKey(poolKey)
 		await response.wait(1)
 
@@ -106,8 +103,6 @@ describe('Pool API', async function (this: any) {
 		await poolContract.waitForDeployment()
 
 		basePool = await sdk.pools.getPoolMinimalFromKey(poolKey)
-
-		sdk.setDisableCache(false)
 
 		expect(basePool.initialized).to.be.true
 	})
