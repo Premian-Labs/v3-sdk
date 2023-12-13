@@ -31,7 +31,11 @@ export function nextYearOfMaturities(): dayjs.Dayjs[] {
 
 	maturities.push(tomorrow, afterTomorrow)
 
-	if (!nextFriday.isSame(today, 'day') && !nextFriday.isSame(tomorrow, 'day') && !nextFriday.isSame(afterTomorrow, 'd'))
+	if (
+		!nextFriday.isSame(today, 'day') &&
+		!nextFriday.isSame(tomorrow, 'day') &&
+		!nextFriday.isSame(afterTomorrow, 'd')
+	)
 		maturities.push(nextFriday)
 
 	const next2ndFriday = nextFriday.add(1, 'week')
