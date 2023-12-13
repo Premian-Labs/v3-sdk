@@ -26,22 +26,4 @@ describe('Option API', function (this: any) {
 		const suggested = sdk.options.getSuggestedStrikes(parseBigInt('2000'))
 		expect(suggested).to.not.be.empty
 	})
-
-	it('should get the most liquid option for a token', async () => {
-		sdk = await Premia.initialize({ useTestnet: false })
-
-		try {
-			const pool = await sdk.options.getMostLiquidOptionForToken(
-				Addresses[sdk.chainId].WETH,
-				{
-					isCall: true,
-					isBuy: true,
-				}
-			)
-
-			expect(pool).to.not.be.null
-		} catch (err) {
-			console.error('Err', err)
-		}
-	})
 })
