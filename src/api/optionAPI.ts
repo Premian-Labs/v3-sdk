@@ -113,79 +113,50 @@ export class OptionAPI extends BaseAPI {
 	}
 
 	/**
-	 * Calculates the increment to use for strike prices based on the spot (or reference) price.
-	 *
-	 * @param {BigNumberish} spotPrice - The spot (or reference) price.
-	 * @param {number} decimals - The number of decimal places for the price (defaults to WAD_DECIMALS).
-	 * @returns {bigint} - The increment for the strike prices.
-	 */
-	getStrikeIncrement(
-		spotPrice: BigNumberish,
-		decimals: number | bigint = WAD_DECIMALS
-	): bigint {
-		const _decimals = Number(decimals)
-		const price = parseNumber(spotPrice, _decimals)
-		const exponent = Math.floor(Math.log10(price))
-		const multiplier = price >= 5 * 10 ** exponent ? 5 : 1
-
-		if (exponent - 1 < 0) {
-			return (
-				(toBigInt(multiplier) * toBigInt(10) ** toBigInt(decimals)) /
-				toBigInt(10) ** toBigInt(Math.abs(exponent - 1))
-			)
-		}
-
-		return (
-			toBigInt(multiplier) *
-			toBigInt(10) ** toBigInt(decimals) *
-			toBigInt(10) ** toBigInt(exponent - 1)
-		)
-	}
-
-	/**
 	 * Generates a list of suggested strike prices based on the spot price.
 	 *
-	 * @param {BigNumberish} spotPrice - The spot price.
-	 * @param {number} decimals - The number of decimal places for the price (defaults to WAD_DECIMALS).
-	 * @returns {bigint[]} - An array of suggested strike prices.
+	 * @param {number} spotPrice - The spot price.
+	 * @returns {number[]} - An array of suggested strike prices.
 	 */
-	getSuggestedStrikes(
-		spotPrice: BigNumberish,
-		decimals: number = Number(WAD_DECIMALS)
-	): bigint[] {
-		const _spotPrice = toBigInt(spotPrice)
-		let increment = this.getStrikeIncrement(spotPrice, decimals)
+	getSuggestedStrikes(spotPrice: number): number[] {
+		const minStrike = spotPrice / 2
+		const maxStrike = spotPrice * 2
 
-		if (increment === ZERO_BI) {
-			return []
-		}
-
-		if (increment < parseBigInt('0.05')) {
-			increment = parseBigInt('0.05')
-		}
-
-		const maxProportion = 2n
-
-		const minStrike = _spotPrice / maxProportion
-		const maxStrike = _spotPrice * maxProportion
-
-		let minStrikeRounded = roundToNearest(minStrike, increment)
-		let maxStrikeRounded = roundToNearest(maxStrike, increment)
-
-		if (minStrikeRounded > minStrike) {
-			minStrikeRounded -= increment
-		}
-
-		if (maxStrikeRounded < maxStrike) {
-			maxStrikeRounded += increment
-		}
+		const intervalAtMinStrike = this.getStrikeInterval(minStrike)
+		const intervalAtMaxStrike = this.getStrikeInterval(maxStrike)
+		const properMin = this.roundUpTo(minStrike, intervalAtMinStrike)
+		const properMax = this.roundUpTo(maxStrike, intervalAtMaxStrike)
 
 		const strikes = []
-		for (let i = minStrikeRounded; i <= maxStrikeRounded; i += increment) {
-			strikes.push(i)
+		let increment = this.getStrikeInterval(minStrike)
+		for (let i = properMin; i <= properMax; i += increment) {
+			increment = this.getStrikeInterval(i)
+			const interval = this.truncateFloat(i, increment)
+			strikes.push(interval)
 		}
 
 		return strikes
+	}
+
+	// Fixes JS float imprecision error
+	private truncateFloat(input: number, increment: number): number {
+		const orderOfIncrement = Math.floor(Math.log10(increment))
+		if (orderOfIncrement < 0) {
+			return Number(input.toFixed(-orderOfIncrement))
+		} else {
+			return Number(input.toFixed(0))
+		}
+	}
+
+	private roundUpTo(initial: number, rounding: number): number {
+		return Math.ceil(initial / rounding) * rounding
+	}
+
+	// calculates strike interval size
+	getStrikeInterval(price: number): number {
+		const orderOfTens = Math.floor(Math.log10(price))
+		const base = price / 10 ** orderOfTens
+		return base < 5 ? 10 ** (orderOfTens - 1) : 5 * 10 ** (orderOfTens - 1)
 	}
 
 	/**
