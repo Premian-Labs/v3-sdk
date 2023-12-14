@@ -1,13 +1,13 @@
 import { BigNumberish, toBigInt } from 'ethers'
 import { get, isEqual } from 'lodash'
 
-import { WAD_DECIMALS, ZERO_BI } from '../constants'
+import { ZERO_BI } from '../constants'
 import { FillableQuote, PoolMinimal, Token } from '../entities'
 import { BaseAPI } from './baseAPI'
 import { TokenOrAddress } from './tokenAPI'
-import { roundToNearest } from '../utils/round'
-import { parseBigInt, parseNumber } from '../utils'
+import { parseNumber } from '../utils'
 import { ONE_YEAR_MS, blackScholes } from '../'
+import { roundUpTo, truncateFloat } from '../utils/round'
 
 /**
  * This class provides an API for interacting with options in the Premia system.
@@ -124,32 +124,18 @@ export class OptionAPI extends BaseAPI {
 
 		const intervalAtMinStrike = this.getStrikeInterval(minStrike)
 		const intervalAtMaxStrike = this.getStrikeInterval(maxStrike)
-		const properMin = this.roundUpTo(minStrike, intervalAtMinStrike)
-		const properMax = this.roundUpTo(maxStrike, intervalAtMaxStrike)
+		const properMin = roundUpTo(minStrike, intervalAtMinStrike)
+		const properMax = roundUpTo(maxStrike, intervalAtMaxStrike)
 
 		const strikes = []
 		let increment = this.getStrikeInterval(minStrike)
 		for (let i = properMin; i <= properMax; i += increment) {
 			increment = this.getStrikeInterval(i)
-			const interval = this.truncateFloat(i, increment)
+			const interval = truncateFloat(i, increment)
 			strikes.push(interval)
 		}
 
 		return strikes
-	}
-
-	// Fixes JS float imprecision error
-	private truncateFloat(input: number, increment: number): number {
-		const orderOfIncrement = Math.floor(Math.log10(increment))
-		if (orderOfIncrement < 0) {
-			return Number(input.toFixed(-orderOfIncrement))
-		} else {
-			return Number(input.toFixed(0))
-		}
-	}
-
-	private roundUpTo(initial: number, rounding: number): number {
-		return Math.ceil(initial / rounding) * rounding
 	}
 
 	// calculates strike interval size
