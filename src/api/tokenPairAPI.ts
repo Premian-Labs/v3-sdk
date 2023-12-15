@@ -45,18 +45,19 @@ export class TokenPairAPI extends BaseAPI {
 	}
 
 	/**
-	 * Gets the strike increment for a token pair based on its spot price.
+	 * Gets the strike interval for a token pair based on its spot price.
 	 *
 	 * @param {TokenPairOrId} pair - The token pair to fetch the strike increment for.
 	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<bigint>} The strike increment for the token pair.
 	 */
-	async getStrikeIncrement(
+	async getStrikeInterval(
 		pair: TokenPairOrId,
 		provider?: Provider
 	): Promise<bigint> {
 		const spotPrice = await this.getSpotPrice(pair, provider)
-		return this.premia.options.getStrikeIncrement(spotPrice)
+		const interval = this.premia.options.getStrikeInterval(Number(spotPrice))
+		return toBigInt(interval)
 	}
 
 	/**
