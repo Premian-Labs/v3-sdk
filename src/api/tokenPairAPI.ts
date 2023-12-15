@@ -49,7 +49,8 @@ export class TokenPairAPI extends BaseAPI {
 	 */
 	async getStrikeIncrement(pair: TokenPairOrId): Promise<bigint> {
 		const spotPrice = await this.getSpotPrice(pair)
-		return this.premia.options.getStrikeIncrement(spotPrice)
+		const interval = this.premia.options.getStrikeInterval(Number(spotPrice))
+		return toBigInt(interval)
 	}
 
 	/**
