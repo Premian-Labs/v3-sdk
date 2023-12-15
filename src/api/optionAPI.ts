@@ -1,4 +1,4 @@
-import { BigNumberish, toBigInt } from 'ethers'
+import { BigNumberish, Provider, toBigInt } from 'ethers'
 import { get, isEqual } from 'lodash'
 
 import { WAD_DECIMALS, ZERO_BI } from '../constants'
@@ -82,34 +82,6 @@ export class OptionAPI extends BaseAPI {
 		}
 
 		return pools
-	}
-
-	/**
-	 * Gets the profit or loss for a given pool, action (buy/sell), and premium.
-	 *
-	 * @param {string} poolAddress - The address of the pool.
-	 * @param {boolean} isBuy - Whether the action is a buy.
-	 * @param {BigNumberish} premium - The premium for the transaction.
-	 * @returns {Promise<bigint>} - A promise that resolves to the calculated profit or loss.
-	 */
-	async getProfitLoss(
-		poolAddress: string,
-		isBuy: boolean,
-		premium: BigNumberish
-	): Promise<bigint> {
-		const pool = await this.premia.pools.getPool(poolAddress)
-
-		const _premium = toBigInt(premium)
-		const isExpired = Number(pool.maturity) < Date.now() / 1000
-
-		let value = ZERO_BI
-		if (isExpired) {
-			value = await this.premia.pools.getExerciseValue(poolAddress)
-		} else {
-			value = await this.premia.pools.marketPrice(poolAddress)
-		}
-
-		return isBuy ? value - _premium : _premium - value
 	}
 
 	/**
@@ -220,6 +192,36 @@ export class OptionAPI extends BaseAPI {
 		})
 
 		return iv
+	}
+
+	/**
+	 * Gets the profit or loss for a given pool, action (buy/sell), and premium.
+	 *
+	 * @param {string} poolAddress - The address of the pool.
+	 * @param {boolean} isBuy - Whether the action is a buy.
+	 * @param {BigNumberish} premium - The premium for the transaction.
+	 * @param {Provider} provider - The custom provider to use for this call.
+	 * @returns {Promise<bigint>} - A promise that resolves to the calculated profit or loss.
+	 */
+	async getProfitLoss(
+		poolAddress: string,
+		isBuy: boolean,
+		premium: BigNumberish,
+		provider?: Provider
+	): Promise<bigint> {
+		const pool = await this.premia.pools.getPool(poolAddress)
+
+		const _premium = toBigInt(premium)
+		const isExpired = Number(pool.maturity) < Date.now() / 1000
+
+		let value = ZERO_BI
+		if (isExpired) {
+			value = await this.premia.pools.getExerciseValue(poolAddress, provider)
+		} else {
+			value = await this.premia.pools.marketPrice(poolAddress, provider)
+		}
+
+		return isBuy ? value - _premium : _premium - value
 	}
 
 	/**

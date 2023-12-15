@@ -2,6 +2,7 @@ import {
 	AbiCoder,
 	BigNumberish,
 	keccak256,
+	Provider,
 	Signature,
 	solidityPacked,
 	toBigInt,
@@ -40,13 +41,16 @@ export class OrdersAPI extends BaseAPI {
 	 * @param {OrderbookQuote[]} quotes - An array of quotes.
 	 * @param {BigNumberish} size - The size of the trade.
 	 * @param {BigNumberish} [minimumSize] - The minimum size of the trade (optional).
+	 * @param {string} [taker] - The address of the taker (optional).
+	 * @param {Provider} [provider] - The custom provider to use for this call.
 	 * @returns {Promise<OrderbookQuote[] | null>} - A promise resolving to the best quote from the array of quotes, or null if no valid quote is found.
 	 */
 	private async bestQuote(
 		quotes: OrderbookQuote[],
 		size: BigNumberish,
 		minimumSize?: BigNumberish,
-		taker?: string
+		taker?: string,
+		provider?: Provider
 	): Promise<OrderbookQuote | null> {
 		const bestQuotes = quotes.slice().sort((a, b) => {
 			const betterQuote = this.premia.pricing.better(
@@ -67,7 +71,15 @@ export class OrdersAPI extends BaseAPI {
 		/// @dev: return the first valid quote in order of sorting
 		for (const quote of bestQuotes) {
 			try {
-				if (await this.isQuoteValid(quote, quote.fillableSize, taker, true)) {
+				if (
+					await this.isQuoteValid(
+						quote,
+						quote.fillableSize,
+						taker,
+						true,
+						provider
+					)
+				) {
 					return quote
 				} else {
 					console.log('Invalid quote: ', quote)
@@ -89,6 +101,7 @@ export class OrdersAPI extends BaseAPI {
 	 * @param {OrderbookQuote} quote - The orderbook quote to be converted.
 	 * @param {number} [createdAt] - The timestamp of the quote's creation (optional).
 	 * @param {string} [referrer] - The address of the referrer (optional).
+	 * @param {Provider} [provider] - The custom provider to use for this call.
 	 * @returns {Promise<FillableQuote>} - A promise resolving to the fillable quote.
 	 */
 	private async tradeQuoteToFillable(
@@ -96,11 +109,12 @@ export class OrdersAPI extends BaseAPI {
 		size: BigNumberish,
 		quote: OrderbookQuote,
 		createdAt?: number,
-		referrer?: string
+		referrer?: string,
+		provider?: Provider
 	): Promise<FillableQuote> {
 		const poolContract = this.premia.contracts.getPoolContract(
 			poolAddress,
-			this.premia.multicallProvider
+			provider ?? this.premia.multicallProvider
 		)
 		const price = toBigInt(quote.price)
 		const _size =
@@ -117,7 +131,8 @@ export class OrdersAPI extends BaseAPI {
 				normalizedPremium,
 				true,
 				true,
-				quote.taker
+				quote.taker,
+				provider
 			),
 		])
 
@@ -174,22 +189,29 @@ export class OrdersAPI extends BaseAPI {
 	 *
 	 * @param {OrderbookQuote} quote - The quote to check.
 	 * @param {BigNumberish} [size] - The size of the trade (optional).
+	 * @param {string} [taker] - The address of the taker (optional).
 	 * @param {boolean} [throwError=false] - Whether to throw an error if the quote is invalid (default is false).
+	 * @param {Provider} [provider] - The custom provider to use for this call.
 	 * @returns {Promise<boolean>} - A promise that resolves to a boolean indicating whether the quote is valid.
 	 */
 	async isQuoteValid(
 		quote: OrderbookQuote,
 		size?: BigNumberish,
 		taker?: string,
-		throwError: boolean = false
+		throwError: boolean = false,
+		provider?: Provider
 	): Promise<boolean> {
 		/// @TODO: this currently will fail if a pool is not deployed. need to replace with
 		///        off-chain checks for allowance and balance
 
-		const { isValid, error } = await this.premia.pools.isQuoteValid(quote, {
-			taker,
-			size,
-		})
+		const { isValid, error } = await this.premia.pools.isQuoteValid(
+			quote,
+			{
+				taker,
+				size,
+			},
+			provider
+		)
 
 		if (!isValid && throwError) {
 			throw new Error(error)
@@ -207,6 +229,7 @@ export class OrdersAPI extends BaseAPI {
 	 * @param {BigNumberish} [minimumSize] - The minimum size of the trade (optional).
 	 * @param {string} [referrer] - The address of the referrer (optional).
 	 * @param {string} [taker] - The address of the taker (optional).
+	 * @param {Provider} [provider] - The custom provider to use for this call.
 	 * @returns {Promise<FillableQuote | null>} - The best fillable quote, or null if no quotes available.
 	 */
 	async quote(
@@ -215,7 +238,8 @@ export class OrdersAPI extends BaseAPI {
 		isBuy: boolean,
 		minimumSize?: BigNumberish,
 		referrer?: string,
-		taker?: string
+		taker?: string,
+		provider?: Provider
 	): Promise<FillableQuote | null> {
 		let quotes = await this.premia.orderbook.getQuotes(
 			poolAddress,
@@ -228,7 +252,13 @@ export class OrdersAPI extends BaseAPI {
 			return null
 		}
 
-		const bestQuote = await this.bestQuote(quotes, size, minimumSize, taker)
+		const bestQuote = await this.bestQuote(
+			quotes,
+			size,
+			minimumSize,
+			taker,
+			provider
+		)
 
 		if (bestQuote === null) {
 			return null
@@ -239,7 +269,8 @@ export class OrdersAPI extends BaseAPI {
 			size,
 			bestQuote,
 			bestQuote.ts,
-			referrer
+			referrer,
+			provider
 		)
 	}
 
@@ -252,6 +283,8 @@ export class OrdersAPI extends BaseAPI {
 	 * @param {boolean} options.isBuy - Whether it's a buy or a sell.
 	 * @param {BigNumberish} [options.minimumSize] - The minimum size of the trade (optional).
 	 * @param {string} [options.referrer] - The address of the referrer (optional).
+	 * @param {string} [options.taker] - The address of the taker (optional).
+	 * @param {Provider} [options.provider] - The custom provider to use for this call.
 	 * @param {(quote: FillableQuote | null) => void} callback - The callback to execute for the best quote.
 	 * @returns {Promise<void>}
 	 */
@@ -263,6 +296,7 @@ export class OrdersAPI extends BaseAPI {
 			minimumSize?: BigNumberish
 			referrer?: string
 			taker?: string
+			provider?: Provider
 		},
 		callback: (quote: FillableQuote | null) => void
 	): Promise<void> {
@@ -276,7 +310,8 @@ export class OrdersAPI extends BaseAPI {
 
 		try {
 			const poolKey = await this.premia.pools.getPoolKeyFromAddress(
-				options.poolAddress
+				options.poolAddress,
+				options.provider
 			)
 
 			let [, bestQuote] = await Promise.all([
@@ -293,7 +328,8 @@ export class OrdersAPI extends BaseAPI {
 					options.isBuy,
 					options.minimumSize,
 					options.referrer,
-					options.taker
+					options.taker,
+					options.provider
 				),
 			])
 
@@ -319,7 +355,8 @@ export class OrdersAPI extends BaseAPI {
 						[message.body],
 						options.size,
 						options.minimumSize,
-						options.taker
+						options.taker,
+						options.provider
 					)
 					if (quote === null) return
 
@@ -329,7 +366,8 @@ export class OrdersAPI extends BaseAPI {
 							options.size,
 							quote,
 							quote.ts,
-							options.referrer
+							options.referrer,
+							options.provider
 						)
 						callbackIfNotStale(bestQuote)
 					} else {
@@ -346,7 +384,8 @@ export class OrdersAPI extends BaseAPI {
 								options.size,
 								quote,
 								quote.ts,
-								options.referrer
+								options.referrer,
+								options.provider
 							)
 							callbackIfNotStale(bestQuote)
 						}
@@ -441,13 +480,15 @@ export class OrdersAPI extends BaseAPI {
 	 *
 	 * @param {string} poolAddress - The address of the pool.
 	 * @param {QuoteSaltOptionalT} quote - The unsigned quote to publish.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<TransactionReceipt | null>} A promise that resolves to the transaction receipt or null if failed.
 	 */
 	async publishUnsignedQuote(
 		poolAddress: string,
-		quote: QuoteSaltOptionalT
+		quote: QuoteSaltOptionalT,
+		provider?: Provider
 	): Promise<TransactionReceipt | null> {
-		return this.publishUnsignedQuotes(poolAddress, [quote])
+		return this.publishUnsignedQuotes(poolAddress, [quote], provider)
 	}
 
 	/**
@@ -455,40 +496,46 @@ export class OrdersAPI extends BaseAPI {
 	 *
 	 * @param {string} poolAddress - The address of the pool.
 	 * @param {QuoteSaltOptionalT[]} quotes - The list of unsigned quotes to publish.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<TransactionReceipt | null>} A promise that resolves to the transaction receipt or null if failed.
 	 */
 	async publishUnsignedQuotes(
 		poolAddress: string,
-		quotes: QuoteSaltOptionalT[]
+		quotes: QuoteSaltOptionalT[],
+		provider?: Provider
 	): Promise<TransactionReceipt | null> {
 		const _quotes = await Promise.all(
 			quotes.map((quote) => this.signQuote(poolAddress, quote))
 		)
-		return this.publishQuotes(_quotes)
+		return this.publishQuotes(_quotes, provider)
 	}
 
 	/**
 	 * Publishes a quote.
 	 *
 	 * @param {QuoteWithSignatureT} quote - The quote to publish.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<TransactionReceipt | null>} A promise that resolves to the transaction receipt or null if failed.
 	 */
 	async publishQuote(
-		quote: QuoteWithSignatureT
+		quote: QuoteWithSignatureT,
+		provider?: Provider
 	): Promise<TransactionReceipt | null> {
-		return this.publishQuotes([quote])
+		return this.publishQuotes([quote], provider)
 	}
 
 	/**
 	 * Publishes a list of quotes.
 	 *
 	 * @param {QuoteWithSignatureT[]} quotes - The list of quotes to publish.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<TransactionReceipt | null>} A promise that resolves to the transaction receipt or null if failed.
 	 */
 	async publishQuotes(
-		quotes: QuoteWithSignatureT[]
+		quotes: QuoteWithSignatureT[],
+		provider?: Provider
 	): Promise<TransactionReceipt | null> {
-		const orderbook = this.premia.contracts.getOrderbookContract()
+		const orderbook = this.premia.contracts.getOrderbookContract(provider)
 		const _quotes = this.premia.orderbook.serializeQuotesWithSignature(quotes)
 		const response = await orderbook.add(_quotes)
 		return response.wait()

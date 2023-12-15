@@ -3,6 +3,7 @@ import {
 	ContractTransaction,
 	ContractTransactionResponse,
 	FixedNumber,
+	Provider,
 	toBigInt,
 	ZeroAddress,
 } from 'ethers'
@@ -11,6 +12,7 @@ import { WAD_BI, ZERO_BI } from '../constants'
 import {
 	FillableQuote,
 	PoolKey,
+	TransactionData,
 	Vault,
 	VaultExtended,
 	VaultPosition,
@@ -44,26 +46,40 @@ export class VaultAPI extends BaseAPI {
 	/**
 	 * Returns the total amount of assets in a vault.
 	 * @param vaultAddress {string} The contract address of the vault.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<bigint>} Promise containing the total assets in the vault.
 	 */
-	totalAssets(vaultAddress: string): Promise<bigint> {
-		const vaultContract = this.premia.contracts.getERC4626Contract(vaultAddress)
+	totalAssets(vaultAddress: string, provider?: Provider): Promise<bigint> {
+		const vaultContract = this.premia.contracts.getERC4626Contract(
+			vaultAddress,
+			provider ?? this.premia.multicallProvider
+		)
 		return vaultContract.totalAssets()
 	}
 
 	/**
 	 * Returns the utilization percent of total assets in a vault.
 	 * @param vaultAddress {string} The contract address of the vault.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<bigint>} Promise containing the utilization percent of the assets in the vault.
 	 */
-	async getUtilizationPercent(vaultAddress: string): Promise<number> {
-		const vaultContract = this.premia.contracts.getERC4626Contract(vaultAddress)
+	async getUtilizationPercent(
+		vaultAddress: string,
+		provider?: Provider
+	): Promise<number> {
+		const vaultContract = this.premia.contracts.getERC4626Contract(
+			vaultAddress,
+			provider ?? this.premia.multicallProvider
+		)
 		const [_totalAssets, asset] = await Promise.all([
 			vaultContract.totalAssets(),
 			vaultContract.asset(),
 		])
 
-		const tokenContract = this.premia.contracts.getTokenContract(asset)
+		const tokenContract = this.premia.contracts.getTokenContract(
+			asset,
+			provider ?? this.premia.multicallProvider
+		)
 		const [decimals, _remaining] = await Promise.all([
 			tokenContract.decimals(),
 			tokenContract.balanceOf(vaultAddress),
@@ -86,6 +102,7 @@ export class VaultAPI extends BaseAPI {
 	 * @param {string} taker - The taker address to use for the quote.
 	 * @param {number} maxSlippagePercent - The maximum slippage percent to use for the quote.
 	 * @param {boolean} showErrors - Whether to show errors in the console.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 *
 	 * @returns {Promise<FillableQuote | null>} A promise that resolves to the best quote for the given pool.
 	 */
@@ -97,15 +114,19 @@ export class VaultAPI extends BaseAPI {
 		referrer?: string,
 		taker?: string,
 		maxSlippagePercent?: number,
-		showErrors?: boolean
+		showErrors?: boolean,
+		provider?: Provider
 	): Promise<FillableQuote | null> {
 		const _size = toBigInt(size)
 		const _minimumSize = minimumSize ? toBigInt(minimumSize) : _size
 		const vaultRegistry = this.premia.contracts.getVaultRegistryContract(
-			this.premia.multicallProvider
+			provider ?? this.premia.multicallProvider
 		)
 
-		const poolKey = await this.premia.pools.getPoolKeyFromAddress(poolAddress)
+		const poolKey = await this.premia.pools.getPoolKeyFromAddress(
+			poolAddress,
+			provider
+		)
 		const [_taker, vaults, pool] = await Promise.all([
 			taker ?? this.premia.signer?.getAddress() ?? ZeroAddress,
 			vaultRegistry.getVaultsByFilter(
@@ -120,7 +141,7 @@ export class VaultAPI extends BaseAPI {
 			vaults.map(async (_vault) => {
 				const vault = this.premia.contracts.getVaultContract(
 					_vault.vault,
-					this.premia.multicallProvider
+					provider ?? this.premia.multicallProvider
 				)
 
 				const supportedPairs = await vaultRegistry.getSupportedTokenPairs(
@@ -165,7 +186,8 @@ export class VaultAPI extends BaseAPI {
 					ZERO_BI,
 					true,
 					false,
-					_taker
+					_taker,
+					provider
 				)
 				/// @dev remove the taker fee from the price, to be consistent with the other quotes
 				const price = ((quote - takerFee) * WAD_BI) / _size
@@ -212,6 +234,7 @@ export class VaultAPI extends BaseAPI {
 	 * @param {string} options.taker - The taker address to use for the quote.
 	 * @param {number} options.maxSlippagePercent - The maximum slippage percent to use for the quote.
 	 * @param {boolean} options.showErrors - Whether to show errors in the console.
+	 * @param {Provider} options.provider - The custom provider to use for this call.
 	 * @param {string} callback - The callback to call when a new quote is emitted.
 	 *
 	 * @returns {Promise<void>} A promise that resolves when the quote stream has been started.
@@ -226,6 +249,7 @@ export class VaultAPI extends BaseAPI {
 			taker?: string
 			maxSlippagePercent?: number
 			showErrors?: boolean
+			provider?: Provider
 		},
 		callback: (quote: FillableQuote | null) => void
 	): Promise<void> {
@@ -237,10 +261,13 @@ export class VaultAPI extends BaseAPI {
 		}
 
 		const poolKey = await this.premia.pools.getPoolKeyFromAddress(
-			options.poolAddress
+			options.poolAddress,
+			options.provider
 		)
 		const vaults = await this.premia.contracts
-			.getVaultRegistryContract(this.premia.multicallProvider)
+			.getVaultRegistryContract(
+				options.provider ?? this.premia.multicallProvider
+			)
 			.getVaultsByFilter(
 				[poolKey.base],
 				this.tradeSide(!options.isBuy),
@@ -256,7 +283,8 @@ export class VaultAPI extends BaseAPI {
 				options.referrer,
 				options.taker,
 				options.maxSlippagePercent,
-				options.showErrors
+				options.showErrors,
+				options.provider
 			)
 
 			callbackIfNotStale(bestQuote)
@@ -278,7 +306,8 @@ export class VaultAPI extends BaseAPI {
 						options.referrer,
 						options.taker,
 						options.maxSlippagePercent,
-						options.showErrors
+						options.showErrors,
+						options.provider
 					)
 					callbackIfNotStale(quote)
 				} catch (err) {
@@ -295,16 +324,18 @@ export class VaultAPI extends BaseAPI {
 	 * @param {string} assets - The vault assets for which to cancel quote streams on.
 	 * @param {string} isCall - Whether the vault is a call vault.
 	 * @param {string} isBuy - Whether the quote is a buy quote.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 *
 	 * @returns {Promise<void>} A promise that resolves when the quote stream has been cancelled.
 	 */
 	async cancelQuoteStream(
 		assets: string[],
 		isCall: boolean,
-		isBuy: boolean
+		isBuy: boolean,
+		provider?: Provider
 	): Promise<void> {
 		const vaults = await this.premia.contracts
-			.getVaultRegistryContract()
+			.getVaultRegistryContract(provider ?? this.premia.multicallProvider)
 			.getVaultsByFilter(
 				assets,
 				this.tradeSide(!isBuy),
@@ -312,7 +343,10 @@ export class VaultAPI extends BaseAPI {
 			)
 
 		for (const _vault of vaults) {
-			const vault = this.premia.contracts.getVaultContract(_vault.vault)
+			const vault = this.premia.contracts.getVaultContract(
+				_vault.vault,
+				provider
+			)
 			vault.on(vault.filters.UpdateQuotes, async () => null)
 		}
 	}
@@ -453,11 +487,17 @@ export class VaultAPI extends BaseAPI {
 	 *
 	 * @param {string} vaultAddress - The address of the vault.
 	 * @param {string} owner - The address of the owner.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<bigint>} A promise that resolves to a bigint representing the balance of shares for the specified owner in the specified vault.
 	 */
-	async balanceOfShares(vaultAddress: string, owner: string): Promise<bigint> {
+	async balanceOfShares(
+		vaultAddress: string,
+		owner: string,
+		provider?: Provider
+	): Promise<bigint> {
 		const vaultContract = await this.premia.contracts.getERC4626Contract(
-			vaultAddress
+			vaultAddress,
+			provider ?? this.premia.multicallProvider
 		)
 		return vaultContract.balanceOf(owner)
 	}
@@ -467,11 +507,17 @@ export class VaultAPI extends BaseAPI {
 	 *
 	 * @param {string} vaultAddress - The address of the vault.
 	 * @param {string} owner - The address of the owner.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<bigint>} A promise that resolves to a bigint representing the balance of assets for the specified owner in the specified vault.
 	 */
-	async balanceOfAssets(vaultAddress: string, owner: string): Promise<bigint> {
+	async balanceOfAssets(
+		vaultAddress: string,
+		owner: string,
+		provider?: Provider
+	): Promise<bigint> {
 		const vaultContract = await this.premia.contracts.getERC4626Contract(
-			vaultAddress
+			vaultAddress,
+			provider ?? this.premia.multicallProvider
 		)
 		const shares = await vaultContract.balanceOf(owner)
 		return vaultContract.convertToAssets(shares)
@@ -482,14 +528,17 @@ export class VaultAPI extends BaseAPI {
 	 *
 	 * @param {string} vaultAddress - The address of the vault.
 	 * @param {BigNumberish} assets - The amount of assets to be converted.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<bigint>} A promise that resolves to a bigint representing the equivalent shares for the specified amount of assets in the specified vault.
 	 */
 	async convertToShares(
 		vaultAddress: string,
-		assets: BigNumberish
+		assets: BigNumberish,
+		provider?: Provider
 	): Promise<bigint> {
 		const vaultContract = await this.premia.contracts.getERC4626Contract(
-			vaultAddress
+			vaultAddress,
+			provider ?? this.premia.multicallProvider
 		)
 		return vaultContract.convertToShares(assets)
 	}
@@ -499,14 +548,17 @@ export class VaultAPI extends BaseAPI {
 	 *
 	 * @param {string} vaultAddress - The address of the vault.
 	 * @param {BigNumberish} shares - The amount of shares to be converted.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<bigint>} A promise that resolves to a bigint representing the equivalent assets for the specified amount of shares in the specified vault.
 	 */
 	async convertToAssets(
 		vaultAddress: string,
-		shares: BigNumberish
+		shares: BigNumberish,
+		provider?: Provider
 	): Promise<bigint> {
 		const vaultContract = await this.premia.contracts.getERC4626Contract(
-			vaultAddress
+			vaultAddress,
+			provider ?? this.premia.multicallProvider
 		)
 		return vaultContract.convertToAssets(shares)
 	}
@@ -518,6 +570,7 @@ export class VaultAPI extends BaseAPI {
 	 * @param {Object} options - An object containing the parameters for the deposit operation.
 	 * @param {BigNumberish} options.assets - The amount of assets to be deposited.
 	 * @param {string} options.receiver - The address of the receiver whose assets will be deposited and shares will be received.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 *
 	 * @returns {Promise<ContractTransaction>} A promise that resolves to a contract transaction for the deposit operation.
 	 *
@@ -531,10 +584,53 @@ export class VaultAPI extends BaseAPI {
 		}: {
 			assets: BigNumberish
 			receiver: string
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const vaultContract = this.premia.contracts.getERC4626Contract(vaultAddress)
+		const vaultContract = this.premia.contracts.getERC4626Contract(
+			vaultAddress,
+			provider
+		)
 		return vaultContract.deposit.populateTransaction(assets, receiver)
+	}
+
+	/**
+	 * Encodes the deposit parameters into a transaction that can be broadcasted to the provider network.
+	 *
+	 * @param {string} vaultAddress - The address of the vault where assets will be deposited.
+	 * @param {Object} options - An object containing the parameters for the deposit operation.
+	 * @param {BigNumberish} options.assets - The amount of assets to be deposited.
+	 * @param {string} options.receiver - The address of the receiver whose assets will be deposited and shares will be received.
+	 * @param {Provider} provider - The custom provider to use for this call.
+	 *
+	 * @returns {TransactionData} The encoded transaction data.
+	 *
+	 * @throws Will throw an error if the ERC4626 contract is not found for the provided vault address.
+	 */
+	encodeDepositSync(
+		vaultAddress: string,
+		{
+			assets,
+			receiver,
+		}: {
+			assets: BigNumberish
+			receiver: string
+		},
+		provider?: Provider
+	): TransactionData {
+		const vaultContract = this.premia.contracts.getERC4626Contract(
+			vaultAddress,
+			provider
+		)
+		const data = vaultContract.interface.encodeFunctionData('deposit', [
+			assets,
+			receiver,
+		])
+
+		return {
+			to: vaultAddress,
+			data,
+		}
 	}
 
 	/**
@@ -544,6 +640,7 @@ export class VaultAPI extends BaseAPI {
 	 * @param {Object} options - An object containing deposit parameters.
 	 * @param {BigNumberish} options.assets - The amount of assets to be deposited into the vault.
 	 * @param {string} options.receiver - The address of the receiver whose assets will be deposited and shares will be received.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 *
 	 * @returns {Promise<ContractTransactionResponse>} A promise that resolves to a transaction response. This contains details of the transaction such as block number, transaction hash, etc.
 	 *
@@ -554,11 +651,12 @@ export class VaultAPI extends BaseAPI {
 		options: {
 			assets: BigNumberish
 			receiver: string
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getERC4626Contract(vaultAddress),
-			this.encodeDeposit(vaultAddress, options),
+			this.premia.contracts.getERC4626Contract(vaultAddress, provider),
+			this.encodeDeposit(vaultAddress, options, provider),
 			'encodeDeposit'
 		)
 	}
@@ -568,10 +666,18 @@ export class VaultAPI extends BaseAPI {
 	 *
 	 * @param {string} vaultAddress - The address of the vault.
 	 * @param {string} owner - The address of the owner.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<bigint>} A promise that resolves to a bigint representing the maximum amount that can be withdrawn by the owner from the vault.
 	 */
-	async maxWithdraw(vaultAddress: string, owner: string): Promise<bigint> {
-		const vaultContract = this.premia.contracts.getERC4626Contract(vaultAddress)
+	async maxWithdraw(
+		vaultAddress: string,
+		owner: string,
+		provider?: Provider
+	): Promise<bigint> {
+		const vaultContract = this.premia.contracts.getERC4626Contract(
+			vaultAddress,
+			provider ?? this.premia.multicallProvider
+		)
 		return vaultContract.maxWithdraw(owner)
 	}
 
@@ -581,13 +687,18 @@ export class VaultAPI extends BaseAPI {
 	 * @method previewWithdraw
 	 * @param {string} vaultAddress - The address of the vault.
 	 * @param {BigNumberish} assets - The amount of assets for which to preview the withdrawal.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<bigint>} A promise that resolves to a bigint representing the amount of shares that would be withdrawn for the given assets amount.
 	 */
 	async previewWithdraw(
 		vaultAddress: string,
-		assets: BigNumberish
+		assets: BigNumberish,
+		provider?: Provider
 	): Promise<bigint> {
-		const vaultContract = this.premia.contracts.getERC4626Contract(vaultAddress)
+		const vaultContract = this.premia.contracts.getERC4626Contract(
+			vaultAddress,
+			provider
+		)
 		return vaultContract.previewWithdraw(assets)
 	}
 
@@ -599,6 +710,7 @@ export class VaultAPI extends BaseAPI {
 	 * @param {BigNumberish} options.assets - The amount of assets to be withdrawn.
 	 * @param {string} options.receiver - The address of the receiver who will get the withdrawn assets.
 	 * @param {string} options.owner - The address of the current owner of the assets.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 *
 	 * @returns {Promise<ContractTransaction>} A promise that resolves to a contract transaction for the withdrawal operation.
 	 *
@@ -614,10 +726,57 @@ export class VaultAPI extends BaseAPI {
 			assets: BigNumberish
 			receiver: string
 			owner: string
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const vaultContract = this.premia.contracts.getERC4626Contract(vaultAddress)
+		const vaultContract = this.premia.contracts.getERC4626Contract(
+			vaultAddress,
+			provider
+		)
 		return vaultContract.withdraw.populateTransaction(assets, receiver, owner)
+	}
+
+	/**
+	 * Encodes the withdrawal parameters into a transaction that can be broadcasted to the provider network.
+	 *
+	 * @param {string} vaultAddress - The address of the vault from which assets will be withdrawn.
+	 * @param {Object} options - An object containing the parameters for the withdrawal operation.
+	 * @param {BigNumberish} options.assets - The amount of assets to be withdrawn.
+	 * @param {string} options.receiver - The address of the receiver who will get the withdrawn assets.
+	 * @param {string} options.owner - The address of the current owner of the assets.
+	 * @param {Provider} provider - The custom provider to use for this call.
+	 *
+	 * @returns {TransactionData} The encoded transaction data.
+	 *
+	 * @throws Will throw an error if the ERC4626 contract is not found for the provided vault address.
+	 */
+	encodeWithdrawSync(
+		vaultAddress: string,
+		{
+			assets,
+			receiver,
+			owner,
+		}: {
+			assets: BigNumberish
+			receiver: string
+			owner: string
+		},
+		provider?: Provider
+	): TransactionData {
+		const vaultContract = this.premia.contracts.getERC4626Contract(
+			vaultAddress,
+			provider
+		)
+		const data = vaultContract.interface.encodeFunctionData('withdraw', [
+			assets,
+			receiver,
+			owner,
+		])
+
+		return {
+			to: vaultAddress,
+			data,
+		}
 	}
 
 	/**
@@ -628,6 +787,7 @@ export class VaultAPI extends BaseAPI {
 	 * @param {BigNumberish} options.assets - The amount of assets to be withdrawn from the vault.
 	 * @param {string} options.receiver - The address of the receiver to which the withdrawn assets will be sent.
 	 * @param {string} options.owner - The address of the owner initiating the withdrawal. This should be the signer of the transaction.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 *
 	 * @returns {Promise<ContractTransactionResponse>} A promise that resolves to a transaction response. This contains details of the transaction such as block number, transaction hash etc.
 	 *
@@ -639,11 +799,12 @@ export class VaultAPI extends BaseAPI {
 			assets: BigNumberish
 			receiver: string
 			owner: string
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getERC4626Contract(vaultAddress),
-			this.encodeWithdraw(vaultAddress, options),
+			this.premia.contracts.getERC4626Contract(vaultAddress, provider),
+			this.encodeWithdraw(vaultAddress, options, provider),
 			'encodeWithdraw'
 		)
 	}
@@ -653,10 +814,18 @@ export class VaultAPI extends BaseAPI {
 	 *
 	 * @param {string} vaultAddress - The address of the vault.
 	 * @param {string} owner - The address of the owner.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<bigint>} A promise that resolves to a bigint representing the maximum amount of shares that can be redeemed by the owner from the vault.
 	 */
-	async maxRedeem(vaultAddress: string, owner: string): Promise<bigint> {
-		const vaultContract = this.premia.contracts.getERC4626Contract(vaultAddress)
+	async maxRedeem(
+		vaultAddress: string,
+		owner: string,
+		provider?: Provider
+	): Promise<bigint> {
+		const vaultContract = this.premia.contracts.getERC4626Contract(
+			vaultAddress,
+			provider ?? this.premia.multicallProvider
+		)
 		return vaultContract.maxRedeem(owner)
 	}
 
@@ -666,13 +835,18 @@ export class VaultAPI extends BaseAPI {
 	 * @method previewRedeem
 	 * @param {string} vaultAddress - The address of the vault.
 	 * @param {BigNumberish} shares - The amount of shares for which to preview the redemption.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<bigint>} A promise that resolves to a bigint representing the amount of assets that would be received for the given shares amount.
 	 */
 	async previewRedeem(
 		vaultAddress: string,
-		shares: BigNumberish
+		shares: BigNumberish,
+		provider?: Provider
 	): Promise<bigint> {
-		const vaultContract = this.premia.contracts.getERC4626Contract(vaultAddress)
+		const vaultContract = this.premia.contracts.getERC4626Contract(
+			vaultAddress,
+			provider
+		)
 		return vaultContract.previewRedeem(shares)
 	}
 
@@ -685,6 +859,7 @@ export class VaultAPI extends BaseAPI {
 	 * @param {BigNumberish} options.shares - The number of shares to redeem.
 	 * @param {string} options.receiver - The address to receive the redeemed assets.
 	 * @param {string} options.owner - The address of the owner of the shares.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} A promise that resolves to a ContractTransaction that represents the encoded transaction for redeeming the shares.
 	 */
 	async encodeRedeem(
@@ -697,10 +872,55 @@ export class VaultAPI extends BaseAPI {
 			shares: BigNumberish
 			receiver: string
 			owner: string
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const vaultContract = this.premia.contracts.getERC4626Contract(vaultAddress)
+		const vaultContract = this.premia.contracts.getERC4626Contract(
+			vaultAddress,
+			provider
+		)
 		return vaultContract.redeem.populateTransaction(shares, receiver, owner)
+	}
+
+	/**
+	 * Encodes a transaction for redeeming shares from a vault.
+	 *
+	 * @method encodeRedeem
+	 * @param {string} vaultAddress - The address of the vault.
+	 * @param {object} options - An object containing the parameters for redeeming shares.
+	 * @param {BigNumberish} options.shares - The number of shares to redeem.
+	 * @param {string} options.receiver - The address to receive the redeemed assets.
+	 * @param {string} options.owner - The address of the owner of the shares.
+	 * @param {Provider} provider - The custom provider to use for this call.
+	 * @returns {TransactionData} The encoded transaction data.
+	 */
+	encodeRedeemSync(
+		vaultAddress: string,
+		{
+			shares,
+			receiver,
+			owner,
+		}: {
+			shares: BigNumberish
+			receiver: string
+			owner: string
+		},
+		provider?: Provider
+	): TransactionData {
+		const vaultContract = this.premia.contracts.getERC4626Contract(
+			vaultAddress,
+			provider
+		)
+		const data = vaultContract.interface.encodeFunctionData('redeem', [
+			shares,
+			receiver,
+			owner,
+		])
+
+		return {
+			to: vaultAddress,
+			data,
+		}
 	}
 
 	/**
@@ -712,6 +932,7 @@ export class VaultAPI extends BaseAPI {
 	 * @param {BigNumberish} options.shares - The number of shares to redeem.
 	 * @param {string} options.receiver - The address to receive the redeemed assets.
 	 * @param {string} options.owner - The address of the owner of the shares.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<ContractTransactionResponse>} A promise that resolves to a ContractTransactionResponse which contains information about the transaction that redeemed the shares.
 	 */
 	async redeem(
@@ -720,11 +941,12 @@ export class VaultAPI extends BaseAPI {
 			shares: BigNumberish
 			receiver: string
 			owner: string
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getERC4626Contract(vaultAddress),
-			this.encodeRedeem(vaultAddress, options),
+			this.premia.contracts.getERC4626Contract(vaultAddress, provider),
+			this.encodeRedeem(vaultAddress, options, provider),
 			'encodeRedeem'
 		)
 	}
@@ -737,6 +959,7 @@ export class VaultAPI extends BaseAPI {
 	 * @param {BigNumberish} size - The number of contracts to be bought or sold.
 	 * @param {boolean} isBuy - A boolean indicating whether this operation is a buy (true) or sell (false).
 	 * @param {string} taker - The address of the user who would perform the trade.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 *
 	 * @returns {Promise<bigint>} A promise that resolves to a quote for the proposed trade operation.
 	 *
@@ -747,10 +970,12 @@ export class VaultAPI extends BaseAPI {
 		poolKey: PoolKey,
 		size: BigNumberish,
 		isBuy: boolean,
-		taker: string
+		taker: string,
+		provider?: Provider
 	): Promise<bigint> {
 		const vaultContract = await this.premia.contracts.getVaultContract(
-			vaultAddress
+			vaultAddress,
+			provider ?? this.premia.multicallProvider
 		)
 		return vaultContract.getQuote(poolKey, size, isBuy, taker)
 	}
@@ -765,6 +990,7 @@ export class VaultAPI extends BaseAPI {
 	 * @param {boolean} options.isBuy - A boolean flag indicating whether the trade is a buy (true) or sell (false).
 	 * @param {BigNumberish} options.premiumLimit - The maximum premium that the trader is willing to pay for the trade.
 	 * @param {string} [options.referrer] - (Optional) The address of the referrer. If not provided, the referrer will default to a zero address.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 *
 	 * @returns {Promise<ContractTransaction>} A promise that resolves to an encoded contract transaction. This transaction can be signed and broadcasted to the provider network.
 	 *
@@ -784,9 +1010,13 @@ export class VaultAPI extends BaseAPI {
 			isBuy: boolean
 			premiumLimit: BigNumberish
 			referrer?: string
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const vaultContract = this.premia.contracts.getVaultContract(vaultAddress)
+		const vaultContract = this.premia.contracts.getVaultContract(
+			vaultAddress,
+			provider
+		)
 		return vaultContract.trade.populateTransaction(
 			poolKey,
 			size,
@@ -794,6 +1024,57 @@ export class VaultAPI extends BaseAPI {
 			premiumLimit,
 			this.premia.pools.toReferrer(referrer)
 		)
+	}
+
+	/**
+	 * Encodes the trade parameters into a contract transaction that can be broadcasted to the provider network.
+	 *
+	 * @param {string} vaultAddress - The address of the vault.
+	 * @param {Object} options - An object containing key trade options.
+	 * @param {PoolKey} options.poolKey - The unique identifier for the liquidity pool involved in the trade.
+	 * @param {BigNumberish} options.size - The number of contracts to be bought or sold.
+	 * @param {boolean} options.isBuy - A boolean flag indicating whether the trade is a buy (true) or sell (false).
+	 * @param {BigNumberish} options.premiumLimit - The maximum premium that the trader is willing to pay for the trade.
+	 * @param {string} [options.referrer] - (Optional) The address of the referrer. If not provided, the referrer will default to a zero address.
+	 * @param {Provider} provider - The custom provider to use for this call.
+	 *
+	 * @returns {TransactionData} The encoded transaction data.
+	 *
+	 * @throws Will throw an error if the vault contract is not found for the provided vault address.
+	 */
+	encodeTradeSync(
+		vaultAddress: string,
+		{
+			poolKey,
+			size,
+			isBuy,
+			premiumLimit,
+			referrer,
+		}: {
+			poolKey: PoolKey
+			size: BigNumberish
+			isBuy: boolean
+			premiumLimit: BigNumberish
+			referrer?: string
+		},
+		provider?: Provider
+	): TransactionData {
+		const vaultContract = this.premia.contracts.getVaultContract(
+			vaultAddress,
+			provider
+		)
+		const data = vaultContract.interface.encodeFunctionData('trade', [
+			poolKey,
+			size,
+			isBuy,
+			premiumLimit,
+			this.premia.pools.toReferrer(referrer),
+		])
+
+		return {
+			to: vaultAddress,
+			data,
+		}
 	}
 
 	/**
@@ -806,6 +1087,7 @@ export class VaultAPI extends BaseAPI {
 	 * @param {boolean} options.isBuy - A boolean indicating whether this operation is a buy (true) or sell (false).
 	 * @param {BigNumberish} options.premiumLimit - The maximum premium that the trader is willing to pay for the trade.
 	 * @param {string} [options.referrer] - (Optional) The address of the user who referred this trade.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 *
 	 * @returns {Promise<ContractTransactionResponse>} A promise that resolves to a transaction response. This contains details of the transaction such as block number, transaction hash, etc.
 	 *
@@ -819,11 +1101,12 @@ export class VaultAPI extends BaseAPI {
 			isBuy: boolean
 			premiumLimit: BigNumberish
 			referrer?: string
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getVaultContract(vaultAddress),
-			this.encodeTrade(vaultAddress, options),
+			this.premia.contracts.getVaultContract(vaultAddress, provider),
+			this.encodeTrade(vaultAddress, options, provider),
 			'encodeTrade'
 		)
 	}

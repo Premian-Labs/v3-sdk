@@ -1,5 +1,5 @@
 import { PairInfo } from '@premia/pair-lists/src/types'
-import { toBigInt } from 'ethers'
+import { Provider, toBigInt } from 'ethers'
 import { BlackScholes } from '@uqee/black-scholes'
 
 import { TokenPair, TokenPairExtended, TokenPairMinimal } from '../entities'
@@ -29,13 +29,17 @@ export class TokenPairAPI extends BaseAPI {
 	 * Uses caching with a one-minute time-to-live.
 	 *
 	 * @param {TokenPairOrId} pair - The token pair to fetch the spot price for.
-	 *
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<bigint>} The current spot price of the token pair.
 	 */
-	async getSpotPrice(pair: TokenPairOrId): Promise<bigint> {
+	async getSpotPrice(
+		pair: TokenPairOrId,
+		provider?: Provider
+	): Promise<bigint> {
 		const _pair = this.premia.subgraph._parsePair(pair)
 		const oracleAdapter = await this.premia.contracts.getOracleAdapterContract(
-			_pair.priceOracleAddress
+			_pair.priceOracleAddress,
+			provider ?? this.premia.multicallProvider
 		)
 		return toBigInt(await oracleAdapter.getPrice(_pair.base, _pair.quote))
 	}
@@ -44,11 +48,14 @@ export class TokenPairAPI extends BaseAPI {
 	 * Gets the strike increment for a token pair based on its spot price.
 	 *
 	 * @param {TokenPairOrId} pair - The token pair to fetch the strike increment for.
-	 *
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<bigint>} The strike increment for the token pair.
 	 */
-	async getStrikeIncrement(pair: TokenPairOrId): Promise<bigint> {
-		const spotPrice = await this.getSpotPrice(pair)
+	async getStrikeIncrement(
+		pair: TokenPairOrId,
+		provider?: Provider
+	): Promise<bigint> {
+		const spotPrice = await this.getSpotPrice(pair, provider)
 		return this.premia.options.getStrikeIncrement(spotPrice)
 	}
 
