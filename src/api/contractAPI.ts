@@ -119,7 +119,7 @@ export class ContractAPI extends BaseAPI {
 	getPoolContract(poolAddress: string, provider?: Provider): IPool {
 		return IPool__factory.connect(
 			poolAddress,
-			provider ?? (this.premia.signer || this.premia.provider)
+			provider ?? this.premia.signer ?? this.premia.provider
 		)
 	}
 
@@ -140,7 +140,7 @@ export class ContractAPI extends BaseAPI {
 	): ISolidStateERC20 {
 		return ISolidStateERC20__factory.connect(
 			tokenAddress,
-			provider ?? (this.premia.signer || this.premia.provider)
+			provider ?? this.premia.signer ?? this.premia.provider
 		)
 	}
 
@@ -161,7 +161,7 @@ export class ContractAPI extends BaseAPI {
 	): IOracleAdapter {
 		return IOracleAdapter__factory.connect(
 			oracleAdapterAddress,
-			provider ?? (this.premia.signer || this.premia.provider)
+			provider ?? this.premia.signer ?? this.premia.provider
 		)
 	}
 
@@ -178,7 +178,7 @@ export class ContractAPI extends BaseAPI {
 	getPoolFactoryContract(provider?: Provider): IPoolFactory {
 		return IPoolFactory__factory.connect(
 			this.poolFactoryAddress,
-			provider ?? (this.premia.signer || this.premia.provider)
+			provider ?? this.premia.signer ?? this.premia.provider
 		)
 	}
 
@@ -195,7 +195,7 @@ export class ContractAPI extends BaseAPI {
 	getPoolDiamondContract(provider?: Provider): IPool {
 		return IPool__factory.connect(
 			this.poolDiamondAddress,
-			provider ?? (this.premia.signer || this.premia.provider)
+			provider ?? this.premia.signer ?? this.premia.provider
 		)
 	}
 
@@ -212,7 +212,7 @@ export class ContractAPI extends BaseAPI {
 	getVaultRegistryContract(provider?: Provider): IVaultRegistry {
 		return IVaultRegistry__factory.connect(
 			this.vaultRegistryAddress,
-			provider ?? (this.premia.signer || this.premia.provider)
+			provider ?? this.premia.signer ?? this.premia.provider
 		)
 	}
 
@@ -230,7 +230,7 @@ export class ContractAPI extends BaseAPI {
 	getVaultContract(vaultAddress: string, provider?: Provider): IVault {
 		return IVault__factory.connect(
 			vaultAddress,
-			provider ?? (this.premia.signer || this.premia.provider)
+			provider ?? this.premia.signer ?? this.premia.provider
 		)
 	}
 
@@ -248,7 +248,7 @@ export class ContractAPI extends BaseAPI {
 	getERC4626Contract(vaultAddress: string, provider?: Provider): IERC4626 {
 		return IERC4626__factory.connect(
 			vaultAddress,
-			provider ?? (this.premia.signer || this.premia.provider)
+			provider ?? this.premia.signer ?? this.premia.provider
 		)
 	}
 
@@ -266,7 +266,7 @@ export class ContractAPI extends BaseAPI {
 	getERC1155Contract(poolAddress: string, provider?: Provider): IERC1155 {
 		return IERC1155__factory.connect(
 			poolAddress,
-			provider ?? (this.premia.signer || this.premia.provider)
+			provider ?? this.premia.signer ?? this.premia.provider
 		)
 	}
 
@@ -300,7 +300,7 @@ export class ContractAPI extends BaseAPI {
 	getUserSettingsContract(provider?: Provider): IUserSettings {
 		return IUserSettings__factory.connect(
 			this.userSettingsAddress,
-			provider ?? (this.premia.signer || this.premia.provider)
+			provider ?? this.premia.signer ?? this.premia.provider
 		)
 	}
 
@@ -317,7 +317,7 @@ export class ContractAPI extends BaseAPI {
 	getVxPremiaContract(provider?: Provider): IVxPremia {
 		return IVxPremia__factory.connect(
 			this.vxPremiaAddress,
-			provider ?? (this.premia.signer || this.premia.provider)
+			provider ?? this.premia.signer ?? this.premia.provider
 		)
 	}
 
@@ -334,7 +334,7 @@ export class ContractAPI extends BaseAPI {
 	getReferralContract(provider?: Provider): IReferral {
 		return IReferral__factory.connect(
 			this.referralAddress,
-			provider ?? (this.premia.signer || this.premia.provider)
+			provider ?? this.premia.signer ?? this.premia.provider
 		)
 	}
 
@@ -351,7 +351,7 @@ export class ContractAPI extends BaseAPI {
 	getVaultMiningContract(provider?: Provider): IVaultMining {
 		return IVaultMining__factory.connect(
 			this.vaultMiningAddress,
-			provider ?? (this.premia.signer || this.premia.provider)
+			provider ?? this.premia.signer ?? this.premia.provider
 		)
 	}
 
@@ -368,7 +368,7 @@ export class ContractAPI extends BaseAPI {
 	getOptionRewardContract(provider?: Provider): IOptionReward {
 		return IOptionReward__factory.connect(
 			this.optionRewardAddress,
-			provider ?? (this.premia.signer || this.premia.provider)
+			provider ?? this.premia.signer ?? this.premia.provider
 		)
 	}
 
@@ -386,7 +386,7 @@ export class ContractAPI extends BaseAPI {
 	getOptionPSContract(optionPSAddress: string, provider?: Provider): IOptionPS {
 		return IOptionPS__factory.connect(
 			optionPSAddress,
-			provider ?? (this.premia.signer || this.premia.provider)
+			provider ?? this.premia.signer ?? this.premia.provider
 		)
 	}
 
@@ -407,7 +407,7 @@ export class ContractAPI extends BaseAPI {
 	): IDualMining {
 		return IDualMining__factory.connect(
 			dualMiningAddress,
-			provider ?? (this.premia.signer || this.premia.provider)
+			provider ?? this.premia.signer ?? this.premia.provider
 		)
 	}
 

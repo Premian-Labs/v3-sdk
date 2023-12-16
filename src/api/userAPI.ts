@@ -2,6 +2,7 @@ import {
 	BigNumberish,
 	ContractTransaction,
 	ContractTransactionResponse,
+	Provider,
 	toBigInt,
 } from 'ethers'
 
@@ -10,6 +11,7 @@ import {
 	LiquidityPositionExtended,
 	OptionPositionExtended,
 	OrderType,
+	TransactionData,
 	User,
 	UserExtended,
 	UserPortfolio,
@@ -244,10 +246,13 @@ export class UserAPI extends BaseAPI {
 	 * Fetches a user's authorized cost setting for automatic settlement.
 	 *
 	 * @param {string} address - The address of the User to fetch settings for.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<bigint>} A promise that resolves to a user's authorized cost setting.
 	 */
-	getAuthorizedCost(address: string): Promise<bigint> {
-		const settingsContract = this.premia.contracts.getUserSettingsContract()
+	getAuthorizedCost(address: string, provider?: Provider): Promise<bigint> {
+		const settingsContract = this.premia.contracts.getUserSettingsContract(
+			provider ?? this.premia.multicallProvider
+		)
 		return settingsContract.getAuthorizedCost(address)
 	}
 
@@ -256,15 +261,43 @@ export class UserAPI extends BaseAPI {
 	 *
 	 * @method encodeSetAuthorizedCost
 	 * @param {BigNumberish} authorizedCost - The authorized cost to set.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} A promise that resolves to an encoded ContractTransaction object.
 	 */
 	async encodeSetAuthorizedCost(
-		authorizedCost: BigNumberish
+		authorizedCost: BigNumberish,
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const settingsContract = this.premia.contracts.getUserSettingsContract()
+		const settingsContract =
+			this.premia.contracts.getUserSettingsContract(provider)
 		return settingsContract.setAuthorizedCost.populateTransaction(
 			toBigInt(authorizedCost)
 		)
+	}
+
+	/**
+	 * Encodes a transaction to set the authorized cost of a User.
+	 *
+	 * @method encodeSetAuthorizedCost
+	 * @param {BigNumberish} authorizedCost - The authorized cost to set.
+	 * @param {Provider} provider - The custom provider to use for this call.
+	 * @returns {TransactionData} The encoded transaction data.
+	 */
+	encodeSetAuthorizedCostSync(
+		authorizedCost: BigNumberish,
+		provider?: Provider
+	): TransactionData {
+		const settingsContract =
+			this.premia.contracts.getUserSettingsContract(provider)
+		const data = settingsContract.interface.encodeFunctionData(
+			'setAuthorizedCost',
+			[toBigInt(authorizedCost)]
+		)
+
+		return {
+			to: this.premia.contracts.userSettingsAddress,
+			data,
+		}
 	}
 
 	/**
@@ -272,12 +305,15 @@ export class UserAPI extends BaseAPI {
 	 *
 	 * @method setAuthorizedCost
 	 * @param {BigNumberish} authorizedCost - The authorized cost to set.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<ContractTransactionResponse>} A promise that resolves to a ContractTransactionResponse object after the transaction is complete.
 	 */
 	async setAuthorizedCost(
-		authorizedCost: BigNumberish
+		authorizedCost: BigNumberish,
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
-		const settingsContract = this.premia.contracts.getUserSettingsContract()
+		const settingsContract =
+			this.premia.contracts.getUserSettingsContract(provider)
 		return settingsContract.setAuthorizedCost(toBigInt(authorizedCost))
 	}
 
@@ -286,13 +322,17 @@ export class UserAPI extends BaseAPI {
 	 *
 	 * @param {string} user - The address of the User to fetch settings for.
 	 * @param {string} operator - The address of the Operator to fetch authorizations for.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<bigint>} A promise that resolves to a user's authorized actions for a specific operator.
 	 */
 	getActionAuthorization(
 		user: string,
-		operator: string
+		operator: string,
+		provider?: Provider
 	): Promise<ActionAuthorization> {
-		const settingsContract = this.premia.contracts.getUserSettingsContract()
+		const settingsContract = this.premia.contracts.getUserSettingsContract(
+			provider ?? this.premia.multicallProvider
+		)
 		return settingsContract.getActionAuthorization(user, operator)
 	}
 
@@ -302,14 +342,17 @@ export class UserAPI extends BaseAPI {
 	 * @param {string} operator - The operator to (un)authorize actions for.
 	 * @param {bigint[]} actions - The actions to (un)authorize.
 	 * @param {boolean[]} authorization - The authorization status of the actions.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} A promise that resolves to an encoded ContractTransaction object.
 	 */
 	async encodeSetActionAuthorization(
 		operator: string,
 		actions: bigint[],
-		authorization: boolean[]
+		authorization: boolean[],
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const settingsContract = this.premia.contracts.getUserSettingsContract()
+		const settingsContract =
+			this.premia.contracts.getUserSettingsContract(provider)
 		return settingsContract.setActionAuthorization.populateTransaction(
 			operator,
 			actions,
@@ -318,19 +361,50 @@ export class UserAPI extends BaseAPI {
 	}
 
 	/**
+	 * Encodes a transaction to set the authorized actions for an operator.
+	 *
+	 * @param {string} operator - The operator to (un)authorize actions for.
+	 * @param {bigint[]} actions - The actions to (un)authorize.
+	 * @param {boolean[]} authorization - The authorization status of the actions.
+	 * @param {Provider} provider - The custom provider to use for this call.
+	 * @returns {TransactionData} The encoded transaction data.
+	 */
+	encodeSetActionAuthorizationSync(
+		operator: string,
+		actions: bigint[],
+		authorization: boolean[],
+		provider?: Provider
+	): TransactionData {
+		const settingsContract =
+			this.premia.contracts.getUserSettingsContract(provider)
+		const data = settingsContract.interface.encodeFunctionData(
+			'setActionAuthorization',
+			[operator, actions, authorization]
+		)
+
+		return {
+			to: this.premia.contracts.userSettingsAddress,
+			data,
+		}
+	}
+
+	/**
 	 * Sets the authorized actions for an operator.
 	 *
 	 * @param {string} operator - The operator to (un)authorize actions for.
 	 * @param {bigint[]} actions - The actions to (un)authorize.
 	 * @param {boolean[]} authorization - The authorization status of the actions.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} A promise that resolves to an encoded ContractTransactionResponse object.
 	 */
 	async setActionAuthorization(
 		operator: string,
 		actions: bigint[],
-		authorization: boolean[]
+		authorization: boolean[],
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
-		const settingsContract = this.premia.contracts.getUserSettingsContract()
+		const settingsContract =
+			this.premia.contracts.getUserSettingsContract(provider)
 		return settingsContract.setActionAuthorization(
 			operator,
 			actions,
@@ -345,18 +419,26 @@ export class UserAPI extends BaseAPI {
 	 * @param {bigint[]} actions - The actions to (un)authorize.
 	 * @param {boolean[]} authorization - The authorization status of the actions.
 	 * @param {BigNumberish} authorizedCost - The authorized cost to set.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} A promise that resolves to an encoded ContractTransactionResponse object.
 	 */
 	async updateUserSettings(
 		operator: string,
 		actions: bigint[],
 		authorization: boolean[],
-		authorizedCost: BigNumberish
+		authorizedCost: BigNumberish,
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
-		const settingsContract = this.premia.contracts.getUserSettingsContract()
+		const settingsContract =
+			this.premia.contracts.getUserSettingsContract(provider)
 		const calls = await Promise.all([
-			this.encodeSetAuthorizedCost(authorizedCost),
-			this.encodeSetActionAuthorization(operator, actions, authorization),
+			this.encodeSetAuthorizedCost(authorizedCost, provider),
+			this.encodeSetActionAuthorization(
+				operator,
+				actions,
+				authorization,
+				provider
+			),
 		])
 		return settingsContract.multicall(calls.map((call) => call.data))
 	}

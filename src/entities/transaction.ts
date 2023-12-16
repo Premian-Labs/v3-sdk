@@ -6,6 +6,12 @@ import { Token } from './token'
 import { TokenPair } from './tokenPair'
 import { Vault } from './vault'
 
+export interface TransactionData {
+	to: string
+	data?: BigNumberish | undefined | null
+	value?: BigNumberish | undefined | null
+}
+
 export enum TransactionType {
 	POOL_DEPOSIT = 'POOL_DEPOSIT',
 	POOL_WITHDRAW = 'POOL_WITHDRAW',
