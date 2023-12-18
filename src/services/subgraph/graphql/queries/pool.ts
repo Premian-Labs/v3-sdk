@@ -9,7 +9,6 @@ import {
 import { OptionType, Token, TokenPairMinimal } from '../../../../entities'
 import { addFields } from '../../../../utils/subgraph'
 import { TokenQuery } from './token'
-import { TokenPairQuery } from './tokenPair'
 import PremiaSubgraph from '../../index'
 import { TokenPairOrId } from '../../../..'
 
@@ -249,7 +248,11 @@ export class PoolQuery {
             pools(where: {
 				pair: "${pairId}",
 				${filter}
-			}) {
+			},
+			first: 1000, 
+			orderBy: createdAt, 
+			orderDirection: desc
+			) {
                 ...Pool
             }
         }
