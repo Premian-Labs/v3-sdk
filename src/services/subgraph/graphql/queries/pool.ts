@@ -249,7 +249,8 @@ export class PoolQuery {
             pools(where: {
 				pair: "${pairId}",
 				${filter}
-			}) {
+			},
+			first: 1000) {
                 ...Pool
             }
         }
