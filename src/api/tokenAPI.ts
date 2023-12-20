@@ -5,7 +5,7 @@ import { Addresses, WAD_DECIMALS } from '../constants'
 import { BaseAPI } from './baseAPI'
 import { CoingeckoTokenId } from '../services'
 import { parseBigInt } from '../utils'
-import { toBigInt } from 'ethers'
+import { Provider, toBigInt } from 'ethers'
 
 export type TokenOrAddress = Token | string
 
@@ -64,13 +64,16 @@ export class TokenAPI extends BaseAPI {
 	 * Fetches minimal information of a given token including its symbol and decimals.
 	 *
 	 * @param {string} address - The address of the token for which to fetch the minimal information.
-	 *
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<TokenMinimal>} A promise that resolves to an object containing the token's address, symbol, and decimals.
 	 */
-	async getTokenMinimal(address: string): Promise<TokenMinimal> {
+	async getTokenMinimal(
+		address: string,
+		provider?: Provider
+	): Promise<TokenMinimal> {
 		const tokenContract = this.premia.contracts.getTokenContract(
 			address,
-			this.premia.multicallProvider
+			provider ?? this.premia.multicallProvider
 		)
 		const [symbol, decimals] = await Promise.all([
 			tokenContract.symbol(),
@@ -88,13 +91,13 @@ export class TokenAPI extends BaseAPI {
 	 * Fetches information of a given token from subgraph, coingecko, or token contract.
 	 *
 	 * @param {string} address - The address of the token for which to fetch the detailed information.
-	 *
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<Token>} A promise that resolves to an object containing the token's name, symbol, decimals,
 	 * whether it's native or wrapped native, price in ETH and USD, address, and chain ID.
 	 *
 	 * @throws Will throw an error if the token information cannot be fetched from either the subgraph, coingecko, or token contract.
 	 */
-	async getToken(address: string): Promise<Token> {
+	async getToken(address: string, provider?: Provider): Promise<Token> {
 		if (!this.premia.skipSubgraph) {
 			try {
 				const token = await this.premia.subgraph.getToken(address)
@@ -168,7 +171,7 @@ export class TokenAPI extends BaseAPI {
 
 		const tokenContract = this.premia.contracts.getTokenContract(
 			address,
-			this.premia.multicallProvider
+			provider ?? this.premia.multicallProvider
 		)
 		const [name, symbol, decimals, _priceETH, _priceUSD] = await Promise.all([
 			tokenContract.name(),
@@ -222,10 +225,10 @@ export class TokenAPI extends BaseAPI {
 	 * If subgraph call fails, it switches to skip the subgraph and fetches the tokens' information directly.
 	 *
 	 * @param {string[]} tokens - An array of token addresses for which to fetch the information.
-	 *
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<Token[]>} A promise that resolves to an array containing the information of the tokens.
 	 */
-	async getTokens(tokens: string[]): Promise<Token[]> {
+	async getTokens(tokens: string[], provider?: Provider): Promise<Token[]> {
 		if (!this.premia.skipSubgraph) {
 			try {
 				return this.premia.subgraph.getTokens(tokens)
@@ -238,7 +241,7 @@ export class TokenAPI extends BaseAPI {
 		this.premia.setSkipSubgraph(true)
 
 		const _tokens = await Promise.all(
-			tokens.map((token) => this.getToken(token))
+			tokens.map((token) => this.getToken(token, provider))
 		)
 
 		this.premia.setSkipSubgraph(skipSubgraph)
@@ -266,12 +269,15 @@ export class TokenAPI extends BaseAPI {
 	 * resorts to fetching token details directly.
 	 *
 	 * @param {TokenInfo[]} tokenList - An array of token information objects for which to fetch the token data.
-	 *
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<Token[]>} A promise that resolves to an array containing the information of the specified tokens.
 	 *
 	 * @throws Will throw an error if the subgraph fails to load.
 	 */
-	async getTokenList(tokenList: TokenInfo[]): Promise<Token[]> {
+	async getTokenList(
+		tokenList: TokenInfo[],
+		provider?: Provider
+	): Promise<Token[]> {
 		if (!this.premia.skipSubgraph) {
 			try {
 				const tokens = await this.premia.subgraph.getTokenList(tokenList)
@@ -288,7 +294,7 @@ export class TokenAPI extends BaseAPI {
 		this.premia.setSkipSubgraph(true)
 
 		const tokens = await Promise.all(
-			tokenList.map((token) => this.getToken(token.address))
+			tokenList.map((token) => this.getToken(token.address, provider))
 		)
 
 		this.premia.setSkipSubgraph(skipSubgraph)

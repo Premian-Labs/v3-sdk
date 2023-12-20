@@ -4,6 +4,7 @@ import {
 	ContractTransactionResponse,
 	FixedNumber,
 	getAddress,
+	Provider,
 	toBigInt,
 	ZeroAddress,
 } from 'ethers'
@@ -23,6 +24,7 @@ import {
 	Signature,
 	Token,
 	TokenType,
+	TransactionData,
 } from '../entities'
 import { Addresses, Fees, WAD_BI, WAD_DECIMALS, ZERO_BI } from '../constants'
 import { Position } from '@premia/v3-abi/typechain/IPool'
@@ -83,10 +85,14 @@ export class PoolAPI extends BaseAPI {
 	 * Fetches the current market price of a specific pool using its address.
 	 *
 	 * @param {string} poolAddress - The address of the pool.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<bigint>} - Returns a promise that resolves to the market price.
 	 */
-	marketPrice(poolAddress: string): Promise<bigint> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+	marketPrice(poolAddress: string, provider?: Provider): Promise<bigint> {
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider ?? this.premia.multicallProvider
+		)
 		return poolContract.marketPrice()
 	}
 
@@ -97,16 +103,22 @@ export class PoolAPI extends BaseAPI {
 	 *
 	 * @param {string} poolAddress - The address of the pool.
 	 * @param {Object} [poolSettings] - The pool settings. If not provided, they are fetched from the pool contract.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<bigint>} - Returns a promise that resolves to the spot price.
 	 */
 	async spotPrice(
 		poolAddress: string,
-		poolSettings?: { base: string; quote: string; oracleAdapter: string }
+		poolSettings?: { base: string; quote: string; oracleAdapter: string },
+		provider?: Provider
 	): Promise<bigint> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider ?? this.premia.multicallProvider
+		)
 		const _poolSettings = poolSettings ?? (await poolContract.getPoolSettings())
 		const oracleContract = this.premia.contracts.getOracleAdapterContract(
-			_poolSettings.oracleAdapter
+			_poolSettings.oracleAdapter,
+			provider ?? this.premia.multicallProvider
 		)
 		return oracleContract.getPrice(_poolSettings.base, _poolSettings.quote)
 	}
@@ -120,10 +132,14 @@ export class PoolAPI extends BaseAPI {
 	 * after the pool has expired, otherwise 0 is returned.
 	 *
 	 * @param {string} poolAddress - The address of the pool.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<bigint>} - Returns a promise that resolves to the settlement price.
 	 */
-	settlementPrice(poolAddress: string): Promise<bigint> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+	settlementPrice(poolAddress: string, provider?: Provider): Promise<bigint> {
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider ?? this.premia.multicallProvider
+		)
 		return poolContract.getSettlementPrice()
 	}
 
@@ -131,10 +147,17 @@ export class PoolAPI extends BaseAPI {
 	 * Determines if the market price is stranded by comparing the upper and lower bounds of the stranded area.
 	 *
 	 * @param {string} poolAddress - The address of the pool.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<boolean>} Whether the market price is stranded.
 	 */
-	async isMarketPriceStranded(poolAddress: string): Promise<boolean> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+	async isMarketPriceStranded(
+		poolAddress: string,
+		provider?: Provider
+	): Promise<boolean> {
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider ?? this.premia.multicallProvider
+		)
 		const strandedArea = await poolContract.getStrandedArea()
 		return strandedArea.lower === strandedArea.upper
 	}
@@ -143,12 +166,17 @@ export class PoolAPI extends BaseAPI {
 	 * Gets the stranded area, defined by its lower and upper bounds.
 	 *
 	 * @param {string} poolAddress - The address of the pool.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<{ lower: bigint; upper: bigint }>} The stranded area.
 	 */
 	getStrandedArea(
-		poolAddress: string
+		poolAddress: string,
+		provider?: Provider
 	): Promise<{ lower: bigint; upper: bigint }> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider ?? this.premia.multicallProvider
+		)
 		return poolContract.getStrandedArea()
 	}
 
@@ -157,14 +185,19 @@ export class PoolAPI extends BaseAPI {
 	 * @param poolAddress {string} The contract address of the pool.
 	 * @param userAddress {string} The address of which the long / short option balance should be queried.
 	 * @param short {boolean} Whether to return the long or short balance of the address.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<bigint>} Promise containing the long / short option balance of the address.
 	 */
 	balanceOf(
 		poolAddress: string,
 		userAddress: string,
-		short: boolean = false
+		short: boolean = false,
+		provider?: Provider
 	): Promise<bigint> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider ?? this.premia.multicallProvider
+		)
 		const tokenId = short ? TokenType.SHORT : TokenType.LONG
 		return poolContract.balanceOf(userAddress, tokenId)
 	}
@@ -174,13 +207,18 @@ export class PoolAPI extends BaseAPI {
 	 *
 	 * @param {string} poolAddress - The address of the pool.
 	 * @param {PositionKey} positionKey - The position identifier.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<bigint>} The balance of the position.
 	 */
 	async balanceOfRange(
 		poolAddress: string,
-		positionKey: PositionKey
+		positionKey: PositionKey,
+		provider?: Provider
 	): Promise<bigint> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider ?? this.premia.multicallProvider
+		)
 		const tokenId = this.getTokenId(positionKey)
 		return poolContract.balanceOf(
 			getAddress(positionKey.owner),
@@ -191,7 +229,7 @@ export class PoolAPI extends BaseAPI {
 	/**
 	 * Resolves the referrer address. Defaults to a pre-configured referrer if none is provided.
 	 *
-	 * @param {string} [referrer] - The address of the referrer.
+	 * @param {string} referrer - The address of the referrer.
 	 * @returns {string} The address of the referrer.
 	 */
 	toReferrer(referrer?: string) {
@@ -204,17 +242,22 @@ export class PoolAPI extends BaseAPI {
 	 * Calculates the exercise value of an option from a specified pool.
 	 *
 	 * @param {string} poolAddress - The address of the pool.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<bigint>} The exercise value of the option.
 	 */
-	async getExerciseValue(poolAddress: string): Promise<bigint> {
+	async getExerciseValue(
+		poolAddress: string,
+		provider?: Provider
+	): Promise<bigint> {
 		const pool = await this.getPoolMinimal(poolAddress)
 		const strike = toBigInt(pool.strike)
 
-		let settlementPrice = await this.settlementPrice(poolAddress)
+		let settlementPrice = await this.settlementPrice(poolAddress, provider)
 		if (settlementPrice === 0n) {
 			const now = Math.floor(new Date().getTime() / 1000)
 			const oracleContract = this.premia.contracts.getOracleAdapterContract(
-				pool.pair.priceOracleAddress
+				pool.pair.priceOracleAddress,
+				provider ?? this.premia.multicallProvider
 			)
 
 			if (now < Number(pool.maturity)) {
@@ -297,10 +340,13 @@ export class PoolAPI extends BaseAPI {
 	/**
 	 * Returns the contract address of a pool corresponding to a PoolKey.
 	 * @param key {PoolKey} The pool key.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<string>} Promise containing the contract address if it exists.
 	 */
-	async getPoolAddress(key: PoolKey): Promise<string> {
-		const factoryContract = this.premia.contracts.getPoolFactoryContract()
+	async getPoolAddress(key: PoolKey, provider?: Provider): Promise<string> {
+		const factoryContract = this.premia.contracts.getPoolFactoryContract(
+			provider ?? this.premia.multicallProvider
+		)
 		const response = await factoryContract.getPoolAddress(key)
 		return response.pool
 	}
@@ -324,6 +370,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param premium {bigint} The premium paid for the contracts .
 	 * @param isPremiumNormalized {isPremiumNormalized} Whether the premium is normalized. Relevant for put options where the price can be quoted normalized, which is the price divided by the strike, or unnormalized.
 	 * @param taker {string} The taker's address. Relevant in case staking discounts apply. Default: ZeroAddress.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<bigint>} Promise containing the taker fee charged for trading on the exchange,
 	 * 							  denominated in the pool token.
 	 */
@@ -333,11 +380,17 @@ export class PoolAPI extends BaseAPI {
 		premium: bigint,
 		isPremiumNormalized: boolean = false,
 		isOrderbook: boolean = false,
-		taker?: string
+		taker?: string,
+		provider?: Provider
 	): Promise<bigint> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider ?? this.premia.multicallProvider
+		)
 
-		const poolDiamond = this.premia.contracts.getPoolDiamondContract()
+		const poolDiamond = this.premia.contracts.getPoolDiamondContract(
+			provider ?? this.premia.multicallProvider
+		)
 		const [_feeFromPoolContract, _poolKey] = await Promise.allSettled([
 			poolContract.takerFee(
 				taker ?? ZeroAddress,
@@ -360,7 +413,8 @@ export class PoolAPI extends BaseAPI {
 		const poolKey = _poolKey.value
 
 		const tokenContract = this.premia.contracts.getTokenContract(
-			poolKey.isCallPool ? poolKey.base : poolKey.quote
+			poolKey.isCallPool ? poolKey.base : poolKey.quote,
+			provider ?? this.premia.multicallProvider
 		)
 
 		const [_takerFee, tokenDecimals] = await Promise.all([
@@ -414,6 +468,8 @@ export class PoolAPI extends BaseAPI {
 	 * @param {Object} [options] - Additional options for validation.
 	 * @param {string} [options.poolAddress] - The address of the Pool contract.
 	 * @param {BigNumberish} [options.size] - The size of the quote.
+	 * @param {string} [options.taker] - The address of the taker.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<ValidQuoteResponse>} A promise that resolves to the validation result with error information if the quote is invalid.
 	 */
 	async isQuoteValid(
@@ -422,13 +478,14 @@ export class PoolAPI extends BaseAPI {
 			taker?: string
 			poolAddress?: string
 			size?: BigNumberish
-		}
+		},
+		provider?: Provider
 	): Promise<ValidQuoteResponse> {
 		let _poolAddress = options?.poolAddress
 
 		if (!_poolAddress) {
 			const factoryContract = this.premia.contracts.getPoolFactoryContract(
-				this.premia.multicallProvider
+				provider ?? this.premia.multicallProvider
 			)
 			const response = await factoryContract.getPoolAddress(quote.poolKey)
 			_poolAddress = response.pool
@@ -436,7 +493,7 @@ export class PoolAPI extends BaseAPI {
 
 		const pool = this.premia.contracts.getPoolContract(
 			_poolAddress,
-			this.premia.multicallProvider
+			provider ?? this.premia.multicallProvider
 		)
 
 		try {
@@ -479,6 +536,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param {string} [referrer] - The address of the referrer.
 	 * @param {string} [taker] - The address of the taker.
 	 * @param {number} [maxSlippagePercent] - The maximum slippage percent.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<FillableQuote>} A promise that resolves to the fillable quote.
 	 */
 	async quote(
@@ -487,15 +545,16 @@ export class PoolAPI extends BaseAPI {
 		isBuy: boolean,
 		referrer?: string,
 		taker?: string,
-		maxSlippagePercent?: number
+		maxSlippagePercent?: number,
+		provider?: Provider
 	): Promise<FillableQuote> {
 		const _size = toBigInt(size)
 		const poolContract = this.premia.contracts.getPoolContract(
 			poolAddress,
-			this.premia.multicallProvider
+			provider ?? this.premia.multicallProvider
 		)
 		const [poolKey, quote, pool] = await Promise.all([
-			this.getPoolKeyFromAddress(poolAddress),
+			this.getPoolKeyFromAddress(poolAddress, provider),
 			poolContract.getQuoteAMM(taker ?? ZeroAddress, _size, isBuy),
 			this.getPoolMinimal(poolAddress),
 		])
@@ -543,6 +602,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param {string} [options.taker] - The address of the taker.
 	 * @param {number} [options.maxSlippagePercent] - The maximum slippage percent.
 	 * @param {boolean} [options.showErrors] - Whether to show errors in the console.
+	 * @param {Provider} [options.provider] - The custom provider to use for this call.
 	 * @param {(quote: FillableQuote | null) => void} callback - The callback function to handle each new quote.
 	 * @returns {Promise<void>}
 	 */
@@ -556,10 +616,14 @@ export class PoolAPI extends BaseAPI {
 			taker?: string
 			maxSlippagePercent?: number
 			showErrors?: boolean
+			provider?: Provider
 		},
 		callback: (quote: FillableQuote | null) => void
 	): Promise<void> {
-		const pool = this.premia.contracts.getPoolContract(options.poolAddress)
+		const pool = this.premia.contracts.getPoolContract(
+			options.poolAddress,
+			options.provider
+		)
 		const index = this.streamIndex
 
 		const callbackIfNotStale = (quote: FillableQuote | null) => {
@@ -574,7 +638,8 @@ export class PoolAPI extends BaseAPI {
 				options.isBuy,
 				options.referrer,
 				options.taker,
-				options.maxSlippagePercent
+				options.maxSlippagePercent,
+				options.provider
 			).catch()
 
 			callbackIfNotStale(bestQuote)
@@ -596,7 +661,8 @@ export class PoolAPI extends BaseAPI {
 					options.isBuy,
 					options.referrer,
 					options.taker,
-					options.maxSlippagePercent
+					options.maxSlippagePercent,
+					options.provider
 				).catch()
 
 				callbackIfNotStale(quote)
@@ -614,22 +680,30 @@ export class PoolAPI extends BaseAPI {
 	 * Cancels the quote stream for a given pool.
 	 *
 	 * @param {string} poolAddress - The address of the pool.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<void>}
 	 */
-	async cancelQuoteStream(poolAddress: string): Promise<void> {
-		const pool = this.premia.contracts.getPoolContract(poolAddress)
+	async cancelQuoteStream(
+		poolAddress: string,
+		provider?: Provider
+	): Promise<void> {
+		const pool = this.premia.contracts.getPoolContract(poolAddress, provider)
 		pool.on(pool.filters.Trade, () => null)
 	}
 
 	/**
 	 * Returns the PoolKey given the contract address of a pool.
 	 * @param poolAddress {string} The contract address of the relevant pool.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<PoolKey>}
 	 */
-	async getPoolKeyFromAddress(poolAddress: string): Promise<PoolKey> {
+	async getPoolKeyFromAddress(
+		poolAddress: string,
+		provider?: Provider
+	): Promise<PoolKey> {
 		const poolContract = this.premia.contracts.getPoolContract(
 			poolAddress,
-			this.premia.multicallProvider
+			provider ?? this.premia.multicallProvider
 		)
 		const poolSettings = await poolContract.getPoolSettings()
 
@@ -646,14 +720,21 @@ export class PoolAPI extends BaseAPI {
 	/**
 	 * Returns the corresponding PoolMinimal object from a PoolKey.
 	 * @param key {PoolKey} The relevant PoolKey.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<PoolMinimal>} Promise containing PoolMinimal.
 	 */
-	async getPoolMinimalFromKey(key: PoolKey): Promise<PoolMinimal> {
-		const address = await this.getPoolAddress(key)
+	async getPoolMinimalFromKey(
+		key: PoolKey,
+		provider?: Provider
+	): Promise<PoolMinimal> {
+		const address = await this.getPoolAddress(key, provider)
 
 		let initialized = false
 		try {
-			const poolContract = this.premia.contracts.getPoolContract(address)
+			const poolContract = this.premia.contracts.getPoolContract(
+				address,
+				provider ?? this.premia.multicallProvider
+			)
 			const deployed = await poolContract.getDeployedCode()
 			initialized = deployed !== null
 		} catch (err) {}
@@ -663,17 +744,21 @@ export class PoolAPI extends BaseAPI {
 		)
 		const [base, quote, basePricingPath, quotePricingPath, spotPrice] =
 			await Promise.all([
-				this.premia.tokens.getTokenMinimal(key.base),
-				this.premia.tokens.getTokenMinimal(key.quote),
+				this.premia.tokens.getTokenMinimal(key.base, provider),
+				this.premia.tokens.getTokenMinimal(key.quote, provider),
 
 				oracleContract.describePricingPath(key.base),
 				oracleContract.describePricingPath(key.quote),
 
-				this.spotPrice(address, {
-					base: key.base,
-					quote: key.quote,
-					oracleAdapter: key.oracleAdapter,
-				}),
+				this.spotPrice(
+					address,
+					{
+						base: key.base,
+						quote: key.quote,
+						oracleAdapter: key.oracleAdapter,
+					},
+					provider
+				),
 			])
 		const baseAdapterType = Object.keys(AdapterType)[
 			Number(basePricingPath.adapterType)
@@ -825,6 +910,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param strike {BigNumberish} Strike of the pool; denominated in the quote token.
 	 * @param maturity {BigNumberish} Maturity of the pool (UNIX timestamp).
 	 * @param isCall {boolean} Whether the pool supports call or put options.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async encodeDeploy(
@@ -833,16 +919,53 @@ export class PoolAPI extends BaseAPI {
 		oracleAdapter: string,
 		strike: BigNumberish,
 		maturity: BigNumberish,
-		isCall: boolean
+		isCall: boolean,
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		return this.encodeDeployWithKey({
-			base,
-			quote,
-			oracleAdapter,
-			strike: toBigInt(strike),
-			maturity: toBigInt(maturity),
-			isCallPool: isCall,
-		})
+		return this.encodeDeployWithKey(
+			{
+				base,
+				quote,
+				oracleAdapter,
+				strike: toBigInt(strike),
+				maturity: toBigInt(maturity),
+				isCallPool: isCall,
+			},
+			provider
+		)
+	}
+
+	/**
+	 * Returns a promise containing a populated transaction to deploy a pool parametrized by the input parameters. Allows SDK users to sign the transaction without providing a signer.
+	 * @param base {string} Contract address of the base token.
+	 * @param quote {string} Contract address of the quote token.
+	 * @param oracleAdapter {string} Contract address of the oracleAdapter.
+	 * @param strike {BigNumberish} Strike of the pool; denominated in the quote token.
+	 * @param maturity {BigNumberish} Maturity of the pool (UNIX timestamp).
+	 * @param isCall {boolean} Whether the pool supports call or put options.
+	 * @param provider {Provider} The custom provider to use for this call.
+	 * @returns {TransactionData} The encoded transaction data.
+	 */
+	encodeDeploySync(
+		base: string,
+		quote: string,
+		oracleAdapter: string,
+		strike: BigNumberish,
+		maturity: BigNumberish,
+		isCall: boolean,
+		provider?: Provider
+	): TransactionData {
+		return this.encodeDeployWithKeySync(
+			{
+				base,
+				quote,
+				oracleAdapter,
+				strike: toBigInt(strike),
+				maturity: toBigInt(maturity),
+				isCallPool: isCall,
+			},
+			provider
+		)
 	}
 
 	/**
@@ -853,6 +976,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param strike {BigNumberish} Strike of the pool; denominated in the quote token.
 	 * @param maturity {BigNumberish} Maturity of the pool (UNIX timestamp).
 	 * @param isCall {boolean} Whether the pool supports call or put options.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async deploy(
@@ -861,11 +985,20 @@ export class PoolAPI extends BaseAPI {
 		oracleAdapter: string,
 		strike: BigNumberish,
 		maturity: BigNumberish,
-		isCall: boolean
+		isCall: boolean,
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getPoolFactoryContract(),
-			this.encodeDeploy(base, quote, oracleAdapter, strike, maturity, isCall),
+			this.premia.contracts.getPoolFactoryContract(provider),
+			this.encodeDeploy(
+				base,
+				quote,
+				oracleAdapter,
+				strike,
+				maturity,
+				isCall,
+				provider
+			),
 			'encodeDeploy'
 		)
 	}
@@ -873,20 +1006,44 @@ export class PoolAPI extends BaseAPI {
 	/**
 	 * Returns the promise containing a populated transaction to deploy a pool parametrized by the PoolKey. Allows SDK users to sign the transaction without providing a signer.
 	 * @param key {PoolKey} PoolKey containing parameters of the pool to be deployed.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
-	async encodeDeployWithKey(key: PoolKey): Promise<ContractTransaction> {
-		const factory = this.premia.contracts.getPoolFactoryContract()
+	async encodeDeployWithKey(
+		key: PoolKey,
+		provider?: Provider
+	): Promise<ContractTransaction> {
+		const factory = this.premia.contracts.getPoolFactoryContract(provider)
 		return factory.deployPool.populateTransaction(key)
+	}
+
+	/**
+	 * Returns the promise containing a populated transaction to deploy a pool parametrized by the PoolKey. Allows SDK users to sign the transaction without providing a signer.
+	 * @param key {PoolKey} PoolKey containing parameters of the pool to be deployed.
+	 * @param provider {Provider} The custom provider to use for this call.
+	 * @returns {TransactionData} The encoded transaction data.
+	 */
+	encodeDeployWithKeySync(key: PoolKey, provider?: Provider): TransactionData {
+		const factory = this.premia.contracts.getPoolFactoryContract(provider)
+		const data = factory.interface.encodeFunctionData('deployPool', [key])
+
+		return {
+			to: this.premia.contracts.poolFactoryAddress,
+			data,
+		}
 	}
 
 	/**
 	 * Returns the promise containing a transaction to deploy a pool parametrized by the PoolKey.
 	 * @param key {PoolKey} PoolKey containing parameters of the pool to be deployed.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
-	async deployWithKey(key: PoolKey): Promise<ContractTransactionResponse> {
-		const factory = this.premia.contracts.getPoolFactoryContract()
+	async deployWithKey(
+		key: PoolKey,
+		provider?: Provider
+	): Promise<ContractTransactionResponse> {
+		const factory = this.premia.contracts.getPoolFactoryContract(provider)
 
 		let [, isDeployed] = await factory.getPoolAddress(key)
 
@@ -908,6 +1065,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param operator {string} Address of the operator.
 	 * @param minMarketPrice {BigNumberish} Optional argument specifying the minimum admissible market price for the deposit to be processed.
 	 * @param maxMarketPrice {BigNumberish} Optional argument specifying the maximum admissible market price for the deposit to be processed.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async encodeDeposit(
@@ -930,9 +1088,13 @@ export class PoolAPI extends BaseAPI {
 			operator?: string
 			minMarketPrice?: BigNumberish
 			maxMarketPrice?: BigNumberish
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		const poolSettings = await poolContract.getPoolSettings()
 
 		const positionKey: PositionKey = {
@@ -945,22 +1107,7 @@ export class PoolAPI extends BaseAPI {
 			strike: poolSettings.strike,
 		}
 
-		console.log('Pool address: ', poolAddress)
-		console.log('Getting ticks: ', [lower, upper])
-
 		const ticks = await poolContract.getNearestTicksBelow(lower, upper)
-
-		console.log('Deposit: ', [
-			positionKey,
-			ticks.nearestBelowLower,
-			ticks.nearestBelowUpper,
-			size,
-			toBigInt(minMarketPrice || 0),
-			toBigInt(
-				maxMarketPrice ||
-					(poolSettings.isCallPool ? WAD_BI : poolSettings.strike)
-			),
-		])
 
 		return poolContract[
 			'deposit((address,address,uint256,uint256,uint8),uint256,uint256,uint256,uint256,uint256)'
@@ -988,6 +1135,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param operator {string} Address of the operator.
 	 * @param minMarketPrice {BigNumberish} Optional argument specifying the minimum admissible market price for the deposit to be processed.
 	 * @param maxMarketPrice {BigNumberish} Optional argument specifying the maximum admissible market price for the deposit to be processed.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async deposit(
@@ -1010,20 +1158,25 @@ export class PoolAPI extends BaseAPI {
 			operator?: string
 			minMarketPrice?: BigNumberish
 			maxMarketPrice?: BigNumberish
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getPoolContract(poolAddress),
-			this.encodeDeposit(poolAddress, {
-				owner,
-				lower,
-				upper,
-				size,
-				orderType,
-				operator,
-				minMarketPrice,
-				maxMarketPrice,
-			}),
+			this.premia.contracts.getPoolContract(poolAddress, provider),
+			this.encodeDeposit(
+				poolAddress,
+				{
+					owner,
+					lower,
+					upper,
+					size,
+					orderType,
+					operator,
+					minMarketPrice,
+					maxMarketPrice,
+				},
+				provider
+			),
 			'encodeDeposit'
 		)
 	}
@@ -1035,6 +1188,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param size {BigNumberish} The amount of liquidity denominated in options contracts to be deposited.
 	 * @param minMarketPrice {BigNumberish} Optional argument specifying the minimum admissible market price for the deposit to be processed.
 	 * @param maxMarketPrice {BigNumberish} Optional argument specifying the maximum admissible market price for the deposit to be processed.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async encodeDepositWithKey(
@@ -1049,9 +1203,13 @@ export class PoolAPI extends BaseAPI {
 			size: BigNumberish
 			minMarketPrice?: BigNumberish
 			maxMarketPrice?: BigNumberish
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		const poolSettings = await poolContract.getPoolSettings()
 
 		const ticks = await poolContract.getNearestTicksBelow(
@@ -1081,6 +1239,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param size {BigNumberish} The amount of liquidity denominated in options contracts to be deposited.
 	 * @param minMarketPrice {BigNumberish} Optional argument specifying the minimum admissible market price for the deposit to be processed.
 	 * @param maxMarketPrice {BigNumberish} Optional argument specifying the maximum admissible market price for the deposit to be processed.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async depositWithKey(
@@ -1095,16 +1254,21 @@ export class PoolAPI extends BaseAPI {
 			size: BigNumberish
 			minMarketPrice?: BigNumberish
 			maxMarketPrice?: BigNumberish
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getPoolContract(poolAddress),
-			this.encodeDepositWithKey(poolAddress, {
-				positionKey,
-				size,
-				minMarketPrice,
-				maxMarketPrice,
-			}),
+			this.premia.contracts.getPoolContract(poolAddress, provider),
+			this.encodeDepositWithKey(
+				poolAddress,
+				{
+					positionKey,
+					size,
+					minMarketPrice,
+					maxMarketPrice,
+				},
+				provider
+			),
 			'encodeDepositWithKey'
 		)
 	}
@@ -1120,6 +1284,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param operator {string} Address of the operator.
 	 * @param minMarketPrice {BigNumberish} Optional argument specifying the minimum admissible market price for the deposit to be processed.
 	 * @param maxMarketPrice {BigNumberish} Optional argument specifying the maximum admissible market price for the deposit to be processed.* @param size {BigNumberish} The amount of liquidity denominated in options contracts to be deposited.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<Position.DeltaStructOutput>} Promise containing the position's delta struct.
 	 */
 	async previewDeposit(
@@ -1142,9 +1307,13 @@ export class PoolAPI extends BaseAPI {
 			operator?: string
 			minMarketPrice?: BigNumberish
 			maxMarketPrice?: BigNumberish
-		}
+		},
+		provider?: Provider
 	): Promise<Position.DeltaStructOutput> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		const poolSettings = await poolContract.getPoolSettings()
 
 		const positionKey: PositionKey = {
@@ -1157,12 +1326,16 @@ export class PoolAPI extends BaseAPI {
 			strike: poolSettings.strike,
 		}
 
-		return this.previewDepositWithKey(poolAddress, {
-			positionKey,
-			size,
-			minMarketPrice,
-			maxMarketPrice,
-		})
+		return this.previewDepositWithKey(
+			poolAddress,
+			{
+				positionKey,
+				size,
+				minMarketPrice,
+				maxMarketPrice,
+			},
+			provider
+		)
 	}
 
 	/**
@@ -1172,6 +1345,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param size {BigNumberish} The amount of liquidity denominated in options contracts to be deposited.
 	 * @param minMarketPrice {BigNumberish} Optional argument specifying the minimum admissible market price for the deposit to be processed.
 	 * @param maxMarketPrice {BigNumberish} Optional argument specifying the maximum admissible market price for the deposit to be processed.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<Position.DeltaStructOutput>} Promise containing the position's delta struct.
 	 */
 	async previewDepositWithKey(
@@ -1186,9 +1360,13 @@ export class PoolAPI extends BaseAPI {
 			size: BigNumberish
 			minMarketPrice?: BigNumberish
 			maxMarketPrice?: BigNumberish
-		}
+		},
+		provider?: Provider
 	): Promise<Position.DeltaStructOutput> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		const poolSettings = await poolContract.getPoolSettings()
 
 		const ticks = await poolContract.getNearestTicksBelow(
@@ -1222,6 +1400,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param operator {string} Address of the operator.
 	 * @param minMarketPrice {BigNumberish} Optional argument specifying the minimum admissible market price for the withdrawal to be processed.
 	 * @param maxMarketPrice {BigNumberish} Optional argument specifying the maximum admissible market price for the withdrawal to be processed.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async encodeWithdraw(
@@ -1244,9 +1423,13 @@ export class PoolAPI extends BaseAPI {
 			operator?: string
 			minMarketPrice?: BigNumberish
 			maxMarketPrice?: BigNumberish
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		const poolSettings = await poolContract.getPoolSettings()
 
 		const positionKey: PositionKey = {
@@ -1280,6 +1463,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param operator {string} Address of the operator.
 	 * @param minMarketPrice {BigNumberish} Optional argument specifying the minimum admissible market price for the withdrawal to be processed.
 	 * @param maxMarketPrice {BigNumberish} Optional argument specifying the maximum admissible market price for the withrawal to be processed.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async withdraw(
@@ -1302,20 +1486,25 @@ export class PoolAPI extends BaseAPI {
 			operator?: string
 			minMarketPrice?: BigNumberish
 			maxMarketPrice?: BigNumberish
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getPoolContract(poolAddress),
-			this.encodeWithdraw(poolAddress, {
-				owner,
-				lower,
-				upper,
-				orderType,
-				size,
-				operator,
-				minMarketPrice,
-				maxMarketPrice,
-			}),
+			this.premia.contracts.getPoolContract(poolAddress, provider),
+			this.encodeWithdraw(
+				poolAddress,
+				{
+					owner,
+					lower,
+					upper,
+					orderType,
+					size,
+					operator,
+					minMarketPrice,
+					maxMarketPrice,
+				},
+				provider
+			),
 			'encodeWithdraw'
 		)
 	}
@@ -1327,6 +1516,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param size {BigNumberish} The amount of liquidity denominated in options contracts to be withdrawn.
 	 * @param minMarketPrice {BigNumberish} Optional argument specifying the minimum admissible market price for the withdrawal to be processed.
 	 * @param maxMarketPrice {BigNumberish} Optional argument specifying the maximum admissible market price for the withdrawal to be processed.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async encodeWithdrawWithKey(
@@ -1341,9 +1531,13 @@ export class PoolAPI extends BaseAPI {
 			size: BigNumberish
 			minMarketPrice?: BigNumberish
 			maxMarketPrice?: BigNumberish
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		const poolSettings = await poolContract.getPoolSettings()
 
 		return poolContract.withdraw.populateTransaction(
@@ -1364,6 +1558,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param size {BigNumberish} The amount of liquidity denominated in options contracts to be withdrawn.
 	 * @param minMarketPrice {BigNumberish} Optional argument specifying the minimum admissible market price for the withdrawal to be processed.
 	 * @param maxMarketPrice {BigNumberish} Optional argument specifying the maximum admissible market price for the withdrawal to be processed.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async withdrawWithKey(
@@ -1378,16 +1573,21 @@ export class PoolAPI extends BaseAPI {
 			size: BigNumberish
 			minMarketPrice?: BigNumberish
 			maxMarketPrice?: BigNumberish
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getPoolContract(poolAddress),
-			this.encodeWithdrawWithKey(poolAddress, {
-				positionKey,
-				size,
-				minMarketPrice,
-				maxMarketPrice,
-			}),
+			this.premia.contracts.getPoolContract(poolAddress, provider),
+			this.encodeWithdrawWithKey(
+				poolAddress,
+				{
+					positionKey,
+					size,
+					minMarketPrice,
+					maxMarketPrice,
+				},
+				provider
+			),
 			'encodeWithdrawWithKey'
 		)
 	}
@@ -1403,6 +1603,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param operator {string} Address of the operator.
 	 * @param minMarketPrice {BigNumberish} Optional argument specifying the minimum admissible market price for the withdrawal to be processed.
 	 * @param maxMarketPrice {BigNumberish} Optional argument specifying the maximum admissible market price for the withrawal to be processed.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<Position.DeltaStructOutput>} Promise containing the position's delta struct.
 	 */
 	async previewWithdraw(
@@ -1425,9 +1626,13 @@ export class PoolAPI extends BaseAPI {
 			operator?: string
 			minMarketPrice?: BigNumberish
 			maxMarketPrice?: BigNumberish
-		}
+		},
+		provider?: Provider
 	): Promise<Position.DeltaStructOutput> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		const poolSettings = await poolContract.getPoolSettings()
 
 		const positionKey: PositionKey = {
@@ -1439,12 +1644,16 @@ export class PoolAPI extends BaseAPI {
 			isCall: poolSettings.isCallPool,
 			strike: poolSettings.strike,
 		}
-		return this.previewWithdrawWithKey(poolAddress, {
-			positionKey,
-			size,
-			minMarketPrice,
-			maxMarketPrice,
-		})
+		return this.previewWithdrawWithKey(
+			poolAddress,
+			{
+				positionKey,
+				size,
+				minMarketPrice,
+				maxMarketPrice,
+			},
+			provider
+		)
 	}
 
 	/**
@@ -1454,6 +1663,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param size {BigNumberish} The amount of liquidity denominated in options contracts to be withdrawn.
 	 * @param minMarketPrice {BigNumberish} Optional argument specifying the minimum admissible market price for the withdrawal to be processed.
 	 * @param maxMarketPrice {BigNumberish} Optional argument specifying the maximum admissible market price for the withdrawal to be processed.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<Position.DeltaStructOutput>} Promise containing the position's delta struct.
 	 */
 	async previewWithdrawWithKey(
@@ -1468,9 +1678,13 @@ export class PoolAPI extends BaseAPI {
 			size: BigNumberish
 			minMarketPrice?: BigNumberish
 			maxMarketPrice?: BigNumberish
-		}
+		},
+		provider?: Provider
 	): Promise<Position.DeltaStructOutput> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		const poolSettings = await poolContract.getPoolSettings()
 
 		return poolContract.withdraw.staticCall(
@@ -1492,6 +1706,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param upper {BigNumberish} Upper tick price of the range order. Tick price is quoted in the base for calls and in the quote for puts where it is additionally normalized by the strike.
 	 * @param orderType {OrderType} Type of the range order (LC or CS).
 	 * @param operator {string} Address of the operator.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<bigint>} Promise containing the amount of claimable fees.
 	 */
 	async getClaimableFees(
@@ -1508,9 +1723,13 @@ export class PoolAPI extends BaseAPI {
 			upper: BigNumberish
 			orderType: OrderType
 			operator?: string
-		}
+		},
+		provider?: Provider
 	): Promise<bigint> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		const poolSettings = await poolContract.getPoolSettings()
 
 		const positionKey: PositionKey = {
@@ -1523,20 +1742,25 @@ export class PoolAPI extends BaseAPI {
 			strike: poolSettings.strike,
 		}
 
-		return this.getClaimableFeesWithKey(poolAddress, positionKey)
+		return this.getClaimableFeesWithKey(poolAddress, positionKey, provider)
 	}
 
 	/**
 	 * Returns the promise containing the amount of fees that are claimable.
 	 * @param poolAddress {string} Contract address of the pool.
 	 * @param key {PositionKey} PositionKey parametrizing the range order.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<bigint>} Promise containing the amount of claimable fees.
 	 */
 	async getClaimableFeesWithKey(
 		poolAddress: string,
-		key: PositionKey
+		key: PositionKey,
+		provider?: Provider
 	): Promise<bigint> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider ?? this.premia.multicallProvider
+		)
 		return poolContract.getClaimableFees(key)
 	}
 
@@ -1548,6 +1772,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param upper {BigNumberish} Upper tick price of the range order. Tick price is quoted in the base for calls and in the quote for puts where it is additionally normalized by the strike.
 	 * @param orderType {OrderType} Type of the range order (LC or CS).
 	 * @param operator {string} Address of the operator.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async encodeClaim(
@@ -1564,9 +1789,13 @@ export class PoolAPI extends BaseAPI {
 			upper: BigNumberish
 			orderType: OrderType
 			operator?: string
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		const poolSettings = await poolContract.getPoolSettings()
 
 		const positionKey: PositionKey = {
@@ -1578,7 +1807,7 @@ export class PoolAPI extends BaseAPI {
 			isCall: poolSettings.isCallPool,
 			strike: poolSettings.strike,
 		}
-		return this.encodeClaimWithKey(poolAddress, positionKey)
+		return this.encodeClaimWithKey(poolAddress, positionKey, provider)
 	}
 
 	/**
@@ -1589,6 +1818,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param upper {BigNumberish} Upper tick price of the range order. Tick price is quoted in the base for calls and in the quote for puts where it is additionally normalized by the strike.
 	 * @param orderType {OrderType} Type of the range order (LC or CS).
 	 * @param operator {string} Address of the operator.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async claim(
@@ -1605,17 +1835,22 @@ export class PoolAPI extends BaseAPI {
 			upper: BigNumberish
 			orderType: OrderType
 			operator?: string
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getPoolContract(poolAddress),
-			this.encodeClaim(poolAddress, {
-				owner,
-				lower,
-				upper,
-				orderType,
-				operator,
-			}),
+			this.premia.contracts.getPoolContract(poolAddress, provider),
+			this.encodeClaim(
+				poolAddress,
+				{
+					owner,
+					lower,
+					upper,
+					orderType,
+					operator,
+				},
+				provider
+			),
 			'encodeClaim'
 		)
 	}
@@ -1624,29 +1859,60 @@ export class PoolAPI extends BaseAPI {
 	 * Returns a promise containing a populated transaction to claim fees generated by the range order specified by the PositionKey. Allows the SDK to be used without providing a signer.
 	 * @param poolAddress {string} Contract address of the pool.
 	 * @param key {PositionKey} PositionKey parametrizing the range order.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async encodeClaimWithKey(
 		poolAddress: string,
-		key: PositionKey
+		key: PositionKey,
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		return poolContract.claim.populateTransaction(key)
+	}
+
+	/**
+	 * Returns a promise containing a populated transaction to claim fees generated by the range order specified by the PositionKey. Allows the SDK to be used without providing a signer.
+	 * @param poolAddress {string} Contract address of the pool.
+	 * @param key {PositionKey} PositionKey parametrizing the range order.
+	 * @param provider {Provider} The custom provider to use for this call.
+	 * @returns {TransactionData} The encoded transaction data.
+	 */
+	encodeClaimWithKeySync(
+		poolAddress: string,
+		key: PositionKey,
+		provider?: Provider
+	): TransactionData {
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
+		const data = poolContract.interface.encodeFunctionData('claim', [key])
+
+		return {
+			to: poolAddress,
+			data,
+		}
 	}
 
 	/**
 	 * Returns a promise containing a signed transaction to claim fees generated by the range order specified by the PositionKey. Allows the SDK to be used without providing a signer.
 	 * @param poolAddress {string} Contract address of the pool.
 	 * @param key {PositionKey} PositionKey parametrizing the range order.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async claimWithKey(
 		poolAddress: string,
-		key: PositionKey
+		key: PositionKey,
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getPoolContract(poolAddress),
-			this.encodeClaimWithKey(poolAddress, key),
+			this.premia.contracts.getPoolContract(poolAddress, provider),
+			this.encodeClaimWithKey(poolAddress, key, provider),
 			'encodeClaimWithKey'
 		)
 	}
@@ -1657,7 +1923,8 @@ export class PoolAPI extends BaseAPI {
 	 * @param underwriter {string} Address of the underwriter receiving the short options.
 	 * @param longReceiver {string} Address receiving the long options.
 	 * @param size {BigNumberish} Amount of options to be underwritten (minted).
-	 * @param referrer {string} Address of the referrer // todo: specify
+	 * @param referrer {string} Address of the referrer.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async encodeWriteOption(
@@ -1672,9 +1939,13 @@ export class PoolAPI extends BaseAPI {
 			size: BigNumberish
 			longReceiver?: string
 			referrer?: string
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		const _longReceiver = longReceiver ? longReceiver : underwriter
 		return poolContract.writeFrom.populateTransaction(
 			underwriter,
@@ -1685,11 +1956,55 @@ export class PoolAPI extends BaseAPI {
 	}
 
 	/**
+	 * Returns a promise containing a populated transaction to underwrite an option. The option's strike and maturity are specified through the contract address of the pool. Allows users to use the SDK without providing a signer.
+	 * @param poolAddress {string} Contract address of the pool.
+	 * @param underwriter {string} Address of the underwriter receiving the short options.
+	 * @param longReceiver {string} Address receiving the long options.
+	 * @param size {BigNumberish} Amount of options to be underwritten (minted).
+	 * @param referrer {string} Address of the referrer.
+	 * @param provider {Provider} The custom provider to use for this call.
+	 * @returns {TransactionData} The encoded transaction data.
+	 */
+	encodeWriteOptionSync(
+		poolAddress: string,
+		{
+			underwriter,
+			longReceiver,
+			size,
+			referrer,
+		}: {
+			underwriter: string
+			size: BigNumberish
+			longReceiver?: string
+			referrer?: string
+		},
+		provider?: Provider
+	): TransactionData {
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
+		const _longReceiver = longReceiver ? longReceiver : underwriter
+		const data = poolContract.interface.encodeFunctionData('writeFrom', [
+			underwriter,
+			_longReceiver,
+			size,
+			this.toReferrer(referrer),
+		])
+
+		return {
+			to: poolAddress,
+			data,
+		}
+	}
+
+	/**
 	 * Returns a promise containing a signed transaction to underwrite an option. The option's strike and maturity are specified through the contract address of the pool.
 	 * @param poolAddress {string} Contract address of the pool.
 	 * @param underwriter {string} Address of the underwriter receiving the short options.
 	 * @param longReceiver {string} Address receiving the long options.
 	 * @param size {BigNumberish} Amount of options to be underwritten (minted).
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async writeOption(
@@ -1702,15 +2017,20 @@ export class PoolAPI extends BaseAPI {
 			underwriter: string
 			size: BigNumberish
 			longReceiver?: string
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getPoolContract(poolAddress),
-			this.encodeWriteOption(poolAddress, {
-				underwriter,
-				longReceiver,
-				size,
-			}),
+			this.premia.contracts.getPoolContract(poolAddress, provider),
+			this.encodeWriteOption(
+				poolAddress,
+				{
+					underwriter,
+					longReceiver,
+					size,
+				},
+				provider
+			),
 			'encodeWriteOption'
 		)
 	}
@@ -1721,7 +2041,8 @@ export class PoolAPI extends BaseAPI {
 	 * @param size {BigNumberish} The amount of options to buy / sell.
 	 * @param isBuy {boolean} Whether to buy or sell options.
 	 * @param premiumLimit {BigNumberish} If isBuy is true the premiumLimit is the maximum amount to be spent to buy the option amount. If isBuy is false the premiumLimit is the minimum amount received for selling the option amount.
-	 * @param referrer {string} Address of the referrer // todo: specify
+	 * @param referrer {string} Address of the referrer.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async encodeTrade(
@@ -1736,9 +2057,13 @@ export class PoolAPI extends BaseAPI {
 			isBuy: boolean
 			premiumLimit: BigNumberish
 			referrer: string
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		return poolContract.trade.populateTransaction(
 			toBigInt(size),
 			isBuy,
@@ -1748,12 +2073,55 @@ export class PoolAPI extends BaseAPI {
 	}
 
 	/**
+	 * Returns a promise containing a populated transaction to trade options. Allows users to use the SDK without providing a signer.
+	 * @param poolAddress {string} Contract address of the pool.
+	 * @param size {BigNumberish} The amount of options to buy / sell.
+	 * @param isBuy {boolean} Whether to buy or sell options.
+	 * @param premiumLimit {BigNumberish} If isBuy is true the premiumLimit is the maximum amount to be spent to buy the option amount. If isBuy is false the premiumLimit is the minimum amount received for selling the option amount.
+	 * @param referrer {string} Address of the referrer.
+	 * @param provider {Provider} The custom provider to use for this call.
+	 * @returns {TransactionData} The encoded transaction data.
+	 */
+	encodeTradeSync(
+		poolAddress: string,
+		{
+			size,
+			isBuy,
+			premiumLimit,
+			referrer,
+		}: {
+			size: BigNumberish
+			isBuy: boolean
+			premiumLimit: BigNumberish
+			referrer: string
+		},
+		provider?: Provider
+	): TransactionData {
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
+		const data = poolContract.interface.encodeFunctionData('trade', [
+			toBigInt(size),
+			isBuy,
+			toBigInt(premiumLimit),
+			referrer,
+		])
+
+		return {
+			to: poolAddress,
+			data,
+		}
+	}
+
+	/**
 	 * Returns a promise containing a signed transaction to trade options.
 	 * @param poolAddress {string} Contract address of the pool.
 	 * @param size {BigNumberish} The amount of options to buy / sell.
 	 * @param isBuy {boolean} Whether to buy or sell options.
 	 * @param premiumLimit {BigNumberish} If isBuy is true the premiumLimit is the maximum amount to be spent to buy the option amount. If isBuy is false the premiumLimit is the minimum amount received for selling the option amount.
-	 * @param referrer {string} Address of the referrer // todo: specify
+	 * @param referrer {string} Address of the referrer.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async trade(
@@ -1768,16 +2136,21 @@ export class PoolAPI extends BaseAPI {
 			isBuy: boolean
 			premiumLimit: BigNumberish
 			referrer: string
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getPoolContract(poolAddress),
-			this.encodeTrade(poolAddress, {
-				size,
-				isBuy,
-				premiumLimit,
-				referrer,
-			}),
+			this.premia.contracts.getPoolContract(poolAddress, provider),
+			this.encodeTrade(
+				poolAddress,
+				{
+					size,
+					isBuy,
+					premiumLimit,
+					referrer,
+				},
+				provider
+			),
 			'encodeTrade'
 		)
 	}
@@ -1787,7 +2160,8 @@ export class PoolAPI extends BaseAPI {
 	 * @param poolAddress {string} Contract address of the pool.
 	 * @param size {BigNumberish} The amount of options to buy.
 	 * @param premiumLimit {BigNumberish} The premiumLimit is the maximum amount to be spent to buy the option amount.
-	 * @param referrer {string} Address of the referrer // todo: specify
+	 * @param referrer {string} Address of the referrer.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async encodeBuy(
@@ -1800,9 +2174,13 @@ export class PoolAPI extends BaseAPI {
 			size: BigNumberish
 			premiumLimit: BigNumberish
 			referrer?: string
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		return poolContract.trade.populateTransaction(
 			size,
 			true,
@@ -1812,11 +2190,51 @@ export class PoolAPI extends BaseAPI {
 	}
 
 	/**
+	 * Returns a promise containing a populated transaction to buy options. Allows users to use the SDK without providing a signer.
+	 * @param poolAddress {string} Contract address of the pool.
+	 * @param size {BigNumberish} The amount of options to buy.
+	 * @param premiumLimit {BigNumberish} The premiumLimit is the maximum amount to be spent to buy the option amount.
+	 * @param referrer {string} Address of the referrer.
+	 * @param provider {Provider} The custom provider to use for this call.
+	 * @returns {TransactionData} The encoded transaction data.
+	 */
+	encodeBuySync(
+		poolAddress: string,
+		{
+			size,
+			premiumLimit,
+			referrer,
+		}: {
+			size: BigNumberish
+			premiumLimit: BigNumberish
+			referrer?: string
+		},
+		provider?: Provider
+	): TransactionData {
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
+		const data = poolContract.interface.encodeFunctionData('trade', [
+			size,
+			true,
+			toBigInt(premiumLimit),
+			this.toReferrer(referrer),
+		])
+
+		return {
+			to: poolAddress,
+			data,
+		}
+	}
+
+	/**
 	 * Returns a promise containing a signed transaction to buy options. Buying options can be in the form of buying long options positions or buying to close short option positions.
 	 * @param poolAddress {string} Contract address of the pool.
 	 * @param size {BigNumberish} The amount of options to buy.
 	 * @param premiumLimit {BigNumberish} The premiumLimit is the maximum amount to be spent to buy the option amount.
-	 * @param referrer {string} Address of the referrer // todo: specify
+	 * @param referrer {string} Address of the referrer.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async buy(
@@ -1829,15 +2247,20 @@ export class PoolAPI extends BaseAPI {
 			size: BigNumberish
 			premiumLimit: BigNumberish
 			referrer?: string
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getPoolContract(poolAddress),
-			this.encodeBuy(poolAddress, {
-				size,
-				premiumLimit,
-				referrer,
-			}),
+			this.premia.contracts.getPoolContract(poolAddress, provider),
+			this.encodeBuy(
+				poolAddress,
+				{
+					size,
+					premiumLimit,
+					referrer,
+				},
+				provider
+			),
 			'encodeBuy'
 		)
 	}
@@ -1847,7 +2270,8 @@ export class PoolAPI extends BaseAPI {
 	 * @param poolAddress {string} Contract address of the pool.
 	 * @param size {BigNumberish} The amount of options to sell.
 	 * @param premiumLimit {BigNumberish} The premiumLimit is the minimum amount to be received to sell the option amount.
-	 * @param referrer {string} Address of the referrer // todo: specify
+	 * @param referrer {string} Address of the referrer.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async encodeSell(
@@ -1860,9 +2284,13 @@ export class PoolAPI extends BaseAPI {
 			size: BigNumberish
 			premiumLimit: BigNumberish
 			referrer?: string
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		const _premiumLimit = toBigInt(premiumLimit)
 		return poolContract.trade.populateTransaction(
 			size,
@@ -1873,11 +2301,52 @@ export class PoolAPI extends BaseAPI {
 	}
 
 	/**
+	 * Returns a promise containing a populated transaction to sell options. Selling options can be in the form of selling long option positions or selling to open short positions. Allows users to use the SDK without providing a signer.
+	 * @param poolAddress {string} Contract address of the pool.
+	 * @param size {BigNumberish} The amount of options to sell.
+	 * @param premiumLimit {BigNumberish} The premiumLimit is the minimum amount to be received to sell the option amount.
+	 * @param referrer {string} Address of the referrer.
+	 * @param provider {Provider} The custom provider to use for this call.
+	 * @returns {TransactionData} The encoded transaction data.
+	 */
+	encodeSellSync(
+		poolAddress: string,
+		{
+			size,
+			premiumLimit,
+			referrer,
+		}: {
+			size: BigNumberish
+			premiumLimit: BigNumberish
+			referrer?: string
+		},
+		provider?: Provider
+	): TransactionData {
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
+		const _premiumLimit = toBigInt(premiumLimit)
+		const data = poolContract.interface.encodeFunctionData('trade', [
+			size,
+			false,
+			_premiumLimit,
+			this.toReferrer(referrer),
+		])
+
+		return {
+			to: poolAddress,
+			data,
+		}
+	}
+
+	/**
 	 * Returns a promise containing a signed transaction to sell options. Selling options can be in the form of selling long option positions or selling to open short positions.
 	 * @param poolAddress {string} Contract address of the pool.
 	 * @param size {BigNumberish} The amount of options to sell.
 	 * @param premiumLimit {BigNumberish} The premiumLimit is the minimum amount to be received to sell the option amount.
-	 * @param referrer {string} Address of the referrer // todo: specify
+	 * @param referrer {string} Address of the referrer.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async sell(
@@ -1890,15 +2359,20 @@ export class PoolAPI extends BaseAPI {
 			size: BigNumberish
 			premiumLimit: BigNumberish
 			referrer?: string
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getPoolContract(poolAddress),
-			this.encodeSell(poolAddress, {
-				size,
-				premiumLimit,
-				referrer,
-			}),
+			this.premia.contracts.getPoolContract(poolAddress, provider),
+			this.encodeSell(
+				poolAddress,
+				{
+					size,
+					premiumLimit,
+					referrer,
+				},
+				provider
+			),
 			'encodeSell'
 		)
 	}
@@ -1912,6 +2386,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param {BigNumberish} options.size - The size to fill.
 	 * @param {Signature} options.signature - The signature of the quote provider.
 	 * @param {string} [options.referrer] - The address of the referrer.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} A promise that resolves to the encoded fill quote request.
 	 */
 	async encodeFillQuote(
@@ -1926,15 +2401,63 @@ export class PoolAPI extends BaseAPI {
 			size: BigNumberish
 			signature: Signature
 			referrer?: string
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		return poolContract.fillQuoteOB.populateTransaction(
 			quote,
 			size,
 			signature,
 			this.toReferrer(referrer)
 		)
+	}
+
+	/**
+	 * Encodes the fill quote request, preparing the transaction for execution.
+	 *
+	 * @param {string} poolAddress - The address of the pool.
+	 * @param {Object} options - The options for the fill quote request.
+	 * @param {Quote} options.quote - The quote object.
+	 * @param {BigNumberish} options.size - The size to fill.
+	 * @param {Signature} options.signature - The signature of the quote provider.
+	 * @param {string} [options.referrer] - The address of the referrer.
+	 * @param {Provider} provider - The custom provider to use for this call.
+	 * @returns {TransactionData} The encoded transaction data.
+	 */
+	encodeFillQuoteSync(
+		poolAddress: string,
+		{
+			quote,
+			size,
+			signature,
+			referrer,
+		}: {
+			quote: Quote
+			size: BigNumberish
+			signature: Signature
+			referrer?: string
+		},
+		provider?: Provider
+	): TransactionData {
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
+		const data = poolContract.interface.encodeFunctionData('fillQuoteOB', [
+			quote,
+			size,
+			signature,
+			this.toReferrer(referrer),
+		])
+
+		return {
+			to: poolAddress,
+			data,
+		}
 	}
 
 	/**
@@ -1946,6 +2469,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param {BigNumberish} options.size - The size to fill.
 	 * @param {Signature} options.signature - The signature of the quote provider.
 	 * @param {string} [options.referrer] - The address of the referrer.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<ContractTransactionResponse>} A promise that resolves to the transaction response.
 	 */
 	async fillQuote(
@@ -1955,11 +2479,12 @@ export class PoolAPI extends BaseAPI {
 			size: BigNumberish
 			signature: Signature
 			referrer?: string
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getPoolContract(poolAddress),
-			this.encodeFillQuote(poolAddress, options),
+			this.premia.contracts.getPoolContract(poolAddress, provider),
+			this.encodeFillQuote(poolAddress, options, provider),
 			'encodeFillQuote'
 		)
 	}
@@ -1970,14 +2495,19 @@ export class PoolAPI extends BaseAPI {
 	 * @param {string} poolAddress - The address of the pool.
 	 * @param {string} quoteProvider - The address of the quote provider.
 	 * @param {string} quoteHash - The hash of the quote.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<bigint>} A promise that resolves to the filled amount of the quote.
 	 */
 	async getFilledQuoteAmount(
 		poolAddress: string,
 		quoteProvider: string,
-		quoteHash: string
+		quoteHash: string,
+		provider?: Provider
 	): Promise<bigint> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider ?? this.premia.multicallProvider
+		)
 		return poolContract.getQuoteOBFilledAmount(quoteProvider, quoteHash)
 	}
 
@@ -1986,14 +2516,46 @@ export class PoolAPI extends BaseAPI {
 	 *
 	 * @param {string} poolAddress - The address of the pool.
 	 * @param {string} quoteHash - The hash of the quote to be cancelled.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} A promise that resolves to the encoded cancel quote request.
 	 */
 	async encodeCancelQuote(
 		poolAddress: string,
-		quoteHash: string
+		quoteHash: string,
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		return poolContract.cancelQuotesOB.populateTransaction([quoteHash])
+	}
+
+	/**
+	 * Encodes the cancel quote request, preparing the transaction for execution.
+	 *
+	 * @param {string} poolAddress - The address of the pool.
+	 * @param {string} quoteHash - The hash of the quote to be cancelled.
+	 * @param {Provider} provider - The custom provider to use for this call.
+	 * @returns {TransactionData} The encoded transaction data.
+	 */
+	encodeCancelQuoteSync(
+		poolAddress: string,
+		quoteHash: string,
+		provider?: Provider
+	): TransactionData {
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
+		const data = poolContract.interface.encodeFunctionResult('cancelQuotesOB', [
+			[quoteHash],
+		])
+
+		return {
+			to: poolAddress,
+			data,
+		}
 	}
 
 	/**
@@ -2001,14 +2563,16 @@ export class PoolAPI extends BaseAPI {
 	 *
 	 * @param {string} poolAddress - The address of the pool.
 	 * @param {string} quoteHash - The hash of the quote to be cancelled.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<ContractTransactionResponse>} A promise that resolves to the transaction response.
 	 */
 	async cancelQuote(
 		poolAddress: string,
-		quoteHash: string
+		quoteHash: string,
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getPoolContract(poolAddress),
+			this.premia.contracts.getPoolContract(poolAddress, provider),
 			this.encodeCancelQuote(poolAddress, quoteHash),
 			'encodeCancelQuote'
 		)
@@ -2019,14 +2583,46 @@ export class PoolAPI extends BaseAPI {
 	 *
 	 * @param {string} poolAddress - The address of the pool.
 	 * @param {string[]} quoteHashes - An array of hashes of the quotes to be cancelled.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} A promise that resolves to the encoded cancel quotes request.
 	 */
 	async encodeCancelQuotes(
 		poolAddress: string,
-		quoteHashes: string[]
+		quoteHashes: string[],
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		return poolContract.cancelQuotesOB.populateTransaction(quoteHashes)
+	}
+
+	/**
+	 * Encodes the cancel quotes request for multiple quotes, preparing the transaction for execution.
+	 *
+	 * @param {string} poolAddress - The address of the pool.
+	 * @param {string[]} quoteHashes - An array of hashes of the quotes to be cancelled.
+	 * @param {Provider} provider - The custom provider to use for this call.
+	 * @returns {TransactionData} The encoded transaction data.
+	 */
+	encodeCancelQuotesSync(
+		poolAddress: string,
+		quoteHashes: string[],
+		provider?: Provider
+	): TransactionData {
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
+		const data = poolContract.interface.encodeFunctionData('cancelQuotesOB', [
+			quoteHashes,
+		])
+
+		return {
+			to: poolAddress,
+			data,
+		}
 	}
 
 	/**
@@ -2034,15 +2630,17 @@ export class PoolAPI extends BaseAPI {
 	 *
 	 * @param {string} poolAddress - The address of the pool.
 	 * @param {string[]} quoteHashes - An array of hashes of the quotes to be cancelled.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<ContractTransactionResponse>} A promise that resolves to the transaction response.
 	 */
 	async cancelQuotes(
 		poolAddress: string,
-		quoteHashes: string[]
+		quoteHashes: string[],
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getPoolContract(poolAddress),
-			this.encodeCancelQuotes(poolAddress, quoteHashes),
+			this.premia.contracts.getPoolContract(poolAddress, provider),
+			this.encodeCancelQuotes(poolAddress, quoteHashes, provider),
 			'encodeCancelQuotes'
 		)
 	}
@@ -2050,22 +2648,55 @@ export class PoolAPI extends BaseAPI {
 	/**
 	 * Returns a promise containing a populated transaction to exercise long option positions. Allows the user to use the SDK without providing a signer.
 	 * @param poolAddress {string} The address of the pool.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} A promise that resolves to the transaction response.
 	 */
-	async encodeExercise(poolAddress: string): Promise<ContractTransaction> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+	async encodeExercise(
+		poolAddress: string,
+		provider?: Provider
+	): Promise<ContractTransaction> {
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		return poolContract.exercise.populateTransaction()
+	}
+
+	/**
+	 * Returns a promise containing a populated transaction to exercise long option positions. Allows the user to use the SDK without providing a signer.
+	 * @param poolAddress {string} The address of the pool.
+	 * @param provider {Provider} The custom provider to use for this call.
+	 * @returns {TransactionData} The encoded transaction data.
+	 */
+	encodeExerciseSync(
+		poolAddress: string,
+		provider?: Provider
+	): TransactionData {
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
+		const data = poolContract.interface.encodeFunctionData('exercise')
+
+		return {
+			to: poolAddress,
+			data,
+		}
 	}
 
 	/**
 	 * Returns a promise containing a signed transaction to exercise long option positions.
 	 * @param poolAddress {string} Contract address of the pool.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
-	async exercise(poolAddress: string): Promise<ContractTransactionResponse> {
+	async exercise(
+		poolAddress: string,
+		provider?: Provider
+	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getPoolContract(poolAddress),
-			this.encodeExercise(poolAddress),
+			this.premia.contracts.getPoolContract(poolAddress, provider),
+			this.encodeExercise(poolAddress, provider),
 			'encodeExercise'
 		)
 	}
@@ -2074,37 +2705,74 @@ export class PoolAPI extends BaseAPI {
 	 * Previews the result of exercising the options in the specified pool.
 	 *
 	 * @param {string} poolAddress - The address of the pool.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<[bigint, bigint]>} The result of exercising the options.
 	 */
-	async previewExercise(poolAddress: string): Promise<
+	async previewExercise(
+		poolAddress: string,
+		provider?: Provider
+	): Promise<
 		[bigint, bigint] & {
 			exerciseValue: bigint
 			exerciseFee: bigint
 		}
 	> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		return poolContract.exercise.staticCall()
 	}
 
 	/**
 	 * Returns a promise containing a populated transaction to settle short option positions. Allows the user to use the SDK without providing a signer.
 	 * @param poolAddress {string} Contract address of the pool.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
-	async encodeSettle(poolAddress: string): Promise<ContractTransaction> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+	async encodeSettle(
+		poolAddress: string,
+		provider?: Provider
+	): Promise<ContractTransaction> {
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		return poolContract.settle.populateTransaction()
+	}
+
+	/**
+	 * Returns a promise containing a populated transaction to settle short option positions. Allows the user to use the SDK without providing a signer.
+	 * @param poolAddress {string} Contract address of the pool.
+	 * @param provider {Provider} The custom provider to use for this call.
+	 * @returns {TransactionData} The encoded transaction data.
+	 */
+	encodeSettleSync(poolAddress: string, provider?: Provider): TransactionData {
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
+		const data = poolContract.interface.encodeFunctionData('settle')
+
+		return {
+			to: poolAddress,
+			data,
+		}
 	}
 
 	/**
 	 * Returns a promise containing a signed transaction to settle short option positions.
 	 * @param poolAddress {string} Contract address of the pool.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
-	async settle(poolAddress: string): Promise<ContractTransactionResponse> {
+	async settle(
+		poolAddress: string,
+		provider?: Provider
+	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getPoolContract(poolAddress),
-			this.encodeSettle(poolAddress),
+			this.premia.contracts.getPoolContract(poolAddress, provider),
+			this.encodeSettle(poolAddress, provider),
 			'encodeSettle'
 		)
 	}
@@ -2113,10 +2781,17 @@ export class PoolAPI extends BaseAPI {
 	 * Previews the result of settling the options in the specified pool.
 	 *
 	 * @param {string} poolAddress - The address of the pool.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<bigint>} The result of settling the options.
 	 */
-	async previewSettle(poolAddress: string): Promise<bigint> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+	async previewSettle(
+		poolAddress: string,
+		provider?: Provider
+	): Promise<bigint> {
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		return poolContract.settle.staticCall()
 	}
 
@@ -2128,6 +2803,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param upper {BigNumberish} Upper tick price of the range order. Tick price is quoted in the base for calls and in the quote for puts where it is additionally normalized by the strike.
 	 * @param orderType {OrderType} Type of the range order (LC or CS).
 	 * @param operator {string} Address of the operator.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async encodeSettlePosition(
@@ -2144,9 +2820,13 @@ export class PoolAPI extends BaseAPI {
 			upper: BigNumberish
 			orderType: OrderType
 			operator?: string
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		const poolSettings = await poolContract.getPoolSettings()
 
 		const positionKey: PositionKey = {
@@ -2158,7 +2838,7 @@ export class PoolAPI extends BaseAPI {
 			isCall: poolSettings.isCallPool,
 			strike: poolSettings.strike,
 		}
-		return this.encodeSettlePositionWithKey(poolAddress, positionKey)
+		return this.encodeSettlePositionWithKey(poolAddress, positionKey, provider)
 	}
 
 	/**
@@ -2169,6 +2849,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param upper {BigNumberish} Upper tick price of the range order. Tick price is quoted in the base for calls and in the quote for puts where it is additionally normalized by the strike.
 	 * @param orderType {OrderType} Type of the range order (LC or CS).
 	 * @param operator {string} Address of the operator.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async settlePosition(
@@ -2185,17 +2866,22 @@ export class PoolAPI extends BaseAPI {
 			upper: BigNumberish
 			orderType: OrderType
 			operator?: string
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getPoolContract(poolAddress),
-			this.encodeSettlePosition(poolAddress, {
-				owner,
-				lower,
-				upper,
-				orderType,
-				operator,
-			}),
+			this.premia.contracts.getPoolContract(poolAddress, provider),
+			this.encodeSettlePosition(
+				poolAddress,
+				{
+					owner,
+					lower,
+					upper,
+					orderType,
+					operator,
+				},
+				provider
+			),
 			'encodeSettlePosition'
 		)
 	}
@@ -2210,6 +2896,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param {BigNumberish} positionData.upper - The upper bound of the position.
 	 * @param {OrderType} positionData.orderType - The order type of the position.
 	 * @param {string} [positionData.operator] - The address of the operator.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<bigint>} The result of settling the position.
 	 */
 	async previewSettlePosition(
@@ -2226,9 +2913,13 @@ export class PoolAPI extends BaseAPI {
 			upper: BigNumberish
 			orderType: OrderType
 			operator?: string
-		}
+		},
+		provider?: Provider
 	): Promise<bigint> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		const poolSettings = await poolContract.getPoolSettings()
 
 		const positionKey: PositionKey = {
@@ -2248,29 +2939,62 @@ export class PoolAPI extends BaseAPI {
 	 * Returns a promise containing a populated transaction to settle a range order position. Allows the user to use the SDK without providing a signer.
 	 * @param poolAddress {string} Contract address of the pool.
 	 * @param positionKey {PositionKey} PositionKey parametrizing the range order.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async encodeSettlePositionWithKey(
 		poolAddress: string,
-		positionKey: PositionKey
+		positionKey: PositionKey,
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		return poolContract.settlePosition.populateTransaction(positionKey)
+	}
+
+	/**
+	 * Returns a promise containing a populated transaction to settle a range order position. Allows the user to use the SDK without providing a signer.
+	 * @param poolAddress {string} Contract address of the pool.
+	 * @param positionKey {PositionKey} PositionKey parametrizing the range order.
+	 * @param provider {Provider} The custom provider to use for this call.
+	 * @returns {TransactionData} The encoded transaction data.
+	 */
+	encodeSettlePositionWithKeySync(
+		poolAddress: string,
+		positionKey: PositionKey,
+		provider?: Provider
+	): TransactionData {
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
+		const data = poolContract.interface.encodeFunctionData('settlePosition', [
+			positionKey,
+		])
+
+		return {
+			to: poolAddress,
+			data,
+		}
 	}
 
 	/**
 	 * Returns a promise containing a signed transaction to settle a range order position.
 	 * @param poolAddress {string} Contract address of the pool.
 	 * @param positionKey {PositionKey} PositionKey parametrizing the range order.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async settlePositionWithKey(
 		poolAddress: string,
-		positionKey: PositionKey
+		positionKey: PositionKey,
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getPoolContract(poolAddress),
-			this.encodeSettlePositionWithKey(poolAddress, positionKey),
+			this.premia.contracts.getPoolContract(poolAddress, provider),
+			this.encodeSettlePositionWithKey(poolAddress, positionKey, provider),
 			'encodeSettlePositionWithKey'
 		)
 	}
@@ -2280,13 +3004,18 @@ export class PoolAPI extends BaseAPI {
 	 *
 	 * @param {string} poolAddress - The address of the pool.
 	 * @param {PositionKey} positionKey - The key identifying the position.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<bigint>} The result of settling the position.
 	 */
 	async previewSettlePositionWithKey(
 		poolAddress: string,
-		positionKey: PositionKey
+		positionKey: PositionKey,
+		provider?: Provider
 	): Promise<bigint> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		return poolContract.settlePosition.staticCall(positionKey)
 	}
 
@@ -2295,14 +3024,19 @@ export class PoolAPI extends BaseAPI {
 	 * @param poolAddress {string} Contract address of the pool.
 	 * @param holderAddresses {string[]} Addresses of which the long option positions should be exercised. Note a user can only exercise long option positions on behalf of other users if the holder granted permission via the UserSettings.
 	 * @param costPerHolder {BigNumberish} Amount charged for exercising the long options per holder. Note the maximum amount charged is specified by each option holder individually in the UserSettings. If the amount charged is above the exercise value the transaction will revert.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async encodeExerciseFor(
 		poolAddress: string,
 		holderAddresses: string[],
-		costPerHolder: BigNumberish
+		costPerHolder: BigNumberish,
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		return poolContract.exerciseFor.populateTransaction(
 			holderAddresses,
 			costPerHolder
@@ -2310,20 +3044,56 @@ export class PoolAPI extends BaseAPI {
 	}
 
 	/**
+	 * Returns a promise containing a populated transaction to exercise option positions on behalf of other users. Allows the user to use the SDK without providing a signer.
+	 * @param poolAddress {string} Contract address of the pool.
+	 * @param holderAddresses {string[]} Addresses of which the long option positions should be exercised. Note a user can only exercise long option positions on behalf of other users if the holder granted permission via the UserSettings.
+	 * @param costPerHolder {BigNumberish} Amount charged for exercising the long options per holder. Note the maximum amount charged is specified by each option holder individually in the UserSettings. If the amount charged is above the exercise value the transaction will revert.
+	 * @param provider {Provider} The custom provider to use for this call.
+	 * @returns {TransactionData} The encoded transaction data.
+	 */
+	encodeExerciseForSync(
+		poolAddress: string,
+		holderAddresses: string[],
+		costPerHolder: BigNumberish,
+		provider?: Provider
+	): TransactionData {
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
+		const data = poolContract.interface.encodeFunctionData('exerciseFor', [
+			holderAddresses,
+			costPerHolder,
+		])
+
+		return {
+			to: poolAddress,
+			data,
+		}
+	}
+
+	/**
 	 * Returns a promise containing a signed transaction to exercise option positions on behalf of other users. Allows the user to use the SDK without providing a signer.
 	 * @param poolAddress {string} Contract address of the pool.
 	 * @param holderAddresses {string[]} Addresses of which the long option positions should be exercised. Note a user can only exercise long option positions on behalf of other users if the holder granted permission via the UserSettings.
 	 * @param costPerHolder {BigNumberish} Amount charged for exercising the long options per holder. Note the maximum amount charged is specified by each option holder individually in the UserSettings. If the amount charged is above the exercise value the transaction will revert.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async exerciseFor(
 		poolAddress: string,
 		holderAddresses: string[],
-		costPerHolder: BigNumberish
+		costPerHolder: BigNumberish,
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getPoolContract(poolAddress),
-			this.encodeExerciseFor(poolAddress, holderAddresses, costPerHolder),
+			this.premia.contracts.getPoolContract(poolAddress, provider),
+			this.encodeExerciseFor(
+				poolAddress,
+				holderAddresses,
+				costPerHolder,
+				provider
+			),
 			'encodeExerciseFor'
 		)
 	}
@@ -2334,19 +3104,24 @@ export class PoolAPI extends BaseAPI {
 	 * @param {string} poolAddress - The address of the pool.
 	 * @param {string[]} holderAddresses - The array of holder addresses.
 	 * @param {BigNumberish} costPerHolder - The cost per holder.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<[bigint[], bigint[]]>} The result of exercising the options for the holders.
 	 */
 	async previewExerciseFor(
 		poolAddress: string,
 		holderAddresses: string[],
-		costPerHolder: BigNumberish
+		costPerHolder: BigNumberish,
+		provider?: Provider
 	): Promise<
 		[bigint[], bigint[]] & {
 			exerciseValues: bigint[]
 			exerciseFees: bigint[]
 		}
 	> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		return poolContract.exerciseFor.staticCall(holderAddresses, costPerHolder)
 	}
 
@@ -2355,14 +3130,19 @@ export class PoolAPI extends BaseAPI {
 	 * @param poolAddress {string} Contract address of the pool.
 	 * @param underwriterAddresses {string[]} List containing the addresses for which the short options should be settled. Note a user can only settle short option positions on behalf of other users if the holder granted permission via the UserSettings.
 	 * @param costPerUnderwriter {BigNumberish} Amount charged by the user to each underwriter. Note the maximum amount charged is specified by each underwriter individually in the UserSettings. If the amount charged is above the settlement value the transaction will revert. // todo
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async encodeSettleFor(
 		poolAddress: string,
 		underwriterAddresses: string[],
-		costPerUnderwriter: BigNumberish
+		costPerUnderwriter: BigNumberish,
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		return poolContract.settleFor.populateTransaction(
 			underwriterAddresses,
 			costPerUnderwriter
@@ -2370,23 +3150,55 @@ export class PoolAPI extends BaseAPI {
 	}
 
 	/**
+	 * Returns a promise containing a populated transaction to settle option positions on behalf of other users. Allows the user to use the SDK without providing a signer.
+	 * @param poolAddress {string} Contract address of the pool.
+	 * @param underwriterAddresses {string[]} List containing the addresses for which the short options should be settled. Note a user can only settle short option positions on behalf of other users if the holder granted permission via the UserSettings.
+	 * @param costPerUnderwriter {BigNumberish} Amount charged by the user to each underwriter. Note the maximum amount charged is specified by each underwriter individually in the UserSettings. If the amount charged is above the settlement value the transaction will revert. // todo
+	 * @param provider {Provider} The custom provider to use for this call.
+	 * @returns {TransactionData} The encoded transaction data.
+	 */
+	encodeSettleForSync(
+		poolAddress: string,
+		underwriterAddresses: string[],
+		costPerUnderwriter: BigNumberish,
+		provider?: Provider
+	): TransactionData {
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
+		const data = poolContract.interface.encodeFunctionData('settleFor', [
+			underwriterAddresses,
+			costPerUnderwriter,
+		])
+
+		return {
+			to: poolAddress,
+			data,
+		}
+	}
+
+	/**
 	 * Returns a promise containing a signed transaction to settle option positions on behalf of other users.
 	 * @param poolAddress {string} Contract address of the pool.
 	 * @param underwriterAddresses {string[]} List containing the addresses for which the short options should be settled. Note a user can only settle short option positions on behalf of other users if the holder granted permission via the UserSettings.
 	 * @param costPerUnderwriter {BigNumberish} Amount charged by the user to each underwriter. Note the maximum amount charged is specified by each underwriter individually in the UserSettings. If the amount charged is above the settlement value the transaction will revert. // todo
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async settleFor(
 		poolAddress: string,
 		underwriterAddresses: string[],
-		costPerUnderwriter: BigNumberish
+		costPerUnderwriter: BigNumberish,
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getPoolContract(poolAddress),
+			this.premia.contracts.getPoolContract(poolAddress, provider),
 			this.encodeSettleFor(
 				poolAddress,
 				underwriterAddresses,
-				costPerUnderwriter
+				costPerUnderwriter,
+				provider
 			),
 			'encodeSettleFor'
 		)
@@ -2398,14 +3210,19 @@ export class PoolAPI extends BaseAPI {
 	 * @param {string} poolAddress - The address of the pool.
 	 * @param {string[]} underwriterAddresses - The array of underwriter addresses.
 	 * @param {BigNumberish} costPerUnderwriter - The cost per underwriter.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<bigint[]>} The result of settling the options for the underwriters.
 	 */
 	async previewSettleFor(
 		poolAddress: string,
 		underwriterAddresses: string[],
-		costPerUnderwriter: BigNumberish
+		costPerUnderwriter: BigNumberish,
+		provider?: Provider
 	): Promise<bigint[]> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		return poolContract.settleFor.staticCall(
 			underwriterAddresses,
 			costPerUnderwriter
@@ -2417,14 +3234,19 @@ export class PoolAPI extends BaseAPI {
 	 * @param poolAddress {string} Contract address of the pool.
 	 * @param positionKeys {string[]} List containing the position keys parametrizing the range orders that should be settled. Note a user can only settle range order positions on behalf of other users if the liquidity providers granted permission via the UserSettings.
 	 * @param costPerHolder {BigNumberish} Amount charged by the user to each liquidity provider. Note the maximum amount charged is specified by each liquidity provider individually in the UserSettings. If the amount charged is above the settlement value of the range order the transaction will revert. // todo
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async encodeSettlePositionFor(
 		poolAddress: string,
 		positionKeys: PositionKey[],
-		costPerHolder: BigNumberish
+		costPerHolder: BigNumberish,
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		return poolContract.settlePositionFor.populateTransaction(
 			positionKeys,
 			costPerHolder
@@ -2432,20 +3254,56 @@ export class PoolAPI extends BaseAPI {
 	}
 
 	/**
+	 * Returns a promise containing a populated transaction to settle range orders / positions on behalf of other users. Allows the user to use the SDK without providing a signer.
+	 * @param poolAddress {string} Contract address of the pool.
+	 * @param positionKeys {string[]} List containing the position keys parametrizing the range orders that should be settled. Note a user can only settle range order positions on behalf of other users if the liquidity providers granted permission via the UserSettings.
+	 * @param costPerHolder {BigNumberish} Amount charged by the user to each liquidity provider. Note the maximum amount charged is specified by each liquidity provider individually in the UserSettings. If the amount charged is above the settlement value of the range order the transaction will revert. // todo
+	 * @param provider {Provider} The custom provider to use for this call.
+	 * @returns {TransactionData} The encoded transaction data.
+	 */
+	encodeSettlePositionForSync(
+		poolAddress: string,
+		positionKeys: PositionKey[],
+		costPerHolder: BigNumberish,
+		provider?: Provider
+	): TransactionData {
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
+		const data = poolContract.interface.encodeFunctionData(
+			'settlePositionFor',
+			[positionKeys, costPerHolder]
+		)
+
+		return {
+			to: poolAddress,
+			data,
+		}
+	}
+
+	/**
 	 * Returns a promise containing a signed transaction to settle option positions on behalf of other users.
 	 * @param poolAddress {string} Contract address of the pool.
 	 * @param positionKeys {string[]} List containing the position keys parametrizing the range orders that should be settled. Note a user can only exercise long option positions on behalf of other users if the holder granted permission via the UserSettings.
 	 * @param costPerHolder {BigNumberish} Amount charged by the user to each liquidity provider. Note the maximum amount charged is specified by each liquidity provider individually in the UserSettings. If the amount charged is above the settlement value of the range order the transaction will revert. // todo
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async settlePositionFor(
 		poolAddress: string,
 		positionKeys: PositionKey[],
-		costPerHolder: BigNumberish
+		costPerHolder: BigNumberish,
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getPoolContract(poolAddress),
-			this.encodeSettlePositionFor(poolAddress, positionKeys, costPerHolder),
+			this.premia.contracts.getPoolContract(poolAddress, provider),
+			this.encodeSettlePositionFor(
+				poolAddress,
+				positionKeys,
+				costPerHolder,
+				provider
+			),
 			'encodeSettlePositionFor'
 		)
 	}
@@ -2456,14 +3314,19 @@ export class PoolAPI extends BaseAPI {
 	 * @param {string} poolAddress - The address of the pool.
 	 * @param {PositionKey[]} positionKeys - The array of position keys.
 	 * @param {BigNumberish} costPerHolder - The cost per holder.
+	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<bigint[]>} The result of settling the positions for the holders.
 	 */
 	async previewSettlePositionFor(
 		poolAddress: string,
 		positionKeys: PositionKey[],
-		costPerHolder: BigNumberish
+		costPerHolder: BigNumberish,
+		provider?: Provider
 	): Promise<bigint[]> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		return poolContract.settlePositionFor.staticCall(
 			positionKeys,
 			costPerHolder
@@ -2481,6 +3344,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param operator {string} Address of the operator.
 	 * @param toOwner {string} Address of the owner receiving the range order liquidity.
 	 * @param toOperator {string} Address of the owner receiving the range order liquidity.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async encodeTransferPosition(
@@ -2503,9 +3367,13 @@ export class PoolAPI extends BaseAPI {
 			operator?: string
 			toOwner: string
 			toOperator?: string
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		const poolSettings = await poolContract.getPoolSettings()
 
 		const positionKey: PositionKey = {
@@ -2537,6 +3405,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param operator {string} Address of the operator.
 	 * @param toOwner {string} Address of the owner receiving the range order liquidity.
 	 * @param toOperator {string} Address of the owner receiving the range order liquidity.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async transferPosition(
@@ -2559,20 +3428,25 @@ export class PoolAPI extends BaseAPI {
 			operator?: string
 			toOwner: string
 			toOperator?: string
-		}
+		},
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getPoolContract(poolAddress),
-			this.encodeTransferPosition(poolAddress, {
-				size,
-				owner,
-				lower,
-				upper,
-				orderType,
-				operator,
-				toOwner,
-				toOperator,
-			}),
+			this.premia.contracts.getPoolContract(poolAddress, provider),
+			this.encodeTransferPosition(
+				poolAddress,
+				{
+					size,
+					owner,
+					lower,
+					upper,
+					orderType,
+					operator,
+					toOwner,
+					toOperator,
+				},
+				provider
+			),
 			'encodeTransferPosition'
 		)
 	}
@@ -2584,6 +3458,7 @@ export class PoolAPI extends BaseAPI {
 	 * @param positionKey {PositionKey} Position key parametrizing the range order that should be transferred.
 	 * @param toOwner {string} Address of the owner receiving the range order liquidity.
 	 * @param toOperator {string} Address of the owner receiving the range order liquidity.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async encodeTransferPositionWithKey(
@@ -2591,9 +3466,13 @@ export class PoolAPI extends BaseAPI {
 		size: BigNumberish,
 		positionKey: PositionKey,
 		toOwner: string,
-		toOperator?: string
+		toOperator?: string,
+		provider?: Provider
 	): Promise<ContractTransaction> {
-		const poolContract = this.premia.contracts.getPoolContract(poolAddress)
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
 		return poolContract.transferPosition.populateTransaction(
 			positionKey,
 			toOwner,
@@ -2603,12 +3482,48 @@ export class PoolAPI extends BaseAPI {
 	}
 
 	/**
+	 * Returns a promise containing a populated transaction to transfer range order liquidity to another owner and operator. Allows the user to use the SDK without providing a signer.
+	 * @param poolAddress {string} Contract address of the pool.
+	 * @param size {BigNumberish} Amount of liquidity transferred. Liquidity is denominated in option contracts that can be sold or (potentially) bought.
+	 * @param positionKey {PositionKey} Position key parametrizing the range order that should be transferred.
+	 * @param toOwner {string} Address of the owner receiving the range order liquidity.
+	 * @param toOperator {string} Address of the owner receiving the range order liquidity.
+	 * @param provider {Provider} The custom provider to use for this call.
+	 * @returns {TransactionData} The encoded transaction data.
+	 */
+	encodeTransferPositionWithKeySync(
+		poolAddress: string,
+		size: BigNumberish,
+		positionKey: PositionKey,
+		toOwner: string,
+		toOperator?: string,
+		provider?: Provider
+	): TransactionData {
+		const poolContract = this.premia.contracts.getPoolContract(
+			poolAddress,
+			provider
+		)
+		const data = poolContract.interface.encodeFunctionData('transferPosition', [
+			positionKey,
+			toOwner,
+			toOperator || toOwner,
+			size,
+		])
+
+		return {
+			to: poolAddress,
+			data,
+		}
+	}
+
+	/**
 	 * Returns a promise containing a signed transaction to transfer range order liquidity to another owner and operator.
 	 * @param poolAddress {string} Contract address of the pool.
 	 * @param size {BigNumberish} Amount of liquidity transferred. Liquidity is denominated in option contracts that can be sold or (potentially) bought.
 	 * @param positionKey {PositionKey} Position key parametrizing the range order that should be transferred.
 	 * @param toOwner {string} Address of the owner receiving the range order liquidity.
 	 * @param toOperator {string} Address of the owner receiving the range order liquidity.
+	 * @param provider {Provider} The custom provider to use for this call.
 	 * @returns {Promise<ContractTransaction>} Promise containing the contract transaction.
 	 */
 	async transferPositionWithKey(
@@ -2616,16 +3531,18 @@ export class PoolAPI extends BaseAPI {
 		size: BigNumberish,
 		positionKey: PositionKey,
 		toOwner: string,
-		toOperator?: string
+		toOperator?: string,
+		provider?: Provider
 	): Promise<ContractTransactionResponse> {
 		return sendTransaction(
-			this.premia.contracts.getPoolContract(poolAddress),
+			this.premia.contracts.getPoolContract(poolAddress, provider),
 			this.encodeTransferPositionWithKey(
 				poolAddress,
 				size,
 				positionKey,
 				toOwner,
-				toOperator
+				toOperator,
+				provider
 			),
 			'encodeTransferPositionWithKey'
 		)
