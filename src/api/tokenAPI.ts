@@ -75,13 +75,15 @@ export class TokenAPI extends BaseAPI {
 			address,
 			provider ?? this.premia.multicallProvider
 		)
-		const [symbol, decimals] = await Promise.all([
+		const [name, symbol, decimals] = await Promise.all([
+			tokenContract.name(),
 			tokenContract.symbol(),
 			tokenContract.decimals(),
 		])
 
 		return {
 			address,
+			name,
 			symbol,
 			decimals: Number(decimals),
 		}
