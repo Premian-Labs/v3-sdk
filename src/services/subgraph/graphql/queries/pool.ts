@@ -297,7 +297,11 @@ export class PoolQuery {
             pools(where: {
 				pair: "${pairId}",
 				${filter}
-			}) {
+			},
+			first: 1000, 
+			orderBy: createdAt, 
+			orderDirection: desc
+			) {
                 ...PoolExtended
             }
         }
