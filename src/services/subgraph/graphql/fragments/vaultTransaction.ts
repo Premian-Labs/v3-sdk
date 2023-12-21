@@ -11,7 +11,6 @@ export const VaultTransactionFragment = gql`
 
 	fragment VaultTransaction on VaultTransaction {
 		id
-		registry
 		vaultName
 		vault {
 			...Vault
