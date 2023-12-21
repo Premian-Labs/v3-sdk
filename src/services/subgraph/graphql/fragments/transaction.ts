@@ -3,13 +3,11 @@ import { gql } from '@apollo/client/core'
 import { PoolFragment } from './pool'
 import { TokenPairFragment } from './tokenPair'
 import { VaultFragment } from './vault'
-import { UserFragment } from './user'
 import { TokenFragment } from './token'
 
 export const TransactionFragment = gql`
 	${PoolFragment}
 	${VaultFragment}
-	${UserFragment}
 	${TokenFragment}
 	${TokenPairFragment}
 
@@ -40,8 +38,5 @@ export const TransactionFragment = gql`
 		size
 		sizeETH
 		sizeUSD
-		user {
-			...User
-		}
 	}
 `

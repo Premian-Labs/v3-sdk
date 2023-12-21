@@ -150,13 +150,11 @@ export class TransactionAPI extends BaseAPI {
 	/**
 	 * Get a list of optionPS transactions with optional filter, search, order, and pagination parameters.
 	 *
-	 * @param {string} filter - The filter for the optionPS transaction search. (all, add, remove)
 	 * @param {string} search - The search query.
 	 * @param {string} [orderBy='timestamp'] - The attribute by which to order the optionPS transactions.
 	 * @param {string} [order='asc'] - The order in which to return the vault transactions (asc, desc).
 	 * @param {number} [first=100] - The maximum number of optionPS transactions to return.
 	 * @param {number} [skip=0] - The number of optionPS transactions to skip.
-	 * @param {string} [type] - The type of optionPS transactions to return.
 	 * @param {string} [account] - The account associated with the optionPS transactions to return.
 	 * @param {number} [startTime] - The start time for the optionPS transactions to return.
 	 * @param {number} [endTime] - The end time for the optionPS transactions to return.

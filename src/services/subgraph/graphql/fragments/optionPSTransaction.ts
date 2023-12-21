@@ -1,11 +1,9 @@
 import { gql } from '@apollo/client/core'
 
-import { UserFragment } from './user'
 import { OptionPhysicallySettledFragment } from './option'
 import { TokenFragment } from './token'
 
 export const OptionPSTransactionFragment = gql`
-	${UserFragment}
 	${OptionPhysicallySettledFragment}
 	${TokenFragment}
 
@@ -31,8 +29,5 @@ export const OptionPSTransactionFragment = gql`
 		size
 		sizeETH
 		sizeUSD
-		user {
-			...User
-		}
 	}
 `
