@@ -77,7 +77,7 @@ export class OptionPSTransactionQuery {
                     ${transactionTypeFilter}
                 }
             ) {
-                ...VaultTransaction
+                ...OptionPSTransaction
             }
         }
     `
