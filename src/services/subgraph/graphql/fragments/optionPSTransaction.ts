@@ -1,29 +1,20 @@
 import { gql } from '@apollo/client/core'
 
-import { PoolFragment } from './pool'
-import { TokenPairFragment } from './tokenPair'
-import { VaultFragment } from './vault'
 import { UserFragment } from './user'
+import { OptionPhysicallySettledFragment } from './option'
 import { TokenFragment } from './token'
 
-export const TransactionFragment = gql`
-	${PoolFragment}
-	${VaultFragment}
+export const OptionPSTransactionFragment = gql`
 	${UserFragment}
+	${OptionPhysicallySettledFragment}
 	${TokenFragment}
-	${TokenPairFragment}
 
-	fragment Transaction on Transaction {
+	fragment OptionPSTransaction on OptionPSTransaction {
 		id
-		pool {
-			...Pool
+		option {
+			...OptionPhysicallySettled
 		}
-		vault {
-			...Vault
-		}
-		pair {
-			...TokenPair
-		}
+		tokenSymbol
 		token {
 			...Token
 		}

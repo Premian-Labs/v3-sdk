@@ -59,12 +59,14 @@ import {
 	VaultTransactionQuery,
 	VxPremiaQuery,
 	ReferralQuery,
+	OptionPSTransactionQuery,
 } from './graphql'
 
 import { BigNumberish, toBigInt } from 'ethers'
 import { get } from 'lodash'
 import { TokenInfo } from '@premia/pair-lists/src/types'
 import { TokenOrAddress, TokenPairOrId } from '../../api'
+import { OptionPSTransaction } from '../../entities/optionPSTransaction'
 
 /**
  * The PremiaSubgraph class is the entry point for interacting with the Premia V3 subgraph
@@ -638,6 +640,45 @@ export class PremiaSubgraph {
 			),
 		})
 		return get(response, 'data.vaultTransactions') as VaultTransaction[]
+	}
+
+	async getOptionPSTransaction(hash: string): Promise<OptionPSTransaction> {
+		const response = await this.client.query({
+			query: VaultTransactionQuery.GetVaultTransaction(this, hash),
+		})
+		return get(response, 'data.optionPSTransaction') as OptionPSTransaction
+	}
+
+	async getOptionPSTransactions(
+		filter: string,
+		search: string,
+		orderBy: string = 'timestamp',
+		order: string = 'asc',
+		first: number = 100,
+		skip: number = 0,
+		type?: string,
+		account?: string,
+		startTime?: number,
+		endTime?: number,
+		searchInput?: string
+	): Promise<OptionPSTransaction[]> {
+		const response = await this.client.query({
+			query: OptionPSTransactionQuery.GetOptionPSTransactions(
+				this,
+				filter,
+				search,
+				orderBy,
+				order,
+				first,
+				skip,
+				type,
+				account,
+				startTime,
+				endTime,
+				searchInput
+			),
+		})
+		return get(response, 'data.optionPSTransactions') as OptionPSTransaction[]
 	}
 
 	async getTradingCompetitionUser(

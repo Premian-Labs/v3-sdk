@@ -1,13 +1,13 @@
 import { gql } from '@apollo/client/core'
 
 import { VaultFragment } from './vault'
+import { UserFragment } from './user'
 import { TokenFragment } from './token'
-import { TokenPairFragment } from './tokenPair'
 
 export const VaultTransactionFragment = gql`
 	${VaultFragment}
+	${UserFragment}
 	${TokenFragment}
-	${TokenPairFragment}
 
 	fragment VaultTransaction on VaultTransaction {
 		id
@@ -15,6 +15,9 @@ export const VaultTransactionFragment = gql`
 		vaultName
 		vault {
 			...Vault
+		}
+		token {
+			...Token
 		}
 		origin
 		gasUsed
@@ -29,6 +32,8 @@ export const VaultTransactionFragment = gql`
 		size
 		sizeETH
 		sizeUSD
-		user
+		user {
+			...User
+		}
 	}
 `

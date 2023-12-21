@@ -1,4 +1,4 @@
-import { Transaction, VaultTransaction } from '../entities'
+import { Transaction, VaultTransaction, OptionPSTransaction } from '../entities'
 import { BaseAPI } from './baseAPI'
 
 /**
@@ -127,6 +127,66 @@ export class TransactionAPI extends BaseAPI {
 			skip,
 			type,
 			vaultAddress,
+			account,
+			startTime,
+			endTime,
+			searchInput
+		)
+	}
+
+	/**
+	 * Get a single optionPS transaction given its hash.
+	 *
+	 * @param {string} hash - The hash of the optionPS transaction to retrieve.
+	 *
+	 * @returns {Promise<OptionPSTransaction>} A promise that resolves to the requested optionPS transaction.
+	 *
+	 * @remark Uses caching with a one-minute time-to-live.
+	 */
+	async getOptionPSTransaction(hash: string): Promise<OptionPSTransaction> {
+		return this.premia.subgraph.getOptionPSTransaction(hash)
+	}
+
+	/**
+	 * Get a list of optionPS transactions with optional filter, search, order, and pagination parameters.
+	 *
+	 * @param {string} filter - The filter for the optionPS transaction search. (all, add, remove)
+	 * @param {string} search - The search query.
+	 * @param {string} [orderBy='timestamp'] - The attribute by which to order the optionPS transactions.
+	 * @param {string} [order='asc'] - The order in which to return the vault transactions (asc, desc).
+	 * @param {number} [first=100] - The maximum number of optionPS transactions to return.
+	 * @param {number} [skip=0] - The number of optionPS transactions to skip.
+	 * @param {string} [type] - The type of optionPS transactions to return.
+	 * @param {string} [account] - The account associated with the optionPS transactions to return.
+	 * @param {number} [startTime] - The start time for the optionPS transactions to return.
+	 * @param {number} [endTime] - The end time for the optionPS transactions to return.
+	 * @param {string} [searchInput] - An additional search input.
+	 *
+	 * @returns {Promise<OptionPSTransaction[]>} A promise that resolves to a list of optionPS transactions.
+	 *
+	 * @remark Uses caching with a one-minute time-to-live.
+	 */
+	async getOptionPSTransactions(
+		filter: string,
+		search: string,
+		orderBy: string = 'timestamp',
+		order: string = 'asc',
+		first = 100,
+		skip = 0,
+		type?: string,
+		account?: string,
+		startTime?: number,
+		endTime?: number,
+		searchInput?: string
+	): Promise<OptionPSTransaction[]> {
+		return this.premia.subgraph.getOptionPSTransactions(
+			filter,
+			search,
+			orderBy,
+			order,
+			first,
+			skip,
+			type,
 			account,
 			startTime,
 			endTime,
