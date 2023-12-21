@@ -1,9 +1,9 @@
 import { gql } from '@apollo/client/core'
 
 import { PoolFragment } from './pool'
-import { TokenFragment } from './token'
 import { TokenPairFragment } from './tokenPair'
 import { VaultFragment } from './vault'
+import { TokenFragment } from './token'
 
 export const TransactionFragment = gql`
 	${PoolFragment}
@@ -22,6 +22,9 @@ export const TransactionFragment = gql`
 		pair {
 			...TokenPair
 		}
+		token {
+			...Token
+		}
 		origin
 		gasUsed
 		gasPrice
@@ -35,6 +38,5 @@ export const TransactionFragment = gql`
 		size
 		sizeETH
 		sizeUSD
-		user
 	}
 `
