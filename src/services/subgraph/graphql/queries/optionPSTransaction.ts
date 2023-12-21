@@ -28,13 +28,11 @@ export class OptionPSTransactionQuery {
 	@addFields
 	static GetOptionPSTransactions(
 		subgraph: PremiaSubgraph,
-		filter: string,
 		search: string,
 		orderBy: string,
 		order: string,
 		first = 100,
 		skip = 0,
-		type?: string,
 		account?: string,
 		startTime?: BigNumberish,
 		endTime?: BigNumberish,
@@ -47,16 +45,8 @@ export class OptionPSTransactionQuery {
 			: ''
 		const accountFilter = account ? `user: "${account.toLowerCase()}",` : ''
 
-		const containsName =
-			type === 'token' ? 'tokenSymbol_contains' : 'vaultName_contains'
+		const containsName = 'tokenSymbol_contains'
 		const containsFilter = `${containsName}: "${search}",`
-
-		let transactionTypeFilter = ''
-		if (filter === 'add') {
-			transactionTypeFilter = 'type_in: ["VAULT_DEPOSIT"]'
-		} else if (filter == 'remove') {
-			transactionTypeFilter = 'type_in: ["VAULT_WITHDRAW"]'
-		}
 
 		return gql`
         ${OptionPSTransactionFragment}
@@ -74,7 +64,6 @@ export class OptionPSTransactionQuery {
                     ${searchFilter}
                     ${accountFilter}
                     ${containsFilter}
-                    ${transactionTypeFilter}
                 }
             ) {
                 ...OptionPSTransaction

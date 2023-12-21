@@ -644,19 +644,17 @@ export class PremiaSubgraph {
 
 	async getOptionPSTransaction(hash: string): Promise<OptionPSTransaction> {
 		const response = await this.client.query({
-			query: VaultTransactionQuery.GetVaultTransaction(this, hash),
+			query: OptionPSTransactionQuery.GetOptionPSTransaction(this, hash),
 		})
 		return get(response, 'data.optionPSTransaction') as OptionPSTransaction
 	}
 
 	async getOptionPSTransactions(
-		filter: string,
 		search: string,
 		orderBy: string = 'timestamp',
 		order: string = 'asc',
 		first: number = 100,
 		skip: number = 0,
-		type?: string,
 		account?: string,
 		startTime?: number,
 		endTime?: number,
@@ -665,13 +663,11 @@ export class PremiaSubgraph {
 		const response = await this.client.query({
 			query: OptionPSTransactionQuery.GetOptionPSTransactions(
 				this,
-				filter,
 				search,
 				orderBy,
 				order,
 				first,
 				skip,
-				type,
 				account,
 				startTime,
 				endTime,

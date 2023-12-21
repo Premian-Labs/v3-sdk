@@ -167,26 +167,22 @@ export class TransactionAPI extends BaseAPI {
 	 * @remark Uses caching with a one-minute time-to-live.
 	 */
 	async getOptionPSTransactions(
-		filter: string,
 		search: string,
 		orderBy: string = 'timestamp',
 		order: string = 'asc',
 		first = 100,
 		skip = 0,
-		type?: string,
 		account?: string,
 		startTime?: number,
 		endTime?: number,
 		searchInput?: string
 	): Promise<OptionPSTransaction[]> {
 		return this.premia.subgraph.getOptionPSTransactions(
-			filter,
 			search,
 			orderBy,
 			order,
 			first,
 			skip,
-			type,
 			account,
 			startTime,
 			endTime,

@@ -77,12 +77,14 @@ export class TransactionQuery {
                 ${
 									filter === 'all'
 										? ''
-										: `, type${filter === 'options' ? '_not_in' : '_in'}: ${
+										: `, type_in: ${
 												filter === 'add'
 													? '["POOL_DEPOSIT"]'
 													: filter === 'remove'
 													? '["POOL_WITHDRAW"]'
-													: '["POOL_DEPOSIT", "POOL_WITHDRAW"]'
+													: filter === 'pools'
+													? '["POOL_DEPOSIT", "POOL_TRADE", "POOL_CLAIM_FEES", "POOL_FILL_QUOTE", "POOL_WRITE_FROM", "POOL_SETTLE_POSITION", "POOL_LIQUIDITY_TRANSFER", "POOL_LIQUIDITY_RECEIVE", "POOL_WITHDRAW"]'
+													: '["SHORT_OPTION_SETTLE", "SHORT_OPTION_TRANSFER", "SHORT_OPTION_RECEIVE", "LONG_OPTION_EXERCISE", "LONG_OPTION_TRANSFER", "LONG_OPTION_RECEIVE", "DUAL_OPTION_ANNIHILATE"]'
 										  }`
 								}
             }
