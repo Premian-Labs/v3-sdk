@@ -79,10 +79,10 @@ export interface GroupByStrikeRequest extends LiquiditySummaryRequest {
 
 export interface GroupByMaturityResponse {
 	maturity: number
-	totalValueLockedUSD: BigInt
+	totalContracts: BigInt
 }
 
 export interface GroupByStrikeResponse {
 	strike: BigInt
-	totalValueLockedUSD: BigInt
+	totalContracts: BigInt
 }
