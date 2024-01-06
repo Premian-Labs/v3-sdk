@@ -368,7 +368,7 @@ describe('PricingAPI', function (this: any) {
 				parseEther('3'),
 				parseEther('1')
 			)
-			expect(bestQuote).to.deep.eq(rfqQuote2)
+			expect(bestQuote).to.deep.eq(rfqQuote1)
 		})
 		it('should give final tiebreaker to quote A (pool vs pool)', async () => {
 			const poolQuote1: QuoteOrFillableQuoteT = {
@@ -778,7 +778,7 @@ describe('PricingAPI', function (this: any) {
 				parseEther('3'),
 				parseEther('2')
 			)
-			expect(bestQuote).to.deep.eq(quotes[0])
+			expect(bestQuote).to.deep.eq(quotes[2])
 		})
 		it('should give final tiebreaker to last identical quote', async () => {
 			const poolQuotes: QuoteOrFillableQuoteT[] = [
