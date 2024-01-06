@@ -121,6 +121,7 @@ export const TokenMinimalFragment = gql`
 	fragment TokenMinimal on Token {
 		id
 		symbol
+		name
 		decimals
 		address
 	}

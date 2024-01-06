@@ -12,19 +12,21 @@ export { AdapterType } from '@premia/pair-lists'
  *
  * @property {string} address - The address of the token contract on the blockchain.
  * @property {string} symbol - The symbol used to represent the token.
+ * @property {string} name - The name of the token.
  * @property {number} decimals - The number of decimal places the token can be divided into.
  */
 export interface TokenMinimal {
 	address: string
 	symbol: string
+	name: string
 	decimals: number
 }
 
 export interface Token extends TokenMinimal {
-	name: string
-	symbol: string
-	decimals: number
 	address: string
+	symbol: string
+	name: string
+	decimals: number
 	chainId: number
 	isNative: boolean
 	isWrappedNative: boolean

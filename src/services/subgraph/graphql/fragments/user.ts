@@ -15,6 +15,7 @@ import {
 import { TransactionFragment } from './transaction'
 import { VaultTransactionFragment } from './vaultTransaction'
 import { ReferralFragment } from './referral'
+import { OptionPSTransactionFragment } from './optionPSTransaction'
 
 export const UserFragment = gql`
 	fragment User on User {
@@ -216,6 +217,7 @@ export const UserPortfolioExtendedFragment = gql`
 	${UserSnapshotExtendedFragment}
 	${TransactionFragment}
 	${VaultTransactionFragment}
+	${OptionPSTransactionFragment}
 
 	fragment UserPortfolioExtended on User {
 		...UserExtended
@@ -238,6 +240,9 @@ export const UserPortfolioExtendedFragment = gql`
 		}
 		vaultTransactions {
 			...VaultTransaction
+		}
+		optionPSTransactions {
+			...OptionPSTransaction
 		}
 	}
 `

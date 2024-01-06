@@ -9,6 +9,7 @@ import { VaultPosition, VaultPositionExtended } from './vaultPosition'
 import { Transaction } from './transaction'
 import { VaultTransaction } from './vaultTransaction'
 import { Referral } from './referral'
+import { OptionPSTransaction } from './optionPSTransaction'
 
 export interface ActionAuthorization {
 	actions: bigint[]
@@ -95,6 +96,7 @@ export interface UserPortfolioHistory extends UserPortfolio {
 	snapshots: UserSnapshot[]
 	poolTransactions: Transaction[]
 	vaultTransactions: VaultTransaction[]
+	optionPSTransactions: OptionPSTransaction[]
 }
 
 export interface UserPortfolioExtended extends UserPortfolio {
@@ -105,6 +107,7 @@ export interface UserPortfolioExtended extends UserPortfolio {
 	snapshots: UserSnapshotExtended[]
 	poolTransactions: Transaction[]
 	vaultTransactions: VaultTransaction[]
+	optionPSTransactions: OptionPSTransaction[]
 }
 
 export interface UserSnapshot {
