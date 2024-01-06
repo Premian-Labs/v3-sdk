@@ -169,15 +169,15 @@ export class PricingAPI extends BaseAPI {
 
 		// 3) price priority
 		if (quoteA.isBuy && quoteB.isBuy) {
-			if (quoteA.price < quoteB.price) {
-				return quoteA
-			} else if (quoteA.price > quoteB.price) {
-				return quoteB
-			}
-		} else {
 			if (quoteA.price > quoteB.price) {
 				return quoteA
 			} else if (quoteA.price < quoteB.price) {
+				return quoteB
+			}
+		} else {
+			if (quoteA.price < quoteB.price) {
+				return quoteA
+			} else if (quoteA.price > quoteB.price) {
 				return quoteB
 			}
 		}

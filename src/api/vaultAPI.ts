@@ -115,7 +115,8 @@ export class VaultAPI extends BaseAPI {
 		taker?: string,
 		maxSlippagePercent?: number,
 		showErrors?: boolean,
-		provider?: Provider
+		provider?: Provider,
+		_vaults?: string[]
 	): Promise<FillableQuote | null> {
 		const _size = toBigInt(size)
 		const _minimumSize = minimumSize ? toBigInt(minimumSize) : _size
@@ -129,11 +130,13 @@ export class VaultAPI extends BaseAPI {
 		)
 		const [_taker, vaults, pool] = await Promise.all([
 			taker ?? this.premia.signer?.getAddress() ?? ZeroAddress,
-			vaultRegistry.getVaultsByFilter(
-				[poolKey.isCallPool ? poolKey.base : poolKey.quote],
-				this.tradeSide(!isBuy),
-				this.optionType(poolKey.isCallPool)
-			),
+			_vaults
+				? _vaults.map((vault) => ({ vault }))
+				: vaultRegistry.getVaultsByFilter(
+						[poolKey.isCallPool ? poolKey.base : poolKey.quote],
+						this.tradeSide(!isBuy),
+						this.optionType(poolKey.isCallPool)
+				  ),
 			this.premia.pools.getPoolMinimal(poolAddress),
 		])
 
@@ -255,8 +258,15 @@ export class VaultAPI extends BaseAPI {
 	): Promise<void> {
 		const index = this.streamIndex
 
-		const callbackIfNotStale = (quote: FillableQuote | null) => {
-			if (this.streamIndex > index) return
+		const callbackIfNotStale = (
+			quote: FillableQuote | null,
+			interval?: NodeJS.Timer
+		) => {
+			if (this.streamIndex > index) {
+				console.log('Stale.')
+				clearInterval(interval)
+				return
+			}
 			callback(quote)
 		}
 
@@ -264,15 +274,17 @@ export class VaultAPI extends BaseAPI {
 			options.poolAddress,
 			options.provider
 		)
-		const vaults = await this.premia.contracts
-			.getVaultRegistryContract(
-				options.provider ?? this.premia.multicallProvider
-			)
-			.getVaultsByFilter(
-				[poolKey.base],
+		const vaultRegistry = this.premia.contracts.getVaultRegistryContract(
+			options.provider ?? this.premia.multicallProvider
+		)
+
+		const vaults = (
+			await vaultRegistry.getVaultsByFilter(
+				[poolKey.isCallPool ? poolKey.base : poolKey.quote],
 				this.tradeSide(!options.isBuy),
 				this.optionType(poolKey.isCallPool)
 			)
+		).map((vault) => vault.vault)
 
 		try {
 			const bestQuote = await this.quote(
@@ -284,7 +296,8 @@ export class VaultAPI extends BaseAPI {
 				options.taker,
 				options.maxSlippagePercent,
 				options.showErrors,
-				options.provider
+				options.provider,
+				vaults
 			)
 
 			callbackIfNotStale(bestQuote)
@@ -293,29 +306,29 @@ export class VaultAPI extends BaseAPI {
 			callbackIfNotStale(null)
 		}
 
-		for (const _vault of vaults) {
-			const vault = this.premia.contracts.getVaultContract(_vault.vault)
-
-			vault.on(vault.filters.UpdateQuotes, async () => {
-				try {
-					const quote = await this.quote(
-						options.poolAddress,
-						options.size,
-						options.isBuy,
-						options.minimumSize,
-						options.referrer,
-						options.taker,
-						options.maxSlippagePercent,
-						options.showErrors,
-						options.provider
-					)
-					callbackIfNotStale(quote)
-				} catch (err) {
-					console.error('Error streaming vault quote: ', err)
-					callbackIfNotStale(null)
-				}
-			})
-		}
+		/// @dev: Use timeout instead of listening for events, because
+		///		  there are at least 3 different events that can lead to
+		///		  a quote update.
+		const interval = setInterval(async () => {
+			try {
+				const quote = await this.quote(
+					options.poolAddress,
+					options.size,
+					options.isBuy,
+					options.minimumSize,
+					options.referrer,
+					options.taker,
+					options.maxSlippagePercent,
+					options.showErrors,
+					options.provider,
+					vaults
+				)
+				callbackIfNotStale(quote, interval)
+			} catch (err) {
+				console.error('Error streaming vault quote: ', err)
+				callbackIfNotStale(null, interval)
+			}
+		}, 15000)
 	}
 
 	/**
