@@ -650,7 +650,7 @@ describe('PricingAPI', function (this: any) {
 				},
 			]
 			const bestQuote = premia.pricing.best(quotes, parseEther('3'))
-			expect(bestQuote).to.deep.eq(quotes[1])
+			expect(bestQuote).to.deep.eq(quotes[2])
 		})
 		it('should return null if minimumSize/size is not satisfied', async () => {
 			const quotes: QuoteOrFillableQuoteT[] = [
