@@ -661,7 +661,10 @@ export class OptionAPI extends BaseAPI {
 			priceOracle?: string
 			quoteTokens?: string[]
 		},
-		callback: (quotes: { [provider: string]: (FillableQuote | null)[] }) => void
+		callback: (
+			quotes: { [provider: string]: (FillableQuote | null)[] },
+			interval?: NodeJS.Timer
+		) => void
 	): Promise<void> {
 		const tokenAddress = this._parseTokenAddress(options.token)
 
@@ -724,9 +727,9 @@ export class OptionAPI extends BaseAPI {
 						callback(toQuotesByProvider(quotesByPool))
 					}),
 
-					this.premia.vaults.streamQuotes(_options, (quote) => {
+					this.premia.vaults.streamQuotes(_options, (quote, interval) => {
 						quotesByPool[pool.address]['vault'] = quote
-						callback(toQuotesByProvider(quotesByPool))
+						callback(toQuotesByProvider(quotesByPool), interval)
 					}),
 				])
 			})

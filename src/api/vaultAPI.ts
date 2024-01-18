@@ -254,7 +254,7 @@ export class VaultAPI extends BaseAPI {
 			showErrors?: boolean
 			provider?: Provider
 		},
-		callback: (quote: FillableQuote | null) => void
+		callback: (quote: FillableQuote | null, interval?: NodeJS.Timer) => void
 	): Promise<void> {
 		const index = this.streamIndex
 
@@ -267,7 +267,7 @@ export class VaultAPI extends BaseAPI {
 				clearInterval(interval)
 				return
 			}
-			callback(quote)
+			callback(quote, interval)
 		}
 
 		const poolKey = await this.premia.pools.getPoolKeyFromAddress(
