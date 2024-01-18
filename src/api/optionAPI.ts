@@ -490,19 +490,34 @@ export class OptionAPI extends BaseAPI {
 			taker?: string
 			maxSlippagePercent?: number
 		},
-		callback: (quote: FillableQuote | null) => void
+		callback: (quote: FillableQuote | null) => void,
+		done?: (options: {
+			poolAddress: string
+			size: BigNumberish
+			isBuy: boolean
+			minimumSize?: BigNumberish
+			referrer?: string
+			taker?: string
+			maxSlippagePercent?: number
+		}) => void
 	): Promise<void> {
-		const bestQuotes: { [type: string]: FillableQuote | null } = {}
+		const bestQuotes: { [type: string]: FillableQuote } = {}
+		const loadedQuotes: { [type: string]: boolean } = {}
 		const index = this.streamIndex
 
-		const callbackIfNotStale = (quote: FillableQuote | null) => {
+		const callbackIfNotStale = (quote: FillableQuote) => {
 			if (this.streamIndex > index) return
 			callback(quote)
 		}
 
 		await Promise.all([
 			this.premia.orders.streamQuotes(options, (quote) => {
+				if (!quote) {
+					return
+				}
+
 				bestQuotes['orderbook'] = quote
+				loadedQuotes['orderbook'] = true
 
 				if (
 					this.premia.pricing.best(
@@ -513,10 +528,23 @@ export class OptionAPI extends BaseAPI {
 				) {
 					callbackIfNotStale(quote)
 				}
+
+				if (
+					loadedQuotes['orderbook'] &&
+					loadedQuotes['pool'] &&
+					loadedQuotes['vault']
+				) {
+					done?.(options)
+				}
 			}),
 
 			this.premia.pools.streamQuotes(options, (quote) => {
+				if (!quote) {
+					return
+				}
+
 				bestQuotes['pool'] = quote
+				loadedQuotes['pool'] = true
 
 				if (
 					this.premia.pricing.best(
@@ -527,10 +555,23 @@ export class OptionAPI extends BaseAPI {
 				) {
 					callbackIfNotStale(quote)
 				}
+
+				if (
+					loadedQuotes['orderbook'] &&
+					loadedQuotes['pool'] &&
+					loadedQuotes['vault']
+				) {
+					done?.(options)
+				}
 			}),
 
 			this.premia.vaults.streamQuotes(options, (quote) => {
+				if (!quote) {
+					return
+				}
+
 				bestQuotes['vault'] = quote
+				loadedQuotes['vault'] = true
 
 				if (
 					this.premia.pricing.best(
@@ -540,6 +581,14 @@ export class OptionAPI extends BaseAPI {
 					) === quote
 				) {
 					callbackIfNotStale(quote)
+				}
+
+				if (
+					loadedQuotes['orderbook'] &&
+					loadedQuotes['pool'] &&
+					loadedQuotes['vault']
+				) {
+					done?.(options)
 				}
 			}),
 		])
