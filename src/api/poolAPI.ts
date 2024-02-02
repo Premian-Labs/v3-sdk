@@ -558,11 +558,8 @@ export class PoolAPI extends BaseAPI {
 
 		const [quote, _poolKey, _pool] = await Promise.all([
 			poolContract.getQuoteAMM(taker ?? ZeroAddress, _size, isBuy),
-			(async () =>
-				poolKey
-					? poolKey
-					: await this.getPoolKeyFromAddress(poolAddress, provider))(),
-			(async () => (pool ? pool : await this.getPoolMinimal(poolAddress)))(),
+			poolKey ?? this.getPoolKeyFromAddress(poolAddress, provider),
+			pool ?? this.getPoolMinimal(poolAddress),
 		])
 
 		const premiumLimit = maxSlippagePercent
@@ -624,6 +621,8 @@ export class PoolAPI extends BaseAPI {
 			maxSlippagePercent?: number
 			showErrors?: boolean
 			provider?: Provider
+			poolKey?: PoolKey
+			pool?: PoolMinimal
 		},
 		callback: (quote: FillableQuote | null) => void
 	): Promise<void> {
@@ -646,7 +645,9 @@ export class PoolAPI extends BaseAPI {
 				options.referrer,
 				options.taker,
 				options.maxSlippagePercent,
-				options.provider
+				options.provider,
+				options.poolKey,
+				options.pool
 			).catch()
 
 			callbackIfNotStale(bestQuote)
@@ -669,7 +670,9 @@ export class PoolAPI extends BaseAPI {
 					options.referrer,
 					options.taker,
 					options.maxSlippagePercent,
-					options.provider
+					options.provider,
+					options.poolKey,
+					options.pool
 				).catch()
 
 				callbackIfNotStale(quote)

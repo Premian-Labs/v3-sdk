@@ -226,7 +226,9 @@ export class OptionAPI extends BaseAPI {
 					options.isBuy,
 					options.minimumSize,
 					options.referrer,
-					options.taker
+					options.taker,
+					undefined,
+					options.pool
 				)
 				.catch((e) => {
 					if (options.showErrors || options.showOrderbookErrors) {
@@ -704,6 +706,10 @@ export class OptionAPI extends BaseAPI {
 
 		await Promise.all(
 			pools.map(async (pool) => {
+				const poolKey = await this.premia.pools.getPoolKeyFromAddress(
+					pool.address
+				)
+
 				const _options = {
 					poolAddress: pool.address,
 					size: options.size,
@@ -712,6 +718,8 @@ export class OptionAPI extends BaseAPI {
 					referrer: options.referrer,
 					taker: options.taker,
 					maxSlippagePercent: options.maxSlippagePercent,
+					pool,
+					poolKey,
 				}
 
 				if (!quotesByPool[pool.address]) {
