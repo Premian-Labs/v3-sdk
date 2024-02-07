@@ -496,6 +496,8 @@ export class OptionAPI extends BaseAPI {
 			referrer?: string
 			taker?: string
 			maxSlippagePercent?: number
+			poolKey?: PoolKey
+			pool?: PoolMinimal
 		},
 		callback: (quote: FillableQuote | null) => void
 	): Promise<void> {
