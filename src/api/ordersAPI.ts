@@ -25,6 +25,8 @@ import {
 	OrderbookQuote,
 	SerializedQuote,
 	SignatureDomain,
+	PoolMinimal,
+	PoolKey,
 } from '../entities'
 
 /**
@@ -110,7 +112,8 @@ export class OrdersAPI extends BaseAPI {
 		quote: OrderbookQuote,
 		createdAt?: number,
 		referrer?: string,
-		provider?: Provider
+		provider?: Provider,
+		pool?: PoolMinimal
 	): Promise<FillableQuote> {
 		const poolContract = this.premia.contracts.getPoolContract(
 			poolAddress,
@@ -123,8 +126,8 @@ export class OrdersAPI extends BaseAPI {
 				: toBigInt(size)
 		const normalizedPremium = (_size * price) / WAD_BI
 
-		const [pool, takerFee] = await Promise.all([
-			this.premia.pools.getPoolMinimal(poolAddress),
+		const [_pool, takerFee] = await Promise.all([
+			pool ?? this.premia.pools.getPoolMinimal(poolAddress),
 			this.premia.pools.takerFee(
 				poolAddress,
 				_size,
@@ -136,19 +139,19 @@ export class OrdersAPI extends BaseAPI {
 			),
 		])
 
-		const denormalizedPrice = pool.isCall
+		const denormalizedPrice = _pool.isCall
 			? price
-			: (price * toBigInt(pool.strike)) / WAD_BI
+			: (price * toBigInt(_pool.strike)) / WAD_BI
 		const convertedPrice = convertDecimals(
 			denormalizedPrice,
 			WAD_DECIMALS,
-			pool.collateralAsset.decimals
+			_pool.collateralAsset.decimals
 		)
 
 		const premium = convertDecimals(
 			(_size * denormalizedPrice) / WAD_BI,
 			WAD_DECIMALS,
-			pool.collateralAsset.decimals
+			_pool.collateralAsset.decimals
 		)
 
 		const approvalAmount = quote.isBuy
@@ -158,7 +161,7 @@ export class OrdersAPI extends BaseAPI {
 		return {
 			...quote,
 			createdAt,
-			pool,
+			pool: _pool,
 			deadline: toBigInt(quote.deadline),
 			price: convertedPrice,
 			salt: toBigInt(quote.salt),
@@ -239,7 +242,8 @@ export class OrdersAPI extends BaseAPI {
 		minimumSize?: BigNumberish,
 		referrer?: string,
 		taker?: string,
-		provider?: Provider
+		provider?: Provider,
+		pool?: PoolMinimal
 	): Promise<FillableQuote | null> {
 		let quotes = await this.premia.orderbook.getQuotes(
 			poolAddress,
@@ -270,7 +274,8 @@ export class OrdersAPI extends BaseAPI {
 			bestQuote,
 			bestQuote.ts,
 			referrer,
-			provider
+			provider,
+			pool
 		)
 	}
 
@@ -297,6 +302,8 @@ export class OrdersAPI extends BaseAPI {
 			referrer?: string
 			taker?: string
 			provider?: Provider
+			poolKey?: PoolKey
+			pool?: PoolMinimal
 		},
 		callback: (quote: FillableQuote | null) => void
 	): Promise<void> {
@@ -309,10 +316,12 @@ export class OrdersAPI extends BaseAPI {
 		}
 
 		try {
-			const poolKey = await this.premia.pools.getPoolKeyFromAddress(
-				options.poolAddress,
-				options.provider
-			)
+			const poolKey =
+				options.poolKey ??
+				(await this.premia.pools.getPoolKeyFromAddress(
+					options.poolAddress,
+					options.provider
+				))
 
 			let [, bestQuote] = await Promise.all([
 				this.premia.orderbook.publishRFQ({
@@ -329,7 +338,8 @@ export class OrdersAPI extends BaseAPI {
 					options.minimumSize,
 					options.referrer,
 					options.taker,
-					options.provider
+					options.provider,
+					options.pool
 				),
 			])
 
