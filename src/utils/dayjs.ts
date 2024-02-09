@@ -18,7 +18,7 @@ export function nextYearOfMaturities(): dayjs.Dayjs[] {
 	const nextYear = today.add(1, 'year')
 
 	// if there's still time to 8:00 AM UTC - 1 hours buffer
-	if (dayjs().utc().hour() < 7)
+	if (dayjs().utc().hour() < 8)
 		maturities.push(today.add(8, 'hours'))
 
 	const tomorrow = today.add(1, 'day').add(8, 'hours')
