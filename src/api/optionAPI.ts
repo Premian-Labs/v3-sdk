@@ -482,6 +482,7 @@ export class OptionAPI extends BaseAPI {
 	 * @param {BigNumberish} [options.minimumSize] - The minimum size of the trade (optional).
 	 * @param {string} [options.referrer] - The address of the referrer (optional).
 	 * @param {string} [options.taker] - The address of the taker (optional).
+	 * @param {boolean} [options.forceSendRFQ] - Whether to force sending/listening for Request-for-Quotes (optional).
 	 * @param {number} [options.maxSlippagePercent] - The maximum slippage percent (optional).
 	 * @param {function} callback - Function to be called when a new best quote is available.
 	 * @returns {Promise<void>}
@@ -494,6 +495,7 @@ export class OptionAPI extends BaseAPI {
 			minimumSize?: BigNumberish
 			referrer?: string
 			taker?: string
+			forceSendRFQ?: boolean
 			maxSlippagePercent?: number
 			poolKey?: PoolKey
 			pool?: PoolMinimal
@@ -648,6 +650,7 @@ export class OptionAPI extends BaseAPI {
 	 * @param {BigNumberish} [options.minimumSize] - The minimum size of the trade (optional).
 	 * @param {string} [options.referrer] - The address of the referrer (optional).
 	 * @param {string} [options.taker] - The address of the taker (optional).
+	 * @param {boolean} [options.forceSendRFQ] - Whether to force sending/listening for Request-for-Quotes (optional).
 	 * @param {number} [options.maxSlippagePercent] - The maximum slippage percent (optional).
 	 * @param {string} [options.priceOracle] - The address of the price oracle (optional).
 	 * @param {string[]} [options.quoteTokens] - Array of quote tokens' addresses (optional).
@@ -665,6 +668,7 @@ export class OptionAPI extends BaseAPI {
 			minimumSize?: BigNumberish
 			referrer?: string
 			taker?: string
+			forceSendRFQ?: boolean
 			maxSlippagePercent?: number
 			priceOracle?: string
 			quoteTokens?: string[]
@@ -718,6 +722,7 @@ export class OptionAPI extends BaseAPI {
 					minimumSize: options.minimumSize,
 					referrer: options.referrer,
 					taker: options.taker,
+					forceSendRFQ: options.forceSendRFQ,
 					maxSlippagePercent: options.maxSlippagePercent,
 					pool,
 					poolKey,

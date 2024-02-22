@@ -194,7 +194,7 @@ export class OrdersAPI extends BaseAPI {
 	 * @param {BigNumberish} [size] - The size of the trade (optional).
 	 * @param {string} [taker] - The address of the taker (optional).
 	 * @param {boolean} [throwError=false] - Whether to throw an error if the quote is invalid (default is false).
-	 * @param {Provider} [provider] - The custom provider to use for this call.
+	 * @param {Provider} [provider] - The custom provider to use for this call (optional).
 	 * @returns {Promise<boolean>} - A promise that resolves to a boolean indicating whether the quote is valid.
 	 */
 	async isQuoteValid(
@@ -232,7 +232,9 @@ export class OrdersAPI extends BaseAPI {
 	 * @param {BigNumberish} [minimumSize] - The minimum size of the trade (optional).
 	 * @param {string} [referrer] - The address of the referrer (optional).
 	 * @param {string} [taker] - The address of the taker (optional).
-	 * @param {Provider} [provider] - The custom provider to use for this call.
+	 * @param {Provider} [provider] - The custom provider to use for this call (optional).
+	 * @param {PoolKey} [poolKey] - The pool key to stream quotes from, passed for optimization purposes (optional).
+	 * @param {PoolMinimal} [pool] - The pool to stream quotes from, passed for optimization purposes (optional).
 	 * @returns {Promise<FillableQuote | null>} - The best fillable quote, or null if no quotes available.
 	 */
 	async quote(
@@ -289,7 +291,10 @@ export class OrdersAPI extends BaseAPI {
 	 * @param {BigNumberish} [options.minimumSize] - The minimum size of the trade (optional).
 	 * @param {string} [options.referrer] - The address of the referrer (optional).
 	 * @param {string} [options.taker] - The address of the taker (optional).
-	 * @param {Provider} [options.provider] - The custom provider to use for this call.
+	 * @param {Provider} [options.provider] - The custom provider to use for this call (optional).
+	 * @param {boolean} [options.forceSendRFQ] - Whether to force sending/listening for Request-for-Quotes (optional).
+	 * @param {PoolKey} [options.poolKey] - The pool key to stream quotes from, passed for optimization purposes (optional).
+	 * @param {PoolMinimal} [options.pool] - The pool to stream quotes from, passed for optimization purposes (optional).
 	 * @param {(quote: FillableQuote | null) => void} callback - The callback to execute for the best quote.
 	 * @returns {Promise<void>}
 	 */
@@ -302,6 +307,7 @@ export class OrdersAPI extends BaseAPI {
 			referrer?: string
 			taker?: string
 			provider?: Provider
+			forceSendRFQ?: boolean
 			poolKey?: PoolKey
 			pool?: PoolMinimal
 		},
@@ -324,13 +330,15 @@ export class OrdersAPI extends BaseAPI {
 				))
 
 			let [, bestQuote] = await Promise.all([
-				this.premia.orderbook.publishRFQ({
-					poolKey,
-					side: options.isBuy ? 'bid' : 'ask',
-					chainId: this.premia.chainId.toString(),
-					size: options.size.toString(),
-					taker: options.taker ?? ZeroAddress,
-				}),
+				options.taker || options.forceSendRFQ
+					? this.premia.orderbook.publishRFQ({
+							poolKey,
+							side: options.isBuy ? 'bid' : 'ask',
+							chainId: this.premia.chainId.toString(),
+							size: options.size.toString(),
+							taker: options.taker ?? ZeroAddress,
+					  })
+					: Promise.resolve(),
 				this.quote(
 					options.poolAddress,
 					options.size,
@@ -348,6 +356,8 @@ export class OrdersAPI extends BaseAPI {
 			console.error('Error streaming OB quote: ', error)
 			callbackIfNotStale(null)
 		}
+
+		if (!options.taker && !options.forceSendRFQ) return
 
 		await this.premia.orderbook.subscribe(
 			{
