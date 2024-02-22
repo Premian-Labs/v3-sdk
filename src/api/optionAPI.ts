@@ -2,7 +2,7 @@ import { BigNumberish, Provider, toBigInt } from 'ethers'
 import { get, isEqual } from 'lodash'
 
 import { ZERO_BI } from '../constants'
-import { FillableQuote, PoolMinimal, Token } from '../entities'
+import { FillableQuote, PoolKey, PoolMinimal, Token } from '../entities'
 import { BaseAPI } from './baseAPI'
 import { TokenOrAddress } from './tokenAPI'
 import { parseNumber } from '../utils'
@@ -118,8 +118,7 @@ export class OptionAPI extends BaseAPI {
 	 */
 	getStrikeInterval(price: number): number {
 		const orderOfTens = Math.floor(Math.log10(price))
-		const base = price / 10 ** orderOfTens
-		return base < 5 ? 10 ** (orderOfTens - 1) : 5 * 10 ** (orderOfTens - 1)
+		return 10 ** (orderOfTens - 1)
 	}
 
 	/**
@@ -215,6 +214,8 @@ export class OptionAPI extends BaseAPI {
 		showPoolErrors?: boolean
 		showOrderbookErrors?: boolean
 		showVaultErrors?: boolean
+		poolKey?: PoolKey
+		pool?: PoolMinimal
 	}): Promise<FillableQuote> {
 		const [bestRfqQuote, bestPoolQuote, bestVaultQuote] = await Promise.all([
 			this.premia.orders
@@ -224,7 +225,9 @@ export class OptionAPI extends BaseAPI {
 					options.isBuy,
 					options.minimumSize,
 					options.referrer,
-					options.taker
+					options.taker,
+					undefined,
+					options.pool
 				)
 				.catch((e) => {
 					if (options.showErrors || options.showOrderbookErrors) {
@@ -241,7 +244,10 @@ export class OptionAPI extends BaseAPI {
 					options.isBuy,
 					options.referrer,
 					options.taker,
-					options.maxSlippagePercent
+					options.maxSlippagePercent,
+					undefined,
+					options.poolKey,
+					options.pool
 				)
 				.catch((e) => {
 					if (options.showErrors || options.showPoolErrors) {
@@ -489,6 +495,8 @@ export class OptionAPI extends BaseAPI {
 			referrer?: string
 			taker?: string
 			maxSlippagePercent?: number
+			poolKey?: PoolKey
+			pool?: PoolMinimal
 		},
 		callback: (quote: FillableQuote | null) => void
 	): Promise<void> {
@@ -699,6 +707,10 @@ export class OptionAPI extends BaseAPI {
 
 		await Promise.all(
 			pools.map(async (pool) => {
+				const poolKey = await this.premia.pools.getPoolKeyFromAddress(
+					pool.address
+				)
+
 				const _options = {
 					poolAddress: pool.address,
 					size: options.size,
@@ -707,6 +719,8 @@ export class OptionAPI extends BaseAPI {
 					referrer: options.referrer,
 					taker: options.taker,
 					maxSlippagePercent: options.maxSlippagePercent,
+					pool,
+					poolKey,
 				}
 
 				if (!quotesByPool[pool.address]) {
