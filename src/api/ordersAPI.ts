@@ -284,7 +284,8 @@ export class OrdersAPI extends BaseAPI {
 	 * @param {BigNumberish} [options.minimumSize] - The minimum size of the trade (optional).
 	 * @param {string} [options.referrer] - The address of the referrer (optional).
 	 * @param {string} [options.taker] - The address of the taker (optional).
-	 * @param {Provider} [options.provider] - The custom provider to use for this call.
+	 * @param {Provider} [options.provider] - The custom provider to use for this call (optional).
+	 * @param {boolean} [options.forceSendRFQ] - Whether to force sending/listening for Request-for-Quotes (optional).
 	 * @param {(quote: FillableQuote | null) => void} callback - The callback to execute for the best quote.
 	 * @returns {Promise<void>}
 	 */
@@ -297,6 +298,7 @@ export class OrdersAPI extends BaseAPI {
 			referrer?: string
 			taker?: string
 			provider?: Provider
+			forceSendRFQ?: boolean
 		},
 		callback: (quote: FillableQuote | null) => void
 	): Promise<void> {
@@ -315,13 +317,15 @@ export class OrdersAPI extends BaseAPI {
 			)
 
 			let [, bestQuote] = await Promise.all([
-				this.premia.orderbook.publishRFQ({
-					poolKey,
-					side: options.isBuy ? 'bid' : 'ask',
-					chainId: this.premia.chainId.toString(),
-					size: options.size.toString(),
-					taker: options.taker ?? ZeroAddress,
-				}),
+				options.taker || options.forceSendRFQ
+					? this.premia.orderbook.publishRFQ({
+							poolKey,
+							side: options.isBuy ? 'bid' : 'ask',
+							chainId: this.premia.chainId.toString(),
+							size: options.size.toString(),
+							taker: options.taker ?? ZeroAddress,
+					  })
+					: Promise.resolve(),
 				this.quote(
 					options.poolAddress,
 					options.size,
@@ -338,6 +342,8 @@ export class OrdersAPI extends BaseAPI {
 			console.error('Error streaming OB quote: ', error)
 			callbackIfNotStale(null)
 		}
+
+		if (!options.taker && !options.forceSendRFQ) return
 
 		await this.premia.orderbook.subscribe(
 			{
