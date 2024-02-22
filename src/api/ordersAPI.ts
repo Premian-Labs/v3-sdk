@@ -25,6 +25,8 @@ import {
 	OrderbookQuote,
 	SerializedQuote,
 	SignatureDomain,
+	PoolMinimal,
+	PoolKey,
 } from '../entities'
 
 /**
@@ -110,7 +112,8 @@ export class OrdersAPI extends BaseAPI {
 		quote: OrderbookQuote,
 		createdAt?: number,
 		referrer?: string,
-		provider?: Provider
+		provider?: Provider,
+		pool?: PoolMinimal
 	): Promise<FillableQuote> {
 		const poolContract = this.premia.contracts.getPoolContract(
 			poolAddress,
@@ -123,8 +126,8 @@ export class OrdersAPI extends BaseAPI {
 				: toBigInt(size)
 		const normalizedPremium = (_size * price) / WAD_BI
 
-		const [pool, takerFee] = await Promise.all([
-			this.premia.pools.getPoolMinimal(poolAddress),
+		const [_pool, takerFee] = await Promise.all([
+			pool ?? this.premia.pools.getPoolMinimal(poolAddress),
 			this.premia.pools.takerFee(
 				poolAddress,
 				_size,
@@ -136,19 +139,19 @@ export class OrdersAPI extends BaseAPI {
 			),
 		])
 
-		const denormalizedPrice = pool.isCall
+		const denormalizedPrice = _pool.isCall
 			? price
-			: (price * toBigInt(pool.strike)) / WAD_BI
+			: (price * toBigInt(_pool.strike)) / WAD_BI
 		const convertedPrice = convertDecimals(
 			denormalizedPrice,
 			WAD_DECIMALS,
-			pool.collateralAsset.decimals
+			_pool.collateralAsset.decimals
 		)
 
 		const premium = convertDecimals(
 			(_size * denormalizedPrice) / WAD_BI,
 			WAD_DECIMALS,
-			pool.collateralAsset.decimals
+			_pool.collateralAsset.decimals
 		)
 
 		const approvalAmount = quote.isBuy
@@ -158,7 +161,7 @@ export class OrdersAPI extends BaseAPI {
 		return {
 			...quote,
 			createdAt,
-			pool,
+			pool: _pool,
 			deadline: toBigInt(quote.deadline),
 			price: convertedPrice,
 			salt: toBigInt(quote.salt),
@@ -191,7 +194,7 @@ export class OrdersAPI extends BaseAPI {
 	 * @param {BigNumberish} [size] - The size of the trade (optional).
 	 * @param {string} [taker] - The address of the taker (optional).
 	 * @param {boolean} [throwError=false] - Whether to throw an error if the quote is invalid (default is false).
-	 * @param {Provider} [provider] - The custom provider to use for this call.
+	 * @param {Provider} [provider] - The custom provider to use for this call (optional).
 	 * @returns {Promise<boolean>} - A promise that resolves to a boolean indicating whether the quote is valid.
 	 */
 	async isQuoteValid(
@@ -229,7 +232,9 @@ export class OrdersAPI extends BaseAPI {
 	 * @param {BigNumberish} [minimumSize] - The minimum size of the trade (optional).
 	 * @param {string} [referrer] - The address of the referrer (optional).
 	 * @param {string} [taker] - The address of the taker (optional).
-	 * @param {Provider} [provider] - The custom provider to use for this call.
+	 * @param {Provider} [provider] - The custom provider to use for this call (optional).
+	 * @param {PoolKey} [poolKey] - The pool key to stream quotes from, passed for optimization purposes (optional).
+	 * @param {PoolMinimal} [pool] - The pool to stream quotes from, passed for optimization purposes (optional).
 	 * @returns {Promise<FillableQuote | null>} - The best fillable quote, or null if no quotes available.
 	 */
 	async quote(
@@ -239,7 +244,8 @@ export class OrdersAPI extends BaseAPI {
 		minimumSize?: BigNumberish,
 		referrer?: string,
 		taker?: string,
-		provider?: Provider
+		provider?: Provider,
+		pool?: PoolMinimal
 	): Promise<FillableQuote | null> {
 		let quotes = await this.premia.orderbook.getQuotes(
 			poolAddress,
@@ -270,7 +276,8 @@ export class OrdersAPI extends BaseAPI {
 			bestQuote,
 			bestQuote.ts,
 			referrer,
-			provider
+			provider,
+			pool
 		)
 	}
 
@@ -286,6 +293,8 @@ export class OrdersAPI extends BaseAPI {
 	 * @param {string} [options.taker] - The address of the taker (optional).
 	 * @param {Provider} [options.provider] - The custom provider to use for this call (optional).
 	 * @param {boolean} [options.forceSendRFQ] - Whether to force sending/listening for Request-for-Quotes (optional).
+	 * @param {PoolKey} [options.poolKey] - The pool key to stream quotes from, passed for optimization purposes (optional).
+	 * @param {PoolMinimal} [options.pool] - The pool to stream quotes from, passed for optimization purposes (optional).
 	 * @param {(quote: FillableQuote | null) => void} callback - The callback to execute for the best quote.
 	 * @returns {Promise<void>}
 	 */
@@ -299,6 +308,8 @@ export class OrdersAPI extends BaseAPI {
 			taker?: string
 			provider?: Provider
 			forceSendRFQ?: boolean
+			poolKey?: PoolKey
+			pool?: PoolMinimal
 		},
 		callback: (quote: FillableQuote | null) => void
 	): Promise<void> {
@@ -311,10 +322,12 @@ export class OrdersAPI extends BaseAPI {
 		}
 
 		try {
-			const poolKey = await this.premia.pools.getPoolKeyFromAddress(
-				options.poolAddress,
-				options.provider
-			)
+			const poolKey =
+				options.poolKey ??
+				(await this.premia.pools.getPoolKeyFromAddress(
+					options.poolAddress,
+					options.provider
+				))
 
 			let [, bestQuote] = await Promise.all([
 				options.taker || options.forceSendRFQ
@@ -333,7 +346,8 @@ export class OrdersAPI extends BaseAPI {
 					options.minimumSize,
 					options.referrer,
 					options.taker,
-					options.provider
+					options.provider,
+					options.pool
 				),
 			])
 

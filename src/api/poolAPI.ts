@@ -546,18 +546,22 @@ export class PoolAPI extends BaseAPI {
 		referrer?: string,
 		taker?: string,
 		maxSlippagePercent?: number,
-		provider?: Provider
+		provider?: Provider,
+		poolKey?: PoolKey,
+		pool?: PoolMinimal
 	): Promise<FillableQuote> {
 		const _size = toBigInt(size)
 		const poolContract = this.premia.contracts.getPoolContract(
 			poolAddress,
 			provider ?? this.premia.multicallProvider
 		)
-		const [poolKey, quote, pool] = await Promise.all([
-			this.getPoolKeyFromAddress(poolAddress, provider),
+
+		const [quote, _poolKey, _pool] = await Promise.all([
 			poolContract.getQuoteAMM(taker ?? ZeroAddress, _size, isBuy),
-			this.getPoolMinimal(poolAddress),
+			poolKey ?? this.getPoolKeyFromAddress(poolAddress, provider),
+			pool ?? this.getPoolMinimal(poolAddress),
 		])
+
 		const premiumLimit = maxSlippagePercent
 			? this.premia.pricing.premiumLimit(
 					quote.premiumNet,
@@ -567,8 +571,8 @@ export class PoolAPI extends BaseAPI {
 			: quote.premiumNet
 
 		return {
-			pool,
-			poolKey,
+			pool: _pool,
+			poolKey: _poolKey,
 			provider: poolAddress,
 			taker: ZeroAddress,
 			price: (quote.premiumNet * WAD_BI) / _size,
@@ -617,6 +621,8 @@ export class PoolAPI extends BaseAPI {
 			maxSlippagePercent?: number
 			showErrors?: boolean
 			provider?: Provider
+			poolKey?: PoolKey
+			pool?: PoolMinimal
 		},
 		callback: (quote: FillableQuote | null) => void
 	): Promise<void> {
@@ -639,7 +645,9 @@ export class PoolAPI extends BaseAPI {
 				options.referrer,
 				options.taker,
 				options.maxSlippagePercent,
-				options.provider
+				options.provider,
+				options.poolKey,
+				options.pool
 			).catch()
 
 			callbackIfNotStale(bestQuote)
@@ -662,7 +670,9 @@ export class PoolAPI extends BaseAPI {
 					options.referrer,
 					options.taker,
 					options.maxSlippagePercent,
-					options.provider
+					options.provider,
+					options.poolKey,
+					options.pool
 				).catch()
 
 				callbackIfNotStale(quote)

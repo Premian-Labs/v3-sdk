@@ -12,6 +12,7 @@ import { WAD_BI, ZERO_BI } from '../constants'
 import {
 	FillableQuote,
 	PoolKey,
+	PoolMinimal,
 	TransactionData,
 	Vault,
 	VaultExtended,
@@ -116,7 +117,9 @@ export class VaultAPI extends BaseAPI {
 		maxSlippagePercent?: number,
 		showErrors?: boolean,
 		provider?: Provider,
-		_vaults?: string[]
+		_vaults?: string[],
+		poolKey?: PoolKey,
+		pool?: PoolMinimal
 	): Promise<FillableQuote | null> {
 		const _size = toBigInt(size)
 		const _minimumSize = minimumSize ? toBigInt(minimumSize) : _size
@@ -124,21 +127,18 @@ export class VaultAPI extends BaseAPI {
 			provider ?? this.premia.multicallProvider
 		)
 
-		const poolKey = await this.premia.pools.getPoolKeyFromAddress(
-			poolAddress,
-			provider
-		)
-		const [_taker, vaults, pool] = await Promise.all([
+		const [_taker, _poolKey, _pool] = await Promise.all([
 			taker ?? this.premia.signer?.getAddress() ?? ZeroAddress,
-			_vaults
-				? _vaults.map((vault) => ({ vault }))
-				: vaultRegistry.getVaultsByFilter(
-						[poolKey.isCallPool ? poolKey.base : poolKey.quote],
-						this.tradeSide(!isBuy),
-						this.optionType(poolKey.isCallPool)
-				  ),
-			this.premia.pools.getPoolMinimal(poolAddress),
+			poolKey ?? this.premia.pools.getPoolKeyFromAddress(poolAddress, provider),
+			pool ?? this.premia.pools.getPoolMinimal(poolAddress),
 		])
+		const vaults = _vaults
+			? _vaults.map((vault) => ({ vault }))
+			: await vaultRegistry.getVaultsByFilter(
+					[_poolKey.isCallPool ? _poolKey.base : _poolKey.quote],
+					this.tradeSide(!isBuy),
+					this.optionType(_poolKey.isCallPool)
+			  )
 
 		const quotes: (FillableQuote | null)[] = await Promise.all(
 			vaults.map(async (_vault) => {
@@ -152,20 +152,20 @@ export class VaultAPI extends BaseAPI {
 				)
 				const isSupported = supportedPairs.some(
 					(pair) =>
-						pair.base === poolKey.base &&
-						pair.quote === poolKey.quote &&
-						pair.oracleAdapter === poolKey.oracleAdapter
+						pair.base === _poolKey.base &&
+						pair.quote === _poolKey.quote &&
+						pair.oracleAdapter === _poolKey.oracleAdapter
 				)
 
 				if (!isSupported) return null
 
 				const quote = await vault
-					.getQuote(poolKey, _size, isBuy, _taker)
+					.getQuote(_poolKey, _size, isBuy, _taker)
 					.catch((err) => {
 						if (showErrors) {
 							console.error(
 								'Error getting vault quote with args:',
-								poolKey,
+								_poolKey,
 								_size,
 								isBuy,
 								_taker,
@@ -196,8 +196,8 @@ export class VaultAPI extends BaseAPI {
 				const price = ((quote - takerFee) * WAD_BI) / _size
 
 				return {
-					pool,
-					poolKey,
+					pool: _pool,
+					poolKey: _poolKey,
 					provider: _vault.vault,
 					taker: _taker,
 					price,
@@ -209,7 +209,7 @@ export class VaultAPI extends BaseAPI {
 					approvalTarget: _vault.vault,
 					approvalAmount: premiumLimit,
 					data: vault.interface.encodeFunctionData('trade', [
-						poolKey,
+						_poolKey,
 						size,
 						isBuy,
 						premiumLimit,
@@ -253,6 +253,8 @@ export class VaultAPI extends BaseAPI {
 			maxSlippagePercent?: number
 			showErrors?: boolean
 			provider?: Provider
+			poolKey?: PoolKey
+			pool?: PoolMinimal
 		},
 		callback: (quote: FillableQuote | null) => void
 	): Promise<void> {
@@ -270,10 +272,12 @@ export class VaultAPI extends BaseAPI {
 			callback(quote)
 		}
 
-		const poolKey = await this.premia.pools.getPoolKeyFromAddress(
-			options.poolAddress,
-			options.provider
-		)
+		const poolKey =
+			options.poolKey ??
+			(await this.premia.pools.getPoolKeyFromAddress(
+				options.poolAddress,
+				options.provider
+			))
 		const vaultRegistry = this.premia.contracts.getVaultRegistryContract(
 			options.provider ?? this.premia.multicallProvider
 		)
@@ -297,7 +301,9 @@ export class VaultAPI extends BaseAPI {
 				options.maxSlippagePercent,
 				options.showErrors,
 				options.provider,
-				vaults
+				vaults,
+				options.poolKey,
+				options.pool
 			)
 
 			callbackIfNotStale(bestQuote)
@@ -321,7 +327,9 @@ export class VaultAPI extends BaseAPI {
 					options.maxSlippagePercent,
 					options.showErrors,
 					options.provider,
-					vaults
+					vaults,
+					options.poolKey,
+					options.pool
 				)
 				callbackIfNotStale(quote, interval)
 			} catch (err) {

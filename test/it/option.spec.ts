@@ -39,7 +39,7 @@ describe('Option API', function (this: any) {
 				// end of array
 				if (Number.isNaN(strikeRange)) return true
 
-				return nextStrike - strike === 50
+				return nextStrike - strike === 10
 			})
 		).to.be.true
 
