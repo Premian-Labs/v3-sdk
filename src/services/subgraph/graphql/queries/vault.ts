@@ -17,7 +17,8 @@ export class VaultQuery {
         ${VaultFragment}
         
         {
-            vault(id: "${this.vaultId(address)}") {
+            vault(id: "${this.vaultId(address)}",
+			subgraphError: allow) {
                 ...Vault
             }
         }
@@ -33,7 +34,8 @@ export class VaultQuery {
         ${VaultExtendedFragment}
 
         {
-            vault(id: "${this.vaultId(address)}") {
+            vault(id: "${this.vaultId(address)}",
+			subgraphError: allow) {
                 ...VaultExtended
             }
         }
@@ -46,7 +48,7 @@ export class VaultQuery {
 			${VaultExtendedFragment}
 
 			{
-				vaults {
+				vaults(subgraphError: allow) {
 					...VaultExtended
 				}
 			}
@@ -62,7 +64,8 @@ export class VaultQuery {
 			${VaultFragment}
 
 			{
-				vaults(where: { asset: "${tokenAddress.toLowerCase()}" }) {
+				vaults(where: { asset: "${tokenAddress.toLowerCase()}" },
+				subgraphError: allow) {
 					...Vault
 				}
 			}
@@ -78,7 +81,8 @@ export class VaultQuery {
         ${VaultExtendedFragment}
 
         {
-            vaults(where: { asset: "${tokenAddress.toLowerCase()}" }) {
+            vaults(where: { asset: "${tokenAddress.toLowerCase()}" },
+			subgraphError: allow) {
                 ...VaultExtended
             }
         }

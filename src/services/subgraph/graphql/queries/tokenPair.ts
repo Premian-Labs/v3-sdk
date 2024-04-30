@@ -31,7 +31,8 @@ export class TokenPairQuery {
         ${TokenPairFragment}
 
         {   
-            tokenPair(id: "${pairId}") {
+            tokenPair(id: "${pairId}",
+			subgraphError: allow) {
                 ...TokenPair
             }
         }
@@ -47,7 +48,8 @@ export class TokenPairQuery {
         ${TokenPairExtendedFragment}
 
         {
-            tokenPair(id: "${pairId}") {
+            tokenPair(id: "${pairId}",
+			subgraphError: allow) {
                 ...TokenPairExtended
             }
         }
@@ -62,7 +64,8 @@ export class TokenPairQuery {
         {    
             tokenPairs(where: {
                 id_in: [${pairIds.map((id) => `"${id}"`).join(', ')}]
-            }) {
+            },
+			subgraphError: allow) {
                 ...TokenPair
             }
         }
@@ -80,7 +83,8 @@ export class TokenPairQuery {
         {    
             tokenPairs(where: {
                 id_in: [${pairIds.map((id) => `"${id}"`).join(', ')}]
-            }) {
+            },
+			subgraphError: allow) {
                 ...TokenPairExtended
             }
         }
@@ -93,7 +97,8 @@ export class TokenPairQuery {
 			${TokenPairFragment}
 
 			{
-				tokenPairs(first: 250) {
+				tokenPairs(first: 250,
+					subgraphError: allow) {
 					...TokenPair
 				}
 			}
@@ -106,7 +111,8 @@ export class TokenPairQuery {
 			${TokenPairExtendedFragment}
 
 			{
-				tokenPairs {
+				tokenPairs(
+					subgraphError: allow) {
 					...TokenPairExtended
 				}
 			}
