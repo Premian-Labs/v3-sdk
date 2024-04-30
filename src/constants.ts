@@ -103,9 +103,10 @@ export const Addresses: AddressMap = {
 export const DefaultApolloClientOptions: DefaultOptions = {
 	watchQuery: {
 		fetchPolicy: 'no-cache',
+		errorPolicy: 'ignore',
 	},
 	query: {
 		fetchPolicy: 'no-cache',
-		errorPolicy: 'all',
+		errorPolicy: 'ignore',
 	},
 }
