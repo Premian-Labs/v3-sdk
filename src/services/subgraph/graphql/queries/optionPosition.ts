@@ -22,7 +22,8 @@ export class OptionPositionQuery {
         ${OptionPositionFragment}
 
         {
-            optionPosition(id: "${this.optionPositionId(owner, poolAddress)}") {
+            optionPosition(id: "${this.optionPositionId(owner, poolAddress)}",
+			subgraphError: allow) {
                 ...OptionPosition
             }
         }
@@ -39,7 +40,8 @@ export class OptionPositionQuery {
         ${OptionPositionExtendedFragment}
 
         { 
-            optionPosition(id: "${this.optionPositionId(owner, poolAddress)}") {
+            optionPosition(id: "${this.optionPositionId(owner, poolAddress)}",
+			subgraphError: allow) {
                 ...OptionPositionExtended
             }
         }
@@ -74,7 +76,8 @@ export class OptionPositionQuery {
 					},
 					first: 1000, 
 					orderBy: createdAt, 
-					orderDirection: desc
+					orderDirection: desc,
+					subgraphError: allow
 				) {
 					...OptionPositionExtended
 				}
@@ -105,7 +108,8 @@ export class OptionPositionQuery {
 					},
 					first: 1000, 
 					orderBy: createdAt, 
-					orderDirection: desc
+					orderDirection: desc,
+					subgraphError: allow
 				) {
 					...OptionPositionExtended
 				}

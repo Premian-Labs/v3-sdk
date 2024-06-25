@@ -26,7 +26,8 @@ export class PoolQuery {
         ${PoolMinimalFragment}
 
         {
-            pool(id: "${this.poolId(address)}") {
+            pool(id: "${this.poolId(address)}",
+			subgraphError: allow) {
                 ...PoolMinimal
             }
         }
@@ -39,7 +40,8 @@ export class PoolQuery {
         ${PoolFragment}
 
         {
-            pool(id: "${this.poolId(address)}") {
+            pool(id: "${this.poolId(address)}",
+			subgraphError: allow) {
                 ...Pool
             }
         }
@@ -55,7 +57,8 @@ export class PoolQuery {
         ${PoolExtendedFragment}
 
         {
-            pool(id: "${this.poolId(address)}") {
+            pool(id: "${this.poolId(address)}",
+			subgraphError: allow) {
                 ...PoolExtended
             }
         }
@@ -87,7 +90,8 @@ export class PoolQuery {
 				}, 
             	first: 1000, 
             	orderBy: createdAt, 
-            	orderDirection: desc
+            	orderDirection: desc,
+				subgraphError: allow
             ) {
                 ...Pool
             }
@@ -120,7 +124,8 @@ export class PoolQuery {
 				},
             	first: 1000, 
 				orderBy: createdAt, 
-				orderDirection: desc
+				orderDirection: desc,
+				subgraphError: allow
             ) {
                 ...PoolExtended
             }
@@ -175,7 +180,8 @@ export class PoolQuery {
             	},
             	first: 1000, 
 				orderBy: createdAt, 
-				orderDirection: desc
+				orderDirection: desc,
+				subgraphError: allow
             ) {
                 ...PoolMinimal
             }
@@ -199,7 +205,8 @@ export class PoolQuery {
 		)}" },
             	first: 1000, 
 				orderBy: createdAt, 
-				orderDirection: desc
+				orderDirection: desc,
+				subgraphError: allow
 			) {
                 ...Pool
             }
@@ -251,7 +258,8 @@ export class PoolQuery {
 			},
 			first: 1000, 
 			orderBy: createdAt, 
-			orderDirection: desc
+			orderDirection: desc,
+			subgraphError: allow
 			) {
                 ...Pool
             }
@@ -300,7 +308,8 @@ export class PoolQuery {
 			},
 			first: 1000, 
 			orderBy: createdAt, 
-			orderDirection: desc
+			orderDirection: desc,
+			subgraphError: allow
 			) {
                 ...PoolExtended
             }
@@ -321,7 +330,8 @@ export class PoolQuery {
             	where: { pair: "${_pairId.toLowerCase()}" },
             	first: 1000, 
 				orderBy: createdAt, 
-				orderDirection: desc
+				orderDirection: desc,
+				subgraphError: allow
             ) {
                 ...Pool
             }
@@ -342,7 +352,8 @@ export class PoolQuery {
             	where: { pair: "${_pairId.toLowerCase()}" }
             	first: 1000, 
 				orderBy: createdAt, 
-				orderDirection: desc
+				orderDirection: desc,
+				subgraphError: allow
             ) {
                 ...PoolExtended
             }
