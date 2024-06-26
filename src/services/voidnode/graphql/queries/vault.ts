@@ -1,10 +1,10 @@
 import { DocumentNode, gql } from '@apollo/client/core'
-import { VaultExtendedFragment, VaultFragment } from '../fragments'
-import { addFields } from '../../../../utils/subgraph'
-import { TokenQuery } from './token'
-import { Token } from '../../../../entities/token'
-import PremiaSubgraph from '../../index'
+
 import { TokenOrAddress } from '../../../../api'
+import { addFields } from '../../../../utils/voidnode'
+import { VaultExtendedFragment, VaultFragment } from '../fragments'
+import { TokenQuery } from './token'
+import PremiaVoidnode from '../../index'
 
 export class VaultQuery {
 	static vaultId(address: string): string {
@@ -12,13 +12,12 @@ export class VaultQuery {
 	}
 
 	@addFields
-	static GetVault(subgraph: PremiaSubgraph, address: string): DocumentNode {
+	static GetVault(voidnode: PremiaVoidnode, address: string): DocumentNode {
 		return gql`
         ${VaultFragment}
         
         {
-            vault(id: "${this.vaultId(address)}",
-			subgraphError: allow) {
+            vault(id: "${this.vaultId(address)}") {
                 ...Vault
             }
         }
@@ -27,15 +26,14 @@ export class VaultQuery {
 
 	@addFields
 	static GetVaultExtended(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		address: string
 	): DocumentNode {
 		return gql`
         ${VaultExtendedFragment}
 
         {
-            vault(id: "${this.vaultId(address)}",
-			subgraphError: allow) {
+            vault(id: "${this.vaultId(address)}") {
                 ...VaultExtended
             }
         }
@@ -43,12 +41,12 @@ export class VaultQuery {
 	}
 
 	@addFields
-	static GetAllVaultsExtended(subgraph: PremiaSubgraph): DocumentNode {
+	static GetAllVaultsExtended(voidnode: PremiaVoidnode): DocumentNode {
 		return gql`
 			${VaultExtendedFragment}
 
 			{
-				vaults(subgraphError: allow) {
+				vaults {
 					...VaultExtended
 				}
 			}
@@ -57,15 +55,14 @@ export class VaultQuery {
 
 	@addFields
 	static GetVaults(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		tokenAddress: string
 	): DocumentNode {
 		return gql`
 			${VaultFragment}
 
 			{
-				vaults(where: { asset: "${tokenAddress.toLowerCase()}" },
-				subgraphError: allow) {
+				vaults(where: { asset: "${tokenAddress.toLowerCase()}" }) {
 					...Vault
 				}
 			}
@@ -74,15 +71,14 @@ export class VaultQuery {
 
 	@addFields
 	static GetVaultsExtended(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		tokenAddress: string
 	): DocumentNode {
 		return gql`
         ${VaultExtendedFragment}
 
         {
-            vaults(where: { asset: "${tokenAddress.toLowerCase()}" },
-			subgraphError: allow) {
+            vaults(where: { asset: "${tokenAddress.toLowerCase()}" }) {
                 ...VaultExtended
             }
         }
@@ -91,10 +87,10 @@ export class VaultQuery {
 
 	@addFields
 	static GetVaultsForToken(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		_token: TokenOrAddress
 	): DocumentNode {
-		const token = subgraph._parseTokenAddress(_token)
+		const token = voidnode._parseTokenAddress(_token)
 		return gql`
         ${VaultFragment}
         
@@ -108,10 +104,10 @@ export class VaultQuery {
 
 	@addFields
 	static GetVaultsExtendedForToken(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		_token: TokenOrAddress
 	): DocumentNode {
-		const token = subgraph._parseTokenAddress(_token)
+		const token = voidnode._parseTokenAddress(_token)
 		return gql`
         ${VaultExtendedFragment}
 

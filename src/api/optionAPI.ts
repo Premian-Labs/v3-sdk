@@ -320,7 +320,7 @@ export class OptionAPI extends BaseAPI {
 	}): Promise<(FillableQuote | null)[]> {
 		const tokenAddress = this._parseTokenAddress(options.token)
 
-		let pools: PoolMinimal[] = await this.premia.subgraph.getQuotePools(
+		let pools: PoolMinimal[] = await this.premia.voidnode.getQuotePools(
 			tokenAddress,
 			options.strike,
 			options.maturity,
@@ -380,7 +380,7 @@ export class OptionAPI extends BaseAPI {
 	}): Promise<{ [provider: string]: (FillableQuote | null)[] }> {
 		const tokenAddress = this._parseTokenAddress(options.token)
 
-		let pools: PoolMinimal[] = await this.premia.subgraph.getQuotePools(
+		let pools: PoolMinimal[] = await this.premia.voidnode.getQuotePools(
 			tokenAddress,
 			options.strike,
 			options.maturity,
@@ -593,7 +593,7 @@ export class OptionAPI extends BaseAPI {
 	): Promise<void> {
 		const tokenAddress = this._parseTokenAddress(options.token)
 
-		let pools: PoolMinimal[] = await this.premia.subgraph.getQuotePools(
+		let pools: PoolMinimal[] = await this.premia.voidnode.getQuotePools(
 			tokenAddress,
 			options.strike,
 			options.maturity,
@@ -677,7 +677,7 @@ export class OptionAPI extends BaseAPI {
 	): Promise<void> {
 		const tokenAddress = this._parseTokenAddress(options.token)
 
-		let pools: PoolMinimal[] = await this.premia.subgraph.getQuotePools(
+		let pools: PoolMinimal[] = await this.premia.voidnode.getQuotePools(
 			tokenAddress,
 			options.strike,
 			options.maturity,

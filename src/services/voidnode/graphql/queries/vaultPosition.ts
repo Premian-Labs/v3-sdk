@@ -1,10 +1,11 @@
 import { DocumentNode, gql } from '@apollo/client/core'
+
 import {
 	VaultPositionExtendedFragment,
 	VaultPositionFragment,
 } from '../fragments'
-import { addFields } from '../../../../utils/subgraph'
-import PremiaSubgraph from '../../index'
+import { addFields } from '../../../../utils/voidnode'
+import PremiaVoidnode from '../../index'
 
 export class VaultPositionQuery {
 	static vaultPositionId(owner: string, vaultAddress: string): string {
@@ -13,7 +14,7 @@ export class VaultPositionQuery {
 
 	@addFields
 	static GetVaultPositionsExtendedForUser(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		owner: string
 	): DocumentNode {
 		return gql`
@@ -31,7 +32,7 @@ export class VaultPositionQuery {
 
 	@addFields
 	static GetVaultPosition(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		owner: string,
 		vaultAddress: string
 	): DocumentNode {
@@ -50,7 +51,7 @@ export class VaultPositionQuery {
 
 	@addFields
 	static GetVaultPositionExtended(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		owner: string,
 		vaultAddress: string
 	): DocumentNode {

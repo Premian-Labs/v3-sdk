@@ -4,8 +4,8 @@ import {
 	OptionPositionExtendedFragment,
 	OptionPositionFragment,
 } from '../fragments'
-import { addFields } from '../../../../utils/subgraph'
-import PremiaSubgraph from '../../index'
+import { addFields } from '../../../../utils/voidnode'
+import PremiaVoidnode from '../../index'
 
 export class OptionPositionQuery {
 	static optionPositionId(owner: string, poolAddress: string): string {
@@ -14,7 +14,7 @@ export class OptionPositionQuery {
 
 	@addFields
 	static GetOptionPosition(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		owner: string,
 		poolAddress: string
 	): DocumentNode {
@@ -22,8 +22,7 @@ export class OptionPositionQuery {
         ${OptionPositionFragment}
 
         {
-            optionPosition(id: "${this.optionPositionId(owner, poolAddress)}",
-			subgraphError: allow) {
+            optionPosition(id: "${this.optionPositionId(owner, poolAddress)}") {
                 ...OptionPosition
             }
         }
@@ -32,7 +31,7 @@ export class OptionPositionQuery {
 
 	@addFields
 	static GetOptionPositionExtended(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		owner: string,
 		poolAddress: string
 	): DocumentNode {
@@ -40,8 +39,7 @@ export class OptionPositionQuery {
         ${OptionPositionExtendedFragment}
 
         { 
-            optionPosition(id: "${this.optionPositionId(owner, poolAddress)}",
-			subgraphError: allow) {
+            optionPosition(id: "${this.optionPositionId(owner, poolAddress)}") {
                 ...OptionPositionExtended
             }
         }
@@ -50,7 +48,7 @@ export class OptionPositionQuery {
 
 	@addFields
 	static GetOptionPositionsExtendedForUser(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		owner: string,
 		isOpen?: boolean
 	): DocumentNode {
@@ -74,10 +72,11 @@ export class OptionPositionQuery {
 							${filter}
 						]
 					},
-					first: 1000, 
-					orderBy: createdAt, 
-					orderDirection: desc,
-					subgraphError: allow
+					limit: 1000, 
+					orderBy: [{
+						field: createdAt, 
+						direction: DESC
+					}]
 				) {
 					...OptionPositionExtended
 				}
@@ -87,7 +86,7 @@ export class OptionPositionQuery {
 
 	@addFields
 	static GetRewardOptionPositionsExtendedForUser(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		owner: string,
 		timestamp?: number,
 		isOpen?: boolean
@@ -106,10 +105,11 @@ export class OptionPositionQuery {
 					where: { 
 						 ${filter}
 					},
-					first: 1000, 
-					orderBy: createdAt, 
-					orderDirection: desc,
-					subgraphError: allow
+					limit: 1000, 
+					orderBy: [{
+						field: createdAt, 
+						direction: DESC
+					}]
 				) {
 					...OptionPositionExtended
 				}

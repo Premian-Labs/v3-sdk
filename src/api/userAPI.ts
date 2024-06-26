@@ -37,7 +37,7 @@ export class UserAPI extends BaseAPI {
 	 * @returns {Promise<User>} A promise that resolves to a User object.
 	 */
 	async getUser(address: string): Promise<User> {
-		return this.premia.subgraph.getUser(address)
+		return this.premia.voidnode.getUser(address)
 	}
 
 	/**
@@ -47,7 +47,7 @@ export class UserAPI extends BaseAPI {
 	 * @returns {Promise<UserExtended>} A promise that resolves to a UserExtended object.
 	 */
 	async getUserExtended(address: string): Promise<UserExtended> {
-		return this.premia.subgraph.getUserExtended(address)
+		return this.premia.voidnode.getUserExtended(address)
 	}
 
 	/**
@@ -57,7 +57,7 @@ export class UserAPI extends BaseAPI {
 	 * @returns {Promise<User[]>} A promise that resolves to an array of User objects.
 	 */
 	async getUsers(addresses: string[]): Promise<User[]> {
-		return this.premia.subgraph.getUsers(addresses)
+		return this.premia.voidnode.getUsers(addresses)
 	}
 
 	/**
@@ -67,7 +67,7 @@ export class UserAPI extends BaseAPI {
 	 * @returns {Promise<UserExtended[]>} A promise that resolves to an array of UserExtended objects.
 	 */
 	async getUsersExtended(addresses: string[]): Promise<UserExtended[]> {
-		return this.premia.subgraph.getUsersExtended(addresses)
+		return this.premia.voidnode.getUsersExtended(addresses)
 	}
 
 	/**
@@ -81,7 +81,7 @@ export class UserAPI extends BaseAPI {
 		address: string,
 		timestamp: BigNumberish
 	): Promise<UserSnapshot> {
-		return this.premia.subgraph.getUserSnapshot(address, timestamp)
+		return this.premia.voidnode.getUserSnapshot(address, timestamp)
 	}
 
 	/**
@@ -95,7 +95,7 @@ export class UserAPI extends BaseAPI {
 		address: string,
 		timestamp: BigNumberish
 	): Promise<UserSnapshotExtended> {
-		return this.premia.subgraph.getUserSnapshotExtended(address, timestamp)
+		return this.premia.voidnode.getUserSnapshotExtended(address, timestamp)
 	}
 
 	/**
@@ -106,8 +106,8 @@ export class UserAPI extends BaseAPI {
 	 * @param {BigNumberish} startTime - The start time of the time frame.
 	 * @param {BigNumberish} endTime - The end time of the time frame.
 	 * @param {string} [orderBy='timestamp'] - The field to order the snapshots by. Default is 'timestamp'.
-	 * @param {string} [order='asc'] - The order of the snapshots. Default is 'asc'.
-	 * @param {number} [first=100] - The number of snapshots to fetch. Default is 100.
+	 * @param {string} [order='ASC'] - The order of the snapshots. Default is 'ASC'.
+	 * @param {number} [limit=100] - The number of snapshots to fetch. Default is 100.
 	 * @param {number} [skip=0] - The number of snapshots to skip. Default is 0.
 	 * @returns {Promise<UserSnapshot[]>} A promise that resolves to an array of UserSnapshot objects.
 	 */
@@ -116,17 +116,17 @@ export class UserAPI extends BaseAPI {
 		startTime: BigNumberish,
 		endTime: BigNumberish,
 		orderBy: string = 'timestamp',
-		order: string = 'asc',
-		first = 100,
+		order: string = 'ASC',
+		limit = 100,
 		skip = 0
 	): Promise<UserSnapshot[]> {
-		return this.premia.subgraph.getUserSnapshots(
+		return this.premia.voidnode.getUserSnapshots(
 			address,
 			startTime,
 			endTime,
 			orderBy,
 			order,
-			first,
+			limit,
 			skip
 		)
 	}
@@ -138,8 +138,8 @@ export class UserAPI extends BaseAPI {
 	 * @param {BigNumberish} startTime - The start time of the time frame.
 	 * @param {BigNumberish} endTime - The end time of the time frame.
 	 * @param {string} [orderBy='timestamp'] - The field to order the snapshots by. Default is 'timestamp'.
-	 * @param {string} [order='asc'] - The order of the snapshots. Default is 'asc'.
-	 * @param {number} [first=100] - The number of snapshots to fetch. Default is 100.
+	 * @param {string} [order='ASC'] - The order of the snapshots. Default is 'ASC'.
+	 * @param {number} [limit=100] - The number of snapshots to fetch. Default is 100.
 	 * @param {number} [skip=0] - The number of snapshots to skip. Default is 0.
 	 * @returns {Promise<UserSnapshotExtended[]>} A promise that resolves to an array of UserSnapshotExtended objects.
 	 */
@@ -148,17 +148,17 @@ export class UserAPI extends BaseAPI {
 		startTime: BigNumberish,
 		endTime: BigNumberish,
 		orderBy: string = 'timestamp',
-		order: string = 'asc',
-		first = 100,
+		order: string = 'ASC',
+		limit = 100,
 		skip = 0
 	): Promise<UserSnapshotExtended[]> {
-		return this.premia.subgraph.getUserSnapshotsExtended(
+		return this.premia.voidnode.getUserSnapshotsExtended(
 			address,
 			startTime,
 			endTime,
 			orderBy,
 			order,
-			first,
+			limit,
 			skip
 		)
 	}
@@ -170,7 +170,7 @@ export class UserAPI extends BaseAPI {
 	 * @returns {Promise<UserPortfolio>} A promise that resolves to a UserPortfolio object.
 	 */
 	async getUserPortfolio(address: string): Promise<UserPortfolio> {
-		return this.premia.subgraph.getUserPortfolio(address)
+		return this.premia.voidnode.getUserPortfolio(address)
 	}
 
 	/**
@@ -182,7 +182,7 @@ export class UserAPI extends BaseAPI {
 	async getUserPortfolioExtended(
 		address: string
 	): Promise<UserPortfolioExtended> {
-		return this.premia.subgraph.getUserPortfolioExtended(address)
+		return this.premia.voidnode.getUserPortfolioExtended(address)
 	}
 
 	/**
@@ -198,7 +198,7 @@ export class UserAPI extends BaseAPI {
 		owner: string,
 		isOpen?: boolean
 	): Promise<OptionPositionExtended[]> {
-		return this.premia.subgraph.getOptionPositionsExtendedForUser(owner, isOpen)
+		return this.premia.voidnode.getOptionPositionsExtendedForUser(owner, isOpen)
 	}
 
 	/**
@@ -216,7 +216,7 @@ export class UserAPI extends BaseAPI {
 		timestamp?: number,
 		isOpen?: boolean
 	): Promise<OptionPositionExtended[]> {
-		return this.premia.subgraph.getRewardOptionPositionsExtendedForUser(
+		return this.premia.voidnode.getRewardOptionPositionsExtendedForUser(
 			owner,
 			timestamp,
 			isOpen
@@ -236,7 +236,7 @@ export class UserAPI extends BaseAPI {
 		owner: string,
 		orderType?: OrderType
 	): Promise<LiquidityPositionExtended[]> {
-		return this.premia.subgraph.getLiquidityPositionsExtendedForUser(
+		return this.premia.voidnode.getLiquidityPositionsExtendedForUser(
 			owner,
 			orderType
 		)

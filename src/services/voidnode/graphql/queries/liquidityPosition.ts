@@ -4,8 +4,8 @@ import {
 	LiquidityPositionExtendedFragment,
 	LiquidityPositionFragment,
 } from '../fragments'
-import { addFields } from '../../../../utils/subgraph'
-import PremiaSubgraph from '../../index'
+import { addFields } from '../../../../utils/voidnode'
+import PremiaVoidnode from '../../index'
 import { OrderType } from '../../../../entities'
 
 export class LiquidityPositionQuery {
@@ -25,7 +25,7 @@ export class LiquidityPositionQuery {
 
 	@addFields
 	static GetLiquidityPosition(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		owner: string,
 		poolAddress: string,
 		tokenId: string
@@ -47,7 +47,7 @@ export class LiquidityPositionQuery {
 
 	@addFields
 	static GetLiquidityPositionExtended(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		owner: string,
 		poolAddress: string,
 		tokenId: string
@@ -69,7 +69,7 @@ export class LiquidityPositionQuery {
 
 	@addFields
 	static GetLiquidityPositionsExtendedForUser(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		owner: string,
 		orderType?: OrderType,
 		isOpen?: boolean
@@ -102,9 +102,11 @@ export class LiquidityPositionQuery {
 						owner: "${owner.toLowerCase()}"
 						${filter}
 					},
-					first: 1000, 
-					orderBy: createdAt, 
-					orderDirection: desc
+					limit: 1000, 
+					orderBy: [{
+						field: createdAt, 
+						direction: DESC
+					}]
 				) {
 					...LiquidityPositionExtended
 				}

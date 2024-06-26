@@ -2,7 +2,7 @@ import { ContractTransaction } from 'ethers'
 import { BaseAPI } from './baseAPI'
 
 /**
- * Represents a class for handling pool operations related to the subgraph and the pool contracts.
+ * Represents a class for handling pool operations related to the voidnode server and the pool contracts.
  *
  * @class OptionPSAPI
  * @extends {BaseAPI}

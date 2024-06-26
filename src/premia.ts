@@ -31,7 +31,7 @@ import {
 } from './api'
 import { Addresses, SupportedChainId } from './constants'
 import { Coingecko, OrderbookV1 } from './services'
-import PremiaSubgraph from './services/subgraph'
+import PremiaVoidnode from './services/voidnode'
 
 export interface SetProviderParams {
 	/**
@@ -89,20 +89,20 @@ export interface SetSignerParams {
 	orderbookSigner?: Signer
 }
 
-export interface SubgraphParams {
+export interface VoidnodeParams {
 	/**
-	 * The subgraph URL to use for fetching indexed contract data.
+	 * The voidnode URL to use for fetching indexed contract data.
 	 *
-	 * @defaultValue {@link Premia.subgraph.uri}
-	 * @see https://docs.premia.finance/api/subgraph
+	 * @defaultValue {@link Premia.voidnode.uri}
+	 * @see https://docs.premia.finance/api/voidnode
 	 */
-	subgraphUri?: string
+	voidnodeUri?: string
 }
 
 export interface PremiaConfig
 	extends SetProviderParams,
 		SetSignerParams,
-		SubgraphParams {
+		VoidnodeParams {
 	/**
 	 * The chain ID to use for interacting with main exchange contracts.
 	 *
@@ -163,9 +163,9 @@ export interface PremiaConfig
 	coingeckoProApiKey?: string
 
 	/**
-	 * A flag to disable usage of the subgraph, and instead use smart contract data where available.
+	 * A flag to disable usage of the voidnode, and instead use smart contract data where available.
 	 */
-	skipSubgraph?: boolean
+	skipVoidnode?: boolean
 
 	/**
 	 * The address of the OrderbookStreamer contract (on Arbitrum Nova).
@@ -311,14 +311,14 @@ export class Premia {
 	chainId: number
 
 	/**
-	 * @inheritdoc {@link PremiaConfig.skipSubgraph}
+	 * @inheritdoc {@link PremiaConfig.skipVoidnode}
 	 */
-	skipSubgraph: boolean
+	skipVoidnode: boolean
 
 	/**
-	 * The Premia subgraph object which handles all interactions with the subgraph
+	 * The Premia voidnode object which handles all interactions with voidnode server.
 	 */
-	subgraph: PremiaSubgraph
+	voidnode: PremiaVoidnode
 
 	/**
 	 * The service used to interact with the Coingecko v3 API.
@@ -458,7 +458,6 @@ export class Premia {
 	 * non-default parameters.
 	 */
 	private constructor(config: PremiaConfigWithDefaults) {
-		// Setup orderbook
 		this.orderbook = new OrderbookV1(
 			config.apiBaseUri,
 			config.apiWsUri,
@@ -466,18 +465,14 @@ export class Premia {
 			config.chainId
 		)
 
-		// Setup coingecko
 		this.coingecko = new Coingecko(
 			config.coingeckoBaseUri,
 			config.coingeckoProApiKey
 		)
 
-		// Setup subgraph client
-		this.skipSubgraph = config.skipSubgraph
+		this.skipVoidnode = config.skipVoidnode
+		this.voidnode = new PremiaVoidnode(config.voidnodeUri)
 
-		this.subgraph = new PremiaSubgraph(config.subgraphUri)
-
-		// Setup provider
 		this.useTestnet = config.useTestnet
 		this.chainId = config.chainId
 
@@ -497,7 +492,6 @@ export class Premia {
 
 		this.setProvider(config)
 
-		// Setup addresses for contracts
 		if (Object.values(SupportedChainId).includes(this.chainId)) {
 			this.contracts.setOrderbookAddress(config.orderbookAddress!)
 			this.contracts.setPoolFactoryAddress(config.poolFactoryAddress!)
@@ -571,10 +565,10 @@ export class Premia {
 				config.useTestnet === false ? '' : 'test.'
 			}quotes.premia.finance`,
 			coingeckoBaseUri: 'https://api.coingecko.com/api/v3',
-			skipSubgraph: false,
-			subgraphUri: config.useTestnet
-				? 'https://api.thegraph.com/subgraphs/name/premian-labs/premia-blue-arbitrum-goerli'
-				: 'https://api.thegraph.com/subgraphs/name/premian-labs/premia-blue',
+			skipVoidnode: false,
+			voidnodeUri: config.useTestnet
+				? 'http://localhost:3000'
+				: 'https://api.voidnode.xyz/projects/premia-v3',
 		}
 
 		const merged = merge(defaultConfig, config) as PremiaConfigWithDefaults
@@ -598,10 +592,10 @@ export class Premia {
 	}
 
 	/**
-	 * @param uri - A uri associated with the PremiaSubgraph.
+	 * @param uri - A uri associated with the PremiaVoidnode.
 	 */
-	set subgraphUri(uri: string) {
-		this.subgraph = new PremiaSubgraph(uri)
+	set voidnodeUri(uri: string) {
+		this.voidnode = new PremiaVoidnode(uri)
 	}
 
 	get apiKey(): string {
@@ -660,10 +654,10 @@ export class Premia {
 	}
 
 	/**
-	 * @param [skipSubgraph] - {@link PremiaConfig.skipSubgraph}
+	 * @param [skipVoidnode] - {@link PremiaConfig.skipVoidnode}
 	 */
-	setSkipSubgraph(skipSubgraph: PremiaConfig['skipSubgraph']) {
-		this.skipSubgraph = skipSubgraph ?? this.skipSubgraph
+	setSkipVoidnode(skipVoidnode: PremiaConfig['skipVoidnode']) {
+		this.skipVoidnode = skipVoidnode ?? this.skipVoidnode
 	}
 
 	/**
@@ -892,8 +886,8 @@ export class Premia {
 			phrase: this.signerCredentials?.phrase,
 			orderbookPrivateKey: this.orderbookSignerCredentials?.privateKey,
 			orderbookPhrase: this.orderbookSignerCredentials?.phrase,
-			subgraphUri: this.subgraph.uri,
-			skipSubgraph: this.skipSubgraph,
+			voidnodeUri: this.voidnode.uri,
+			skipVoidnode: this.skipVoidnode,
 			apiKey: this.apiKey,
 			apiBaseUri: this.apiBaseUri,
 			apiWsUri: this.apiWsUri,

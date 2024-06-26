@@ -1,10 +1,11 @@
 import { DocumentNode, gql } from '@apollo/client/core'
+
 import {
 	VaultRegistryExtendedFragment,
 	VaultRegistryFragment,
 } from '../fragments'
-import { addFields } from '../../../../utils/subgraph'
-import PremiaSubgraph from '../../index'
+import { addFields } from '../../../../utils/voidnode'
+import PremiaVoidnode from '../../index'
 
 export class VaultRegistryQuery {
 	static registryId(address: string): string {
@@ -13,7 +14,7 @@ export class VaultRegistryQuery {
 
 	@addFields
 	static GetVaultRegistry(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		address: string
 	): DocumentNode {
 		return gql`
@@ -29,7 +30,7 @@ export class VaultRegistryQuery {
 
 	@addFields
 	static GetVaultRegistryExtended(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		address: string
 	): DocumentNode {
 		return gql`

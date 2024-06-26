@@ -2,8 +2,8 @@ import { DocumentNode, gql } from '@apollo/client/core'
 import { TokenInfo } from '@premia/pair-lists/src/types'
 
 import { TokenExtendedFragment, TokenFragment } from '../fragments'
-import { addFields } from '../../../../utils/subgraph'
-import PremiaSubgraph from '../../index'
+import { addFields } from '../../../../utils/voidnode'
+import PremiaVoidnode from '../../index'
 
 export class TokenQuery {
 	static tokenId(address: string): string {
@@ -11,7 +11,7 @@ export class TokenQuery {
 	}
 
 	@addFields
-	static GetToken(subgraph: PremiaSubgraph, address: string): DocumentNode {
+	static GetToken(voidnode: PremiaVoidnode, address: string): DocumentNode {
 		return gql`
         ${TokenFragment}
         
@@ -25,7 +25,7 @@ export class TokenQuery {
 
 	@addFields
 	static GetTokenExtended(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		address: string
 	): DocumentNode {
 		return gql`
@@ -40,7 +40,7 @@ export class TokenQuery {
 	}
 
 	@addFields
-	static GetTokens(subgraph: PremiaSubgraph, tokens: string[]): DocumentNode {
+	static GetTokens(voidnode: PremiaVoidnode, tokens: string[]): DocumentNode {
 		return gql`
         ${TokenFragment}
         
@@ -58,7 +58,7 @@ export class TokenQuery {
 
 	@addFields
 	static GetTokensExtended(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		tokens: string[]
 	): DocumentNode {
 		return gql`
@@ -77,12 +77,12 @@ export class TokenQuery {
 	}
 
 	@addFields
-	static GetAllTokens(subgraph: PremiaSubgraph): DocumentNode {
+	static GetAllTokens(voidnode: PremiaVoidnode): DocumentNode {
 		return gql`
 			${TokenFragment}
 
 			{
-				tokens(first: 250) {
+				tokens(limit: 250) {
 					...Token
 				}
 			}
@@ -90,7 +90,7 @@ export class TokenQuery {
 	}
 
 	@addFields
-	static GetAllTokensExtended(subgraph: PremiaSubgraph): DocumentNode {
+	static GetAllTokensExtended(voidnode: PremiaVoidnode): DocumentNode {
 		return gql`
 			${TokenExtendedFragment}
 
@@ -104,7 +104,7 @@ export class TokenQuery {
 
 	@addFields
 	static GetTokenList(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		tokens: TokenInfo[]
 	): DocumentNode {
 		return gql`
@@ -124,7 +124,7 @@ export class TokenQuery {
 
 	@addFields
 	static GetTokenListExtended(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		tokens: TokenInfo[]
 	): DocumentNode {
 		return gql`

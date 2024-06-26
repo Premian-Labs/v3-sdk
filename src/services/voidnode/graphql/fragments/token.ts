@@ -15,29 +15,6 @@ export const TokenFragment = gql`
 	}
 `
 
-// export const TokenPriceNodeFragment = gql`
-// 	fragment TokenPriceNode on TokenPriceNode {
-// 		id
-// 		timestamp
-// 		adapterType
-// 		decimals
-// 		sources
-// 		prices
-// 		liquidity
-// 		tokens
-// 		pairs
-//
-// 		price
-//
-// 		next {
-// 			...TokenPriceNode
-// 		}
-// 		prev {
-// 			...TokenPriceNode
-// 		}
-// 	}
-// `
-
 export const TokenPriceNodeFieldsFragment = gql`
 	fragment TokenPriceNodeFields on TokenPriceNode {
 		id

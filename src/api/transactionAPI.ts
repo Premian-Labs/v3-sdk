@@ -19,7 +19,7 @@ export class TransactionAPI extends BaseAPI {
 	 * @remark Uses caching with a one-minute time-to-live.
 	 */
 	async getTransaction(hash: string): Promise<Transaction> {
-		return this.premia.subgraph.getTransaction(hash)
+		return this.premia.voidnode.getTransaction(hash)
 	}
 
 	/**
@@ -28,8 +28,8 @@ export class TransactionAPI extends BaseAPI {
 	 * @param {string} filter - The filter for the transaction search. (all, add, remove)
 	 * @param {string} search - The search query.
 	 * @param {string} [orderBy='timestamp'] - The attribute by which to order the transactions.
-	 * @param {string} [order='asc'] - The order in which to return the transactions (asc, desc).
-	 * @param {number} [first=100] - The maximum number of transactions to return.
+	 * @param {string} [order='ASC'] - The order in which to return the transactions (ASC, DESC).
+	 * @param {number} [limit=100] - The maximum number of transactions to return.
 	 * @param {number} [skip=0] - The number of transactions to skip.
 	 * @param {string} [type] - The type of transactions to return. (token, vault)
 	 * @param {string} [account] - The account associated with the transactions to return.
@@ -45,8 +45,8 @@ export class TransactionAPI extends BaseAPI {
 		filter: string,
 		search: string,
 		orderBy: string = 'timestamp',
-		order: string = 'asc',
-		first = 100,
+		order: string = 'ASC',
+		limit = 100,
 		skip = 0,
 		type?: string,
 		poolAddress?: string,
@@ -55,12 +55,12 @@ export class TransactionAPI extends BaseAPI {
 		endTime?: number,
 		searchInput?: string
 	): Promise<Transaction[]> {
-		return this.premia.subgraph.getTransactions(
+		return this.premia.voidnode.getTransactions(
 			filter,
 			search,
 			orderBy,
 			order,
-			first,
+			limit,
 			skip,
 			type,
 			poolAddress,
@@ -81,7 +81,7 @@ export class TransactionAPI extends BaseAPI {
 	 * @remark Uses caching with a one-minute time-to-live.
 	 */
 	async getVaultTransaction(hash: string): Promise<VaultTransaction> {
-		return this.premia.subgraph.getVaultTransaction(hash)
+		return this.premia.voidnode.getVaultTransaction(hash)
 	}
 
 	/**
@@ -90,8 +90,8 @@ export class TransactionAPI extends BaseAPI {
 	 * @param {string} filter - The filter for the vault transaction search. (all, add, remove)
 	 * @param {string} search - The search query.
 	 * @param {string} [orderBy='timestamp'] - The attribute by which to order the vault transactions.
-	 * @param {string} [order='asc'] - The order in which to return the vault transactions (asc, desc).
-	 * @param {number} [first=100] - The maximum number of vault transactions to return.
+	 * @param {string} [order='ASC'] - The order in which to return the vault transactions (ASC, DESC).
+	 * @param {number} [limit=100] - The maximum number of vault transactions to return.
 	 * @param {number} [skip=0] - The number of vault transactions to skip.
 	 * @param {string} [type] - The type of vault transactions to return.
 	 * @param {string} [vaultAddress] - The address of the vault associated with the vault transactions to return.
@@ -108,8 +108,8 @@ export class TransactionAPI extends BaseAPI {
 		filter: string,
 		search: string,
 		orderBy: string = 'timestamp',
-		order: string = 'asc',
-		first = 100,
+		order: string = 'ASC',
+		limit = 100,
 		skip = 0,
 		type?: string,
 		vaultAddress?: string,
@@ -118,12 +118,12 @@ export class TransactionAPI extends BaseAPI {
 		endTime?: number,
 		searchInput?: string
 	): Promise<VaultTransaction[]> {
-		return this.premia.subgraph.getVaultTransactions(
+		return this.premia.voidnode.getVaultTransactions(
 			filter,
 			search,
 			orderBy,
 			order,
-			first,
+			limit,
 			skip,
 			type,
 			vaultAddress,
@@ -144,7 +144,7 @@ export class TransactionAPI extends BaseAPI {
 	 * @remark Uses caching with a one-minute time-to-live.
 	 */
 	async getOptionPSTransaction(hash: string): Promise<OptionPSTransaction> {
-		return this.premia.subgraph.getOptionPSTransaction(hash)
+		return this.premia.voidnode.getOptionPSTransaction(hash)
 	}
 
 	/**
@@ -152,8 +152,8 @@ export class TransactionAPI extends BaseAPI {
 	 *
 	 * @param {string} search - The search query.
 	 * @param {string} [orderBy='timestamp'] - The attribute by which to order the optionPS transactions.
-	 * @param {string} [order='asc'] - The order in which to return the vault transactions (asc, desc).
-	 * @param {number} [first=100] - The maximum number of optionPS transactions to return.
+	 * @param {string} [order='ASC'] - The order in which to return the vault transactions (ASC, DESC).
+	 * @param {number} [limit=100] - The maximum number of optionPS transactions to return.
 	 * @param {number} [skip=0] - The number of optionPS transactions to skip.
 	 * @param {string} [account] - The account associated with the optionPS transactions to return.
 	 * @param {number} [startTime] - The start time for the optionPS transactions to return.
@@ -167,19 +167,19 @@ export class TransactionAPI extends BaseAPI {
 	async getOptionPSTransactions(
 		search: string,
 		orderBy: string = 'timestamp',
-		order: string = 'asc',
-		first = 100,
+		order: string = 'ASC',
+		limit = 100,
 		skip = 0,
 		account?: string,
 		startTime?: number,
 		endTime?: number,
 		searchInput?: string
 	): Promise<OptionPSTransaction[]> {
-		return this.premia.subgraph.getOptionPSTransactions(
+		return this.premia.voidnode.getOptionPSTransactions(
 			search,
 			orderBy,
 			order,
-			first,
+			limit,
 			skip,
 			account,
 			startTime,

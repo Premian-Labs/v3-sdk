@@ -10,7 +10,7 @@ import { Provider, toBigInt } from 'ethers'
 export type TokenOrAddress = Token | string
 
 /**
- * Represents a class for handling Token operations related to the subgraph.
+ * Represents a class for handling Token operations related to the voidnode server.
  *
  * @class TokenAPI
  * @extends {BaseAPI}
@@ -90,25 +90,25 @@ export class TokenAPI extends BaseAPI {
 	}
 
 	/**
-	 * Fetches information of a given token from subgraph, coingecko, or token contract.
+	 * Fetches information of a given token from voidnode, coingecko, or token contract.
 	 *
 	 * @param {string} address - The address of the token for which to fetch the detailed information.
 	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<Token>} A promise that resolves to an object containing the token's name, symbol, decimals,
 	 * whether it's native or wrapped native, price in ETH and USD, address, and chain ID.
 	 *
-	 * @throws Will throw an error if the token information cannot be fetched from either the subgraph, coingecko, or token contract.
+	 * @throws Will throw an error if the token information cannot be fetched from either the voidnode server, coingecko, or token contract.
 	 */
 	async getToken(address: string, provider?: Provider): Promise<Token> {
-		if (!this.premia.skipSubgraph) {
+		if (!this.premia.skipVoidnode) {
 			try {
-				const token = await this.premia.subgraph.getToken(address)
+				const token = await this.premia.voidnode.getToken(address)
 
 				if (token) {
 					return token
 				}
 			} catch (e) {
-				console.error('Subgraph failed to load:', e)
+				console.error('Voidnode failed to load:', e)
 			}
 		}
 
@@ -209,44 +209,44 @@ export class TokenAPI extends BaseAPI {
 	}
 
 	/**
-	 * Fetches extended information of a given token from the subgraph.
+	 * Fetches extended information of a given token from the voidnode server.
 	 *
 	 * @param {string} address - The address of the token for which to fetch the extended information.
 	 *
 	 * @returns {Promise<TokenExtended>} A promise that resolves to an object containing the extended information of the token.
 	 */
 	async getTokenExtended(address: string): Promise<TokenExtended> {
-		return this.premia.subgraph.getTokenExtended(address)
+		return this.premia.voidnode.getTokenExtended(address)
 	}
 
 	/**
 	 * Fetches information for multiple tokens given their addresses.
 	 *
 	 * This function retrieves information for multiple tokens specified by an array of addresses.
-	 * It uses caching with an hourly time to live to prevent frequent calls to the subgraph.
-	 * If subgraph call fails, it switches to skip the subgraph and fetches the tokens' information directly.
+	 * It uses caching with an hourly time to live to prevent frequent calls to the voidnode server.
+	 * If voidnode call fails, it switches to skip the voidnode server and fetches the tokens' information directly.
 	 *
 	 * @param {string[]} tokens - An array of token addresses for which to fetch the information.
 	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<Token[]>} A promise that resolves to an array containing the information of the tokens.
 	 */
 	async getTokens(tokens: string[], provider?: Provider): Promise<Token[]> {
-		if (!this.premia.skipSubgraph) {
+		if (!this.premia.skipVoidnode) {
 			try {
-				return this.premia.subgraph.getTokens(tokens)
+				return this.premia.voidnode.getTokens(tokens)
 			} catch (e) {
-				console.error('Subgraph failed to load:', e)
+				console.error('Voidnode failed to load:', e)
 			}
 		}
 
-		const skipSubgraph = this.premia.skipSubgraph
-		this.premia.setSkipSubgraph(true)
+		const skipVoidnode = this.premia.skipVoidnode
+		this.premia.setSkipVoidnode(true)
 
 		const _tokens = await Promise.all(
 			tokens.map((token) => this.getToken(token, provider))
 		)
 
-		this.premia.setSkipSubgraph(skipSubgraph)
+		this.premia.setSkipVoidnode(skipVoidnode)
 
 		return _tokens
 	}
@@ -260,46 +260,46 @@ export class TokenAPI extends BaseAPI {
 	 * information of the specified tokens.
 	 */
 	async getTokensExtended(tokens: string[]): Promise<TokenExtended[]> {
-		return this.premia.subgraph.getTokensExtended(tokens)
+		return this.premia.voidnode.getTokensExtended(tokens)
 	}
 
 	/**
 	 * Retrieves the information for a list of tokens given their details.
 	 *
 	 * This function fetches information for multiple tokens specified by an array of
-	 * token information objects. If subgraph querying is not skipped and fails, the function
+	 * token information objects. If voidnode querying is not skipped and fails, the function
 	 * resorts to fetching token details directly.
 	 *
 	 * @param {TokenInfo[]} tokenList - An array of token information objects for which to fetch the token data.
 	 * @param {Provider} provider - The custom provider to use for this call.
 	 * @returns {Promise<Token[]>} A promise that resolves to an array containing the information of the specified tokens.
 	 *
-	 * @throws Will throw an error if the subgraph fails to load.
+	 * @throws Will throw an error if the voidnode server fails to load.
 	 */
 	async getTokenList(
 		tokenList: TokenInfo[],
 		provider?: Provider
 	): Promise<Token[]> {
-		if (!this.premia.skipSubgraph) {
+		if (!this.premia.skipVoidnode) {
 			try {
-				const tokens = await this.premia.subgraph.getTokenList(tokenList)
+				const tokens = await this.premia.voidnode.getTokenList(tokenList)
 
 				if (tokenList.length === tokens.length) {
 					return tokens
 				}
 			} catch (e) {
-				console.error('Subgraph failed to load:', e)
+				console.error('Voidnode failed to load:', e)
 			}
 		}
 
-		const skipSubgraph = this.premia.skipSubgraph
-		this.premia.setSkipSubgraph(true)
+		const skipVoidnode = this.premia.skipVoidnode
+		this.premia.setSkipVoidnode(true)
 
 		const tokens = await Promise.all(
 			tokenList.map((token) => this.getToken(token.address, provider))
 		)
 
-		this.premia.setSkipSubgraph(skipSubgraph)
+		this.premia.setSkipVoidnode(skipVoidnode)
 
 		return tokens
 	}
@@ -315,6 +315,6 @@ export class TokenAPI extends BaseAPI {
 	 * @returns {Promise<TokenExtended[]>} A promise that resolves to an array containing the extended information of the specified tokens.
 	 */
 	async getTokenListExtended(tokenList: TokenInfo[]): Promise<TokenExtended[]> {
-		return this.premia.subgraph.getTokenListExtended(tokenList)
+		return this.premia.voidnode.getTokenListExtended(tokenList)
 	}
 }

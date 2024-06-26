@@ -1,8 +1,9 @@
 import { DocumentNode, gql } from '@apollo/client/core'
 import { BigNumberish } from 'ethers'
+
 import { VaultTransactionFragment } from '../fragments'
-import { addFields } from '../../../../utils/subgraph'
-import PremiaSubgraph from '../../index'
+import { addFields } from '../../../../utils/voidnode'
+import PremiaVoidnode from '../../index'
 
 export class VaultTransactionQuery {
 	static vaultTransactionId(hash: string): string {
@@ -11,7 +12,7 @@ export class VaultTransactionQuery {
 
 	@addFields
 	static GetVaultTransaction(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		hash: string
 	): DocumentNode {
 		return gql`
@@ -27,12 +28,12 @@ export class VaultTransactionQuery {
 
 	@addFields
 	static GetVaultTransactions(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		filter: string,
 		search: string,
 		orderBy: string,
 		order: string,
-		first = 100,
+		limit = 100,
 		skip = 0,
 		type?: string,
 		vaultAddress?: string,
@@ -67,10 +68,12 @@ export class VaultTransactionQuery {
     
         query VaultTransaction {
             vaultTransactions(
-                first: ${first}
+                limit: ${limit}
                 skip: ${skip}
-                orderBy: "${orderBy}"
-                orderDirection: "${order}"
+                orderBy: [{
+					field: "${orderBy}",
+                	direction: "${order}"
+				}]
                 where: {
                     sizeUSD_gt: 0,
                     ${addressFilter}

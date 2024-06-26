@@ -3,7 +3,7 @@ import { BaseAPI } from './baseAPI'
 import { ContractTransaction, Provider } from 'ethers'
 
 /**
- * Represents a class for handling operations related to making analytics queries from the subgraph.
+ * Represents a class for handling operations related to making analytics queries from the voidnode server.
  *
  * @class ReferralAPI
  * @extends {BaseAPI}

@@ -1,9 +1,10 @@
 import { DocumentNode, gql } from '@apollo/client/core'
 import { PairInfo } from '@premia/pair-lists/src/types'
+
 import { VolatilitySurfaceFragment } from '../fragments'
-import { addFields } from '../../../../utils/subgraph'
+import { addFields } from '../../../../utils/voidnode'
 import { TokenPairQuery } from './tokenPair'
-import PremiaSubgraph from '../../index'
+import PremiaVoidnode from '../../index'
 
 export class VolatilitySurfaceQuery {
 	static volatilitySurfaceId(pair: PairInfo, isCall: boolean): string {
@@ -17,7 +18,7 @@ export class VolatilitySurfaceQuery {
 
 	@addFields
 	static GetVolatilitySurface(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		pair: PairInfo,
 		isCall: boolean
 	): DocumentNode {

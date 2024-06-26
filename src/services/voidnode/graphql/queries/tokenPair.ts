@@ -3,8 +3,8 @@ import { PairInfo } from '@premia/pair-lists/src/types'
 
 import { TokenPairExtendedFragment, TokenPairFragment } from '../fragments'
 import { TokenQuery } from './token'
-import { addFields } from '../../../../utils/subgraph'
-import PremiaSubgraph from '../../index'
+import { addFields } from '../../../../utils/voidnode'
+import PremiaVoidnode from '../../index'
 
 export class TokenPairQuery {
 	static pairId(
@@ -26,13 +26,12 @@ export class TokenPairQuery {
 	}
 
 	@addFields
-	static GetPair(subgraph: PremiaSubgraph, pairId: string): DocumentNode {
+	static GetPair(voidnode: PremiaVoidnode, pairId: string): DocumentNode {
 		return gql`
         ${TokenPairFragment}
 
         {   
-            tokenPair(id: "${pairId}",
-			subgraphError: allow) {
+            tokenPair(id: "${pairId}") {
                 ...TokenPair
             }
         }
@@ -41,15 +40,14 @@ export class TokenPairQuery {
 
 	@addFields
 	static GetPairExtended(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		pairId: string
 	): DocumentNode {
 		return gql`
         ${TokenPairExtendedFragment}
 
         {
-            tokenPair(id: "${pairId}",
-			subgraphError: allow) {
+            tokenPair(id: "${pairId}") {
                 ...TokenPairExtended
             }
         }
@@ -57,15 +55,14 @@ export class TokenPairQuery {
 	}
 
 	@addFields
-	static GetPairs(subgraph: PremiaSubgraph, pairIds: string[]): DocumentNode {
+	static GetPairs(voidnode: PremiaVoidnode, pairIds: string[]): DocumentNode {
 		return gql`
 			${TokenPairFragment}
 
         {    
             tokenPairs(where: {
                 id_in: [${pairIds.map((id) => `"${id}"`).join(', ')}]
-            },
-			subgraphError: allow) {
+            }) {
                 ...TokenPair
             }
         }
@@ -74,7 +71,7 @@ export class TokenPairQuery {
 
 	@addFields
 	static GetPairsExtended(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		pairIds: string[]
 	): DocumentNode {
 		return gql`
@@ -83,8 +80,7 @@ export class TokenPairQuery {
         {    
             tokenPairs(where: {
                 id_in: [${pairIds.map((id) => `"${id}"`).join(', ')}]
-            },
-			subgraphError: allow) {
+            }) {
                 ...TokenPairExtended
             }
         }
@@ -92,13 +88,12 @@ export class TokenPairQuery {
 	}
 
 	@addFields
-	static GetAllPairs(subgraph: PremiaSubgraph): DocumentNode {
+	static GetAllPairs(voidnode: PremiaVoidnode): DocumentNode {
 		return gql`
 			${TokenPairFragment}
 
 			{
-				tokenPairs(first: 250,
-					subgraphError: allow) {
+				tokenPairs(limit: 250) {
 					...TokenPair
 				}
 			}
@@ -106,13 +101,12 @@ export class TokenPairQuery {
 	}
 
 	@addFields
-	static GetAllPairsExtended(subgraph: PremiaSubgraph): DocumentNode {
+	static GetAllPairsExtended(voidnode: PremiaVoidnode): DocumentNode {
 		return gql`
 			${TokenPairExtendedFragment}
 
 			{
-				tokenPairs(
-					subgraphError: allow) {
+				tokenPairs(limit: 250) {
 					...TokenPairExtended
 				}
 			}

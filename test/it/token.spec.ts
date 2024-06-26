@@ -25,7 +25,7 @@ describe('Token API', function (this: any) {
 	})
 
 	it('should correctly load a token with multicall', async () => {
-		sdk.setSkipSubgraph(true)
+		sdk.setSkipVoidnode(true)
 
 		const token = await sdk.tokens.getToken(Addresses[sdk.chainId].WETH)
 		expect(token.address).to.equal(Addresses[sdk.chainId].WETH)
@@ -39,7 +39,7 @@ describe('Token API', function (this: any) {
 	})
 
 	it('should correctly load tokens', async () => {
-		sdk.setSkipSubgraph(false)
+		sdk.setSkipVoidnode(false)
 
 		const tokens = await sdk.tokens.getTokens([CHAINLINK_ETH.toLowerCase()])
 		expect(tokens.length).to.equal(1)
@@ -56,7 +56,7 @@ describe('Token API', function (this: any) {
 	})
 
 	it('should correctly load tokens with multicall', async () => {
-		sdk.setSkipSubgraph(true)
+		sdk.setSkipVoidnode(true)
 
 		const tokens = await sdk.tokens.getTokens([Addresses[sdk.chainId].USDC])
 		expect(tokens.length).to.equal(1)
@@ -72,7 +72,7 @@ describe('Token API', function (this: any) {
 	})
 
 	it('should correctly load token list', async () => {
-		sdk.setSkipSubgraph(false)
+		sdk.setSkipVoidnode(false)
 
 		const tokens = await sdk.tokens.getTokenList([
 			{
@@ -99,7 +99,7 @@ describe('Token API', function (this: any) {
 	})
 
 	it('should correctly load token list with multicall', async () => {
-		sdk.setSkipSubgraph(true)
+		sdk.setSkipVoidnode(true)
 
 		const tokens = await sdk.tokens.getTokenList([
 			{
