@@ -4,6 +4,7 @@ import {
 	InMemoryCache,
 	NormalizedCacheObject,
 } from '@apollo/client/core'
+import { setContext } from '@apollo/client/link/context'
 import { TokenInfo } from '@premia/pair-lists/src/types'
 import { BigNumberish, toBigInt } from 'ethers'
 import { get } from 'lodash'
@@ -65,6 +66,11 @@ import { DefaultApolloClientOptions } from '../../constants'
 import { QueryParams, convertAllBigDecimalToBigInt } from '../../utils'
 import { TokenOrAddress, TokenPairOrId } from '../../api'
 
+export interface VoidnodeAuthentication {
+	apiId: string
+	apiKey: string
+}
+
 /**
  * The PremiaVoidnode class is the entry point for interacting with the Premia V3 voidnode server
  * to query on-chain and indexed data using various APIs and services.
@@ -99,10 +105,26 @@ export class PremiaVoidnode {
 	 * The SDK needs to be initialized before it can be used with
 	 * non-default parameters.
 	 */
-	constructor(uri: string) {
+	constructor(uri: string, authentication?: VoidnodeAuthentication) {
 		this.uri = uri ?? 'https://localhost:4000'
+
+		const httpLink = new HttpLink({ uri: this.uri, fetch })
+		const authLink = setContext((_, { headers }) => {
+			return {
+				headers: {
+					...headers,
+					...(authentication
+						? {
+								'x-api-id': authentication?.apiId,
+								authorization: `Bearer ${authentication?.apiKey}`,
+						  }
+						: {}),
+				},
+			}
+		})
+
 		this.client = new ApolloClient({
-			link: new HttpLink({ uri: this.uri, fetch }),
+			link: authLink.concat(httpLink),
 			cache: new InMemoryCache(),
 			defaultOptions: DefaultApolloClientOptions,
 		})

@@ -31,7 +31,7 @@ import {
 } from './api'
 import { Addresses, SupportedChainId } from './constants'
 import { Coingecko, OrderbookV1 } from './services'
-import PremiaVoidnode from './services/voidnode'
+import { PremiaVoidnode, VoidnodeAuthentication } from './services/voidnode'
 
 export interface SetProviderParams {
 	/**
@@ -97,6 +97,16 @@ export interface VoidnodeParams {
 	 * @see https://docs.premia.finance/api/voidnode
 	 */
 	voidnodeUri?: string
+
+	/**
+	 * The authentication headers to connect to voidnode with.
+	 *
+	 * @see https://docs.premia.finance/api/voidnode
+	 */
+	voidnodeAuthentication?: {
+		apiId?: string
+		apiKey: string
+	}
 }
 
 export interface PremiaConfig
@@ -221,7 +231,10 @@ export interface PremiaConfig
 	vaultMiningAddress?: string
 }
 
-export interface PremiaConfigWithDefaults extends Required<PremiaConfig> {}
+export interface PremiaConfigWithDefaults
+	extends Required<Omit<PremiaConfig, 'voidnodeAuthentication'>> {
+	voidnodeAuthentication?: VoidnodeAuthentication
+}
 
 /**
  * The SDK class is the main entry point for interacting with the Premia V3 protocol.
@@ -471,7 +484,10 @@ export class Premia {
 		)
 
 		this.skipVoidnode = config.skipVoidnode
-		this.voidnode = new PremiaVoidnode(config.voidnodeUri)
+		this.voidnode = new PremiaVoidnode(
+			config.voidnodeUri,
+			config.voidnodeAuthentication
+		)
 
 		this.useTestnet = config.useTestnet
 		this.chainId = config.chainId
@@ -569,6 +585,14 @@ export class Premia {
 			voidnodeUri: config.useTestnet
 				? 'http://localhost:3000'
 				: 'https://api.voidnode.xyz/projects/premia-v3',
+			voidnodeAuthentication: config.voidnodeAuthentication
+				? {
+						apiId:
+							config.voidnodeAuthentication.apiId ??
+							'api_FDsr3g4dAWSAEvCtMQPRwCPy65b',
+						apiKey: config.voidnodeAuthentication.apiKey,
+				  }
+				: undefined,
 		}
 
 		const merged = merge(defaultConfig, config) as PremiaConfigWithDefaults
@@ -592,10 +616,19 @@ export class Premia {
 	}
 
 	/**
-	 * @param uri - A uri associated with the PremiaVoidnode.
+	 * @param uri - A uri to connect to the Voidnode indexed data service.
 	 */
 	set voidnodeUri(uri: string) {
 		this.voidnode = new PremiaVoidnode(uri)
+	}
+
+	/**
+	 * @param authentication - Authentication headers to connect to Voidnode with
+	 */
+	set voidnodeAuthentication(
+		authentication: VoidnodeAuthentication | undefined
+	) {
+		this.voidnodeAuthentication = authentication
 	}
 
 	get apiKey(): string {
@@ -887,6 +920,7 @@ export class Premia {
 			orderbookPrivateKey: this.orderbookSignerCredentials?.privateKey,
 			orderbookPhrase: this.orderbookSignerCredentials?.phrase,
 			voidnodeUri: this.voidnode.uri,
+			voidnodeAuthentication: this.voidnodeAuthentication,
 			skipVoidnode: this.skipVoidnode,
 			apiKey: this.apiKey,
 			apiBaseUri: this.apiBaseUri,
