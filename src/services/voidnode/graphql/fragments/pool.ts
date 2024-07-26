@@ -11,7 +11,7 @@ export const PoolMinimalFragment = gql`
 	${FactoryMinimalFragment}
 
 	fragment PoolMinimal on Pool {
-		id
+		_id
 		address
 		factory {
 			...FactoryMinimal
@@ -39,7 +39,7 @@ export const PoolFragment = gql`
 	${TokenPairFragment}
 
 	fragment Pool on Pool {
-		id
+		_id
 		address
 		name
 		pairName

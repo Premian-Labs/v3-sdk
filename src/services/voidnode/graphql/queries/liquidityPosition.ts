@@ -1,4 +1,5 @@
 import { DocumentNode, gql } from '@apollo/client/core'
+import { getAddress } from 'ethers'
 
 import {
 	LiquidityPositionExtendedFragment,
@@ -15,9 +16,9 @@ export class LiquidityPositionQuery {
 		tokenId: string
 	): string {
 		return (
-			owner.toLowerCase() +
+			getAddress(owner) +
 			':' +
-			poolAddress.toLowerCase() +
+			getAddress(poolAddress) +
 			'/' +
 			tokenId.toString()
 		)
@@ -79,18 +80,18 @@ export class LiquidityPositionQuery {
 			filter = ''
 		} else {
 			if (orderType === OrderType.LONG_COLLATERAL) {
-				filter = ', orderType: "LONG_COLLATERAL"'
+				filter = ', orderType: LONG_COLLATERAL'
 			} else if (orderType == OrderType.COLLATERAL_SHORT) {
-				filter = ', orderType: "COLLATERAL_SHORT"'
+				filter = ', orderType: COLLATERAL_SHORT'
 			} else if (orderType == OrderType.COLLATERAL_SHORT_USE_PREMIUMS) {
-				filter = ', orderType: "COLLATERAL_SHORT_USE_PREMIUMS"'
+				filter = ', orderType: COLLATERAL_SHORT_USE_PREMIUMS'
 			}
 		}
 
 		if (isOpen) {
 			filter += ', closedAt: null'
 		} else if (!isOpen && isOpen !== undefined) {
-			filter += ', closedAt_not: null'
+			filter += ', closedAt_ne: null'
 		}
 
 		return gql`
@@ -99,7 +100,7 @@ export class LiquidityPositionQuery {
 			{
 				liquidityPositions(
 					where: {
-						owner: "${owner.toLowerCase()}"
+						owner: "${getAddress(owner)}"
 						${filter}
 					},
 					limit: 1000, 

@@ -1,5 +1,6 @@
 import { DocumentNode, gql } from '@apollo/client/core'
 import { PairInfo } from '@premia/pair-lists/src/types'
+import { getAddress } from 'ethers'
 
 import { TokenPairExtendedFragment, TokenPairFragment } from '../fragments'
 import { TokenQuery } from './token'
@@ -14,7 +15,7 @@ export class TokenPairQuery {
 	): string {
 		return `${TokenQuery.tokenId(baseAddress)}/${TokenQuery.tokenId(
 			quoteAddress
-		)}:${priceOracle.toLowerCase()}`
+		)}:${getAddress(priceOracle)}`
 	}
 
 	static pairIdFromPair(pair: PairInfo): string {
@@ -61,7 +62,7 @@ export class TokenPairQuery {
 
         {    
             tokenPairs(where: {
-                id_in: [${pairIds.map((id) => `"${id}"`).join(', ')}]
+                _id_in: [${pairIds.map((id) => `"${id}"`).join(', ')}]
             }) {
                 ...TokenPair
             }
@@ -79,7 +80,7 @@ export class TokenPairQuery {
 
         {    
             tokenPairs(where: {
-                id_in: [${pairIds.map((id) => `"${id}"`).join(', ')}]
+                _id_in: [${pairIds.map((id) => `"${id}"`).join(', ')}]
             }) {
                 ...TokenPairExtended
             }

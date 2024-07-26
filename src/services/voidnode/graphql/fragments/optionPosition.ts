@@ -9,7 +9,7 @@ export const OptionPositionFragment = gql`
 	${TokenFragment}
 
 	fragment OptionPosition on OptionPosition {
-		id
+		_id
 		address
 		base {
 			...Token

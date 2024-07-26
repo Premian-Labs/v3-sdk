@@ -1,5 +1,5 @@
 import { DocumentNode, gql } from '@apollo/client/core'
-import { BigNumberish } from 'ethers'
+import { BigNumberish, getAddress } from 'ethers'
 
 import { TransactionFragment } from '../fragments'
 import { addFields } from '../../../../utils/voidnode'
@@ -40,14 +40,14 @@ export class TransactionQuery {
 		searchInput?: string
 	): DocumentNode {
 		const addressFilter = poolAddress
-			? `pool: "${poolAddress.toLowerCase()}",`
+			? `pool: "${getAddress(poolAddress)}",`
 			: ''
 		const startFilter = startTime ? `timestamp_gte: ${Number(startTime)}` : ''
 		const endFilter = endTime ? `timestamp_lte: ${Number(endTime)}` : ''
 		const searchInputFilter = searchInput
 			? `description_contains: "${searchInput.toUpperCase()}"`
 			: ''
-		const accountFilter = account ? `user: "${account.toLowerCase()}"` : ''
+		const accountFilter = account ? `user: "${getAddress(account)}"` : ''
 		const containsName =
 			type === 'token'
 				? 'tokenSymbol_contains'
@@ -67,7 +67,7 @@ export class TransactionQuery {
             skip: ${skip}
             orderBy: [{
 				field: ${orderBy},
-            	direction: ${order}
+            	direction: ${order.toUpperCase()}
 			}]
             where: { 
             	sizeUSD_gt: 0, 

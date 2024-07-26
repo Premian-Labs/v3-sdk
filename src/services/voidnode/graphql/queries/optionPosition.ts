@@ -1,4 +1,5 @@
 import { DocumentNode, gql } from '@apollo/client/core'
+import { getAddress } from 'ethers'
 
 import {
 	OptionPositionExtendedFragment,
@@ -9,7 +10,7 @@ import PremiaVoidnode from '../../index'
 
 export class OptionPositionQuery {
 	static optionPositionId(owner: string, poolAddress: string): string {
-		return owner.toLowerCase() + ':' + poolAddress.toLowerCase()
+		return getAddress(owner) + ':' + getAddress(poolAddress)
 	}
 
 	@addFields
@@ -57,8 +58,8 @@ export class OptionPositionQuery {
 			filter = ''
 		} else {
 			filter = isOpen
-				? ', { closedAt: null }, { or: [{ pool_: { isExpiredOTM: false } }, { option_not: null }, { isBuy: false }] }'
-				: ', { or: [{ closedAt_not: null }, { pool_: { isExpiredOTM: true }, isBuy: true }] }'
+				? ', { closedAt: null }, { or: [{ pool_: { isExpiredOTM: false } }, { option_ne: null }, { isBuy: false }] }'
+				: ', { or: [{ closedAt_ne: null }, { pool_: { isExpiredOTM: true }, isBuy: true }] }'
 		}
 
 		return gql`
@@ -68,7 +69,7 @@ export class OptionPositionQuery {
 				optionPositions(
 					where: { 
 						and: [
-							{ owner: "${owner.toLowerCase()}" }
+							{ owner: "${getAddress(owner)}" }
 							${filter}
 						]
 					},
@@ -91,9 +92,9 @@ export class OptionPositionQuery {
 		timestamp?: number,
 		isOpen?: boolean
 	): DocumentNode {
-		let filter = `owner: "${owner.toLowerCase()}", option_not: null`
+		let filter = `owner: "${getAddress(owner)}", option_ne: null`
 		if (isOpen !== undefined) {
-			filter += isOpen ? ', closedAt: null' : ', closedAt_not: null'
+			filter += isOpen ? ', closedAt: null' : ', closedAt_ne: null'
 		}
 		if (timestamp) {
 			filter += `, maturity_lte: ${timestamp}`

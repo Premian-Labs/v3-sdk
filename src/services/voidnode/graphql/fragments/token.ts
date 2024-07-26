@@ -2,7 +2,7 @@ import { gql } from '@apollo/client/core'
 
 export const TokenFragment = gql`
 	fragment Token on Token {
-		id
+		_id
 		name
 		symbol
 		decimals
@@ -17,15 +17,19 @@ export const TokenFragment = gql`
 
 export const TokenPriceNodeFieldsFragment = gql`
 	fragment TokenPriceNodeFields on TokenPriceNode {
-		id
+		_id
 		timestamp
 		adapterType
 		decimals
 		sources
 		prices
 		liquidity
-		tokens
-		pairs
+		tokens {
+			_id
+		}
+		pairs {
+			_id
+		}
 
 		price
 	}
@@ -96,7 +100,7 @@ export const TokenExtendedFragment = gql`
 
 export const TokenMinimalFragment = gql`
 	fragment TokenMinimal on Token {
-		id
+		_id
 		symbol
 		name
 		decimals

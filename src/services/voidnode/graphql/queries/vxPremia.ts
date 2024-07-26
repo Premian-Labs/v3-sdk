@@ -1,4 +1,5 @@
 import { DocumentNode, gql } from '@apollo/client/core'
+import { getAddress } from 'ethers'
 
 import { addFields } from '../../../../utils/voidnode'
 import {
@@ -21,7 +22,9 @@ export class VxPremiaQuery {
       ${VaultVoteFragment}
 
       query VaultVote {
-        vaultVotes(limit: ${limit}, skip: ${skip}, where: { voter: "${user.toLowerCase()}", isLast: true }) {
+        vaultVotes(limit: ${limit}, skip: ${skip}, where: { voter: "${getAddress(
+			user
+		)}", isLast: true }) {
           ...VaultVote
         }
       }
@@ -44,7 +47,9 @@ export class VxPremiaQuery {
         vaultVotes(
           limit: ${limit}
           skip: ${skip}
-          where: { voter: "${user.toLowerCase()}", timestamp_lte: ${timestampTo}, timestamp_gte: ${timestampFrom} }
+          where: { voter: "${getAddress(
+						user
+					)}", timestamp_lte: ${timestampTo}, timestamp_gte: ${timestampFrom} }
           orderBy: [{
 			field: timestamp
           	direction: DESC
@@ -73,7 +78,7 @@ export class VxPremiaQuery {
           skip: ${skip}
           orderBy: [{
 			field: ${orderBy},
-          	direction: ${order}
+          	direction: ${order.toUpperCase()}
 		  }]
           where: { isLast: true, amount_gt: 0 }
         ) {
@@ -107,7 +112,7 @@ export class VxPremiaQuery {
 			query UserStake {
 				userStakes(
 					limit: 14
-					orderBy: [{ field: amount, orderDirection: "DESC" }]
+					orderBy: [{ field: amount, direction: DESC }]
 					where: { isLast: true }
 				) {
 					...UserStake
@@ -135,7 +140,7 @@ export class VxPremiaQuery {
 			field: timestamp,
 			direction: ASC
 		  }]
-          where: { timestamp_gte: ${startTime}, user: "${user.toLowerCase()}" }
+          where: { timestamp_gte: ${startTime}, user: "${getAddress(user)}" }
         ) {
           ...UserStake
         }
@@ -159,7 +164,7 @@ export class VxPremiaQuery {
 			field: timestamp,
           	direction: DESC
 		  }]
-          where: { timestamp_lte: ${timestamp}, user: "${user.toLowerCase()}" }
+          where: { timestamp_lte: ${timestamp}, user: "${getAddress(user)}" }
         ) {
           ...UserStake
         }

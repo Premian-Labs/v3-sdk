@@ -1,5 +1,5 @@
 import { DocumentNode, gql } from '@apollo/client/core'
-import { BigNumberish } from 'ethers'
+import { BigNumberish, getAddress } from 'ethers'
 
 import { VaultTransactionFragment } from '../fragments'
 import { addFields } from '../../../../utils/voidnode'
@@ -43,24 +43,29 @@ export class VaultTransactionQuery {
 		searchInput?: string
 	): DocumentNode {
 		const addressFilter = vaultAddress
-			? `vault: "${vaultAddress.toLowerCase()}",`
+			? `vault: "${getAddress(vaultAddress)}",`
 			: ''
 		const startFilter = startTime ? `timestamp_gte: ${Number(startTime)},` : ''
 		const endFilter = endTime ? `timestamp_lte: ${Number(endTime)},` : ''
 		const searchFilter = searchInput
 			? `description_contains: "${searchInput.toUpperCase()}",`
 			: ''
-		const accountFilter = account ? `user: "${account.toLowerCase()}",` : ''
+		const accountFilter = account ? `user: "${getAddress(account)}",` : ''
 
-		const containsName =
-			type === 'token' ? 'tokenSymbol_contains' : 'vaultName_contains'
-		const containsFilter = `${containsName}: "${search}",`
+		let containsFilter
+		if (search.length > 0) {
+			const containsName =
+				type === 'token' ? 'tokenSymbol_contains' : 'vaultName_contains'
+			containsFilter = `${containsName}: "${search}",`
+		} else {
+			containsFilter = ''
+		}
 
 		let transactionTypeFilter = ''
 		if (filter === 'add') {
-			transactionTypeFilter = 'type_in: ["VAULT_DEPOSIT"]'
+			transactionTypeFilter = 'type_in: [VAULT_DEPOSIT]'
 		} else if (filter == 'remove') {
-			transactionTypeFilter = 'type_in: ["VAULT_WITHDRAW"]'
+			transactionTypeFilter = 'type_in: [VAULT_WITHDRAW]'
 		}
 
 		return gql`
@@ -71,8 +76,8 @@ export class VaultTransactionQuery {
                 limit: ${limit}
                 skip: ${skip}
                 orderBy: [{
-					field: "${orderBy}",
-                	direction: "${order}"
+					field: ${orderBy},
+                	direction: ${order.toUpperCase()}
 				}]
                 where: {
                     sizeUSD_gt: 0,

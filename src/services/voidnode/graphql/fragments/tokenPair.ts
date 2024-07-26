@@ -12,7 +12,7 @@ export const TokenPairMinimalFragment = gql`
 	${TokenMinimalFragment}
 
 	fragment TokenPairMinimal on TokenPair {
-		id
+		_id
 		name
 		quote {
 			...TokenMinimal
@@ -29,7 +29,7 @@ export const TokenPairFragment = gql`
 	${FactoryFragment}
 
 	fragment TokenPair on TokenPair {
-		id
+		_id
 		factory {
 			...Factory
 		}
@@ -56,7 +56,6 @@ export const TokenPairExtendedFragment = gql`
 
 	fragment TokenPairExtended on TokenPair {
 		...TokenPair
-		...VolatilitySurface
 
 		quotePricingPath {
 			...TokenPriceNode

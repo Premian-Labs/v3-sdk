@@ -6,11 +6,13 @@ export const VaultPositionFragment = gql`
 	${VaultFragment}
 
 	fragment VaultPosition on VaultPosition {
-		id
+		_id
 		vault {
 			...Vault
 		}
-		owner
+		owner {
+			address
+		}
 
 		createdAt
 		createdAtBlock

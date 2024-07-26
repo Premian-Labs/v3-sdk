@@ -1,4 +1,5 @@
 import { DocumentNode, gql } from '@apollo/client/core'
+import { getAddress } from 'ethers'
 
 import { addFields } from '../../../../utils/voidnode'
 import {
@@ -23,7 +24,9 @@ export class AnalyticsQuery {
 
       query PoolDayData {
         poolDayDatas(
-          where: { pool: "${poolAddress.toLowerCase()}", periodStart_gt: ${startTime} }
+          where: { pool: "${getAddress(
+						poolAddress
+					)}", periodStart_gt: ${startTime} }
           limit: ${limit}
           skip: ${skip}
           orderBy: [{
@@ -50,7 +53,9 @@ export class AnalyticsQuery {
 
       query PoolHourData {
         poolHourDatas(
-          where: { pool: "${poolAddress.toLowerCase()}", periodStart_gt: ${startTime} }
+          where: { pool: "${getAddress(
+						poolAddress
+					)}", periodStart_gt: ${startTime} }
           limit: ${limit}
           skip: ${skip}
           orderBy: [{
@@ -77,7 +82,7 @@ export class AnalyticsQuery {
       query OrderbookData {
         poolDayDatas(
           where: { pool_in: [${poolAddresses
-						.map((address) => `"${address.toLowerCase()}"`)
+						.map((address) => `"${getAddress(address)}"`)
 						.toString()}] }
           limit: ${limit}
           skip: ${skip}
@@ -105,7 +110,9 @@ export class AnalyticsQuery {
 
       query VaultDayData {
         vaultDayDatas(
-          where: { vault: "${vaultAddress.toLowerCase()}", periodStart_gt: ${startTime} }
+          where: { vault: "${getAddress(
+						vaultAddress
+					)}", periodStart_gt: ${startTime} }
           limit: ${limit}
           skip: ${skip}
           orderBy: [{

@@ -2,16 +2,14 @@ import { gql } from '@apollo/client/core'
 
 export const FactoryMinimalFragment = gql`
 	fragment FactoryMinimal on Factory {
-		id
+		_id
 		address
 	}
 `
 
 export const FactoryFragment = gql`
-	${FactoryMinimalFragment}
-
 	fragment Factory on Factory {
-		id
+		_id
 		chainId
 		address
 	}

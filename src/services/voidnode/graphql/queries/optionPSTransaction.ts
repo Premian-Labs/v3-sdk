@@ -1,5 +1,5 @@
 import { DocumentNode, gql } from '@apollo/client/core'
-import { BigNumberish } from 'ethers'
+import { BigNumberish, getAddress } from 'ethers'
 
 import { OptionPSTransactionFragment } from '../fragments'
 import { addFields } from '../../../../utils/voidnode'
@@ -44,7 +44,7 @@ export class OptionPSTransactionQuery {
 		const searchFilter = searchInput
 			? `description_contains: "${searchInput.toUpperCase()}",`
 			: ''
-		const accountFilter = account ? `user: "${account.toLowerCase()}",` : ''
+		const accountFilter = account ? `user: "${getAddress(account)}",` : ''
 
 		const containsName = 'tokenSymbol_contains'
 		const containsFilter = `${containsName}: "${search}",`
@@ -57,8 +57,8 @@ export class OptionPSTransactionQuery {
                 limit: ${limit}
                 skip: ${skip}
                 orderBy: [{
-					field: "${orderBy}",
-                	direction: "${order}"
+					field: ${orderBy},
+                	direction: ${order.toUpperCase()}
 				}]
                 where: {
                     sizeUSD_gt: 0,

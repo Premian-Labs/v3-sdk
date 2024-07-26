@@ -1,4 +1,5 @@
 import { DocumentNode, gql } from '@apollo/client/core'
+import { getAddress } from 'ethers'
 
 import { addFields } from '../../../../utils/voidnode'
 import PremiaVoidnode from '../../index'
@@ -17,7 +18,7 @@ export class ReferralQuery {
 
       query Referral {
         referrals(
-          where: { user: "${user.toLowerCase()}"}
+          where: { user: "${getAddress(user)}"}
           limit: ${limit}
           skip: ${skip}
         ) {

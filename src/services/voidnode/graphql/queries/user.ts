@@ -1,5 +1,5 @@
 import { DocumentNode, gql } from '@apollo/client/core'
-import { BigNumberish } from 'ethers'
+import { BigNumberish, getAddress } from 'ethers'
 
 import {
 	UserExtendedFragment,
@@ -15,11 +15,11 @@ import PremiaVoidnode from '../../index'
 
 export class UserQuery {
 	static userId(address: string): string {
-		return address.toLowerCase()
+		return getAddress(address)
 	}
 
 	static snapshotId(address: string, timestamp: BigNumberish): string {
-		return address.toLowerCase() + ':' + timestamp.toString()
+		return getAddress(address) + ':' + timestamp.toString()
 	}
 
 	@addFields
@@ -140,7 +140,7 @@ export class UserQuery {
 
         {
             users(where: {
-                id_in: [${addresses
+                _id_in: [${addresses
 									.map((a) => `"${this.userId(a)}"`)
 									.join(', ')}],
             }) {
@@ -160,7 +160,7 @@ export class UserQuery {
 
         {
             users(where: {
-                id_in: [${addresses
+                _id_in: [${addresses
 									.map((a) => `"${this.userId(a)}"`)
 									.join(', ')}],
             }) {
@@ -189,11 +189,11 @@ export class UserQuery {
 				limit: ${limit}
 				skip: ${skip}
 				orderBy: [{
-					field: "${orderBy}",
-					direction: "${order}"
+					field: ${orderBy},
+					direction: ${order.toUpperCase()}
 				}]
 				where: {
-					user: "${address.toLowerCase()}",
+					user: "${getAddress(address)}",
 					timestamp_gte: ${Number(startTime)},
 					timestamp_lte: ${Number(endTime)},
 				}
@@ -222,11 +222,11 @@ export class UserQuery {
 				limit: ${limit}
 				skip: ${skip}
 				orderBy: [{
-					field: "${orderBy}",
-					direction: "${order}"
+					field: ${orderBy},
+					direction: ${order.toUpperCase()}
 				}]
 				where: {
-					user: "${address.toLowerCase()}",
+					user: "${getAddress(address)}",
 					timestamp_gte: ${Number(startTime)},
 					timestamp_lte: ${Number(endTime)},
 				}

@@ -1,4 +1,5 @@
 import { DocumentNode, gql } from '@apollo/client/core'
+import { getAddress } from 'ethers'
 
 import { TokenOrAddress } from '../../../../api'
 import { addFields } from '../../../../utils/voidnode'
@@ -8,7 +9,7 @@ import PremiaVoidnode from '../../index'
 
 export class VaultQuery {
 	static vaultId(address: string): string {
-		return address.toLowerCase()
+		return getAddress(address)
 	}
 
 	@addFields
@@ -62,7 +63,7 @@ export class VaultQuery {
 			${VaultFragment}
 
 			{
-				vaults(where: { asset: "${tokenAddress.toLowerCase()}" }) {
+				vaults(where: { asset: "${getAddress(tokenAddress)}" }) {
 					...Vault
 				}
 			}
@@ -78,7 +79,7 @@ export class VaultQuery {
         ${VaultExtendedFragment}
 
         {
-            vaults(where: { asset: "${tokenAddress.toLowerCase()}" }) {
+            vaults(where: { asset: "${getAddress(tokenAddress)}" }) {
                 ...VaultExtended
             }
         }

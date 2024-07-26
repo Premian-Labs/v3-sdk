@@ -1,4 +1,5 @@
 import { DocumentNode, gql } from '@apollo/client/core'
+import { getAddress } from 'ethers'
 
 import {
 	VaultPositionExtendedFragment,
@@ -9,7 +10,7 @@ import PremiaVoidnode from '../../index'
 
 export class VaultPositionQuery {
 	static vaultPositionId(owner: string, vaultAddress: string): string {
-		return owner.toLowerCase() + ':' + vaultAddress.toLowerCase()
+		return getAddress(owner) + ':' + getAddress(vaultAddress)
 	}
 
 	@addFields
@@ -22,7 +23,7 @@ export class VaultPositionQuery {
 
         {
             vaultPositions(where: {
-            	owner: "${owner.toLowerCase()}"
+            	owner: "${getAddress(owner)}"
             }) {
                 ...VaultPositionExtended
             }

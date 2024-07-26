@@ -1,5 +1,5 @@
 import { DocumentNode, gql } from '@apollo/client/core'
-import { BigNumberish } from 'ethers'
+import { BigNumberish, getAddress } from 'ethers'
 
 import PremiaVoidnode from '../../index'
 import {
@@ -10,12 +10,12 @@ import {
 } from '../fragments'
 import { OptionType, Token } from '../../../../entities'
 import { addFields } from '../../../../utils/voidnode'
-import { TokenQuery } from './token'
 import { TokenPairOrId } from '../../../..'
+import { TokenQuery } from './token'
 
 export class PoolQuery {
 	static poolId(address: string): string {
-		return address.toLowerCase()
+		return getAddress(address)
 	}
 
 	@addFields
@@ -83,7 +83,7 @@ export class PoolQuery {
         {
             pools(
             	where: {
-					base: "${tokenAddress.toLowerCase()}"
+					base: "${getAddress(tokenAddress)}"
 					${filter}
 				}, 
             	limit: 1000, 
@@ -118,7 +118,7 @@ export class PoolQuery {
         {
             pools(
             	where: {
-					base: "${tokenAddress.toLowerCase()}"
+					base: "${getAddress(tokenAddress)}"
 					${filter}
 				},
             	limit: 1000, 
@@ -173,7 +173,7 @@ export class PoolQuery {
         {
             pools(
             	where: { 
-            		base: "${tokenAddress.toLowerCase()}", 
+            		base: "${getAddress(tokenAddress)}", 
             		strike: "${strike}", 
             		maturity: "${maturity}", 
             		optionType: "${optionType}" 
@@ -333,7 +333,7 @@ export class PoolQuery {
 
         {
             pools(
-            	where: { pair: "${_pairId.toLowerCase()}" },
+            	where: { pair: "${voidnode._parsePairId(_pairId)}" },
             	limit: 1000, 
 				orderBy: [{
 					field: createdAt, 
@@ -356,7 +356,7 @@ export class PoolQuery {
 
         {
             pools(
-            	where: { pair: "${_pairId.toLowerCase()}" }
+            	where: { pair: "${voidnode._parsePairId(_pairId)}" }
             	limit: 1000, 
 				orderBy: [{
 					field: createdAt, 
@@ -378,7 +378,7 @@ export class PoolQuery {
         ${TickFragment}
 
         {
-            ticks(where: { pool: "${_poolAddress.toLowerCase()}" }) {
+            ticks(where: { pool: "${getAddress(_poolAddress)}" }) {
                 ...Tick
             }
         }

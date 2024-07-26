@@ -12,7 +12,7 @@ export const TransactionFragment = gql`
 	${TokenPairFragment}
 
 	fragment Transaction on Transaction {
-		id
+		_id
 		pool {
 			...Pool
 		}

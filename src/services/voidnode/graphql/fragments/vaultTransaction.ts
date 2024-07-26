@@ -8,7 +8,7 @@ export const VaultTransactionFragment = gql`
 	${TokenFragment}
 
 	fragment VaultTransaction on VaultTransaction {
-		id
+		_id
 		vaultName
 		vault {
 			...Vault

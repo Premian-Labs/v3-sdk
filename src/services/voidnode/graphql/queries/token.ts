@@ -1,5 +1,6 @@
 import { DocumentNode, gql } from '@apollo/client/core'
 import { TokenInfo } from '@premia/pair-lists/src/types'
+import { getAddress } from 'ethers'
 
 import { TokenExtendedFragment, TokenFragment } from '../fragments'
 import { addFields } from '../../../../utils/voidnode'
@@ -7,7 +8,7 @@ import PremiaVoidnode from '../../index'
 
 export class TokenQuery {
 	static tokenId(address: string): string {
-		return address.toLowerCase()
+		return getAddress(address)
 	}
 
 	@addFields
@@ -46,7 +47,7 @@ export class TokenQuery {
         
         {
             tokens(where: {
-                id_in: [${tokens
+                _id_in: [${tokens
 									.map((token) => `"${this.tokenId(token)}"`)
 									.join(', ')}]
             }) {
@@ -66,7 +67,7 @@ export class TokenQuery {
 
         {
             tokens(where: {
-                id_in: [${tokens
+                _id_in: [${tokens
 									.map((token) => `"${this.tokenId(token)}"`)
 									.join(', ')}]
             }) {
@@ -112,7 +113,7 @@ export class TokenQuery {
 
         {
             tokens(where: {
-                id_in: [${tokens
+                _id_in: [${tokens
 									.map((token) => `"${this.tokenId(token.address)}"`)
 									.join(', ')}]
             }) {
@@ -132,7 +133,7 @@ export class TokenQuery {
 
         {   
             tokens(where: {
-                id_in: [${tokens
+                _id_in: [${tokens
 									.map((token) => `"${this.tokenId(token.address)}"`)
 									.join(', ')}]
             }) {

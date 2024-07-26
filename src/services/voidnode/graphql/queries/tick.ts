@@ -1,5 +1,5 @@
 import { DocumentNode, gql } from '@apollo/client/core'
-import { BigNumberish } from 'ethers'
+import { BigNumberish, getAddress } from 'ethers'
 
 import { TickFragment } from '../fragments'
 import { addFields } from '../../../../utils/voidnode'
@@ -7,7 +7,7 @@ import PremiaVoidnode from '../../index'
 
 export class TickQuery {
 	static tickId(normalizedPrice: BigNumberish, poolAddress: string): string {
-		return poolAddress.toLowerCase() + ':' + normalizedPrice.toString()
+		return getAddress(poolAddress) + ':' + normalizedPrice.toString()
 	}
 
 	@addFields

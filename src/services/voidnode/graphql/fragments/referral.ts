@@ -6,7 +6,7 @@ export const ReferralFragment = gql`
 	${TokenFragment}
 
 	fragment Referral on Referral {
-		id
+		_id
 		user {
 			address
 		}
