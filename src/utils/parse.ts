@@ -80,5 +80,5 @@ export function parseTokenId(tokenId: BigNumberish): TokenIdParams {
 }
 
 export function parseBigDecimal(bd: Decimal | string): bigint {
-	return BigInt(new Decimal(bd).toFixed(18))
+	return parseBigInt(new Decimal(bd).toFixed(18), 18)
 }

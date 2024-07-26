@@ -45,10 +45,21 @@ function isNumeric(str: string): boolean {
 	return !isNaN(parseFloat(str))
 }
 
-export function convertAllBigDecimalToBigInt<T extends Object>(root: T) {
-	const newRoot = {} as T
+export function transformToLegacyData<T>(root: T) {
+	if (!root) return root
+	if (Array.isArray(root)) {
+		const newRoot = [] as NonNullable<T>
 
-	for (let key of Object.keys(root)) {
+		for (let i = 0; i < root.length; i++) {
+			newRoot[i as keyof typeof newRoot] = transformToLegacyData(root[i])
+		}
+
+		return newRoot
+	}
+
+	const newRoot = {} as NonNullable<T>
+
+	for (let key of Object.keys(root as Object)) {
 		const value = root[key as keyof typeof root]
 
 		if (
@@ -59,13 +70,20 @@ export function convertAllBigDecimalToBigInt<T extends Object>(root: T) {
 			const decimal = new Decimal(value)
 			newRoot[key as keyof typeof newRoot] = parseBigDecimal(
 				decimal
-			) as T[keyof T]
+			) as NonNullable<T>[keyof NonNullable<T>]
+		} else if (Array.isArray(value)) {
+			newRoot[key as keyof typeof newRoot] = value.map((el) =>
+				transformToLegacyData(el)
+			) as NonNullable<T>[keyof NonNullable<T>]
 		} else if (typeof value === 'object') {
-			newRoot[key as keyof typeof newRoot] = convertAllBigDecimalToBigInt(
-				value as Object
-			) as T[keyof T]
+			newRoot[key as keyof typeof newRoot] = transformToLegacyData(value)
 		} else {
 			newRoot[key as keyof typeof newRoot] = value
+		}
+
+		if (key === '_id') {
+			newRoot['id' as keyof typeof newRoot] =
+				newRoot[key as keyof typeof newRoot]
 		}
 	}
 

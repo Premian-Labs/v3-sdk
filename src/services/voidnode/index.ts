@@ -6,7 +6,7 @@ import {
 } from '@apollo/client/core'
 import { setContext } from '@apollo/client/link/context'
 import { TokenInfo } from '@premia/pair-lists/src/types'
-import { BigNumberish, toBigInt } from 'ethers'
+import { BigNumberish, getAddress, toBigInt } from 'ethers'
 import { get } from 'lodash'
 import fetch from 'cross-fetch'
 
@@ -63,7 +63,7 @@ import {
 	OptionPSTransactionQuery,
 } from './graphql'
 import { DefaultApolloClientOptions } from '../../constants'
-import { QueryParams, convertAllBigDecimalToBigInt } from '../../utils'
+import { QueryParams, transformToLegacyData } from '../../utils'
 import { TokenOrAddress, TokenPairOrId } from '../../api'
 
 export interface VoidnodeAuthentication {
@@ -152,7 +152,7 @@ export class PremiaVoidnode {
 		} else {
 			tokenAddress = token as string
 		}
-		return tokenAddress
+		return getAddress(tokenAddress)
 	}
 
 	_parsePairId(pair: TokenPairOrId): string {
@@ -217,7 +217,7 @@ export class PremiaVoidnode {
 			),
 		})
 		const data = get(response, 'data.vaultDayDatas', []) as VaultDayData[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getPoolsOrderbookData(addresses: string[]): Promise<PoolDayData[]> {
@@ -225,7 +225,7 @@ export class PremiaVoidnode {
 			query: AnalyticsQuery.GetPoolsOrderbookData(this, addresses),
 		})
 		const data = get(response, 'data.poolDayDatas', []) as PoolDayData[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getPoolMinimal(address: string): Promise<PoolMinimal> {
@@ -240,7 +240,7 @@ export class PremiaVoidnode {
 		}
 
 		const data = get(response, 'data.pool') as PoolMinimal
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getPool(address: string): Promise<Pool> {
@@ -255,7 +255,7 @@ export class PremiaVoidnode {
 		}
 
 		const data = get(response, 'data.pool') as Pool
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getPoolExtended(address: string): Promise<PoolExtended> {
@@ -270,7 +270,7 @@ export class PremiaVoidnode {
 		}
 
 		const data = get(response, 'data.pool') as PoolExtended
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getPools(baseAddress: string, isExpired?: boolean): Promise<Pool[]> {
@@ -285,7 +285,7 @@ export class PremiaVoidnode {
 		}
 
 		const data = get(response, 'data.pools', []) as Pool[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getPoolsExtended(
@@ -305,7 +305,7 @@ export class PremiaVoidnode {
 		const data = get(response, 'data.pools', []).map(
 			(pool: Omit<Pool, 'contract'>) => pool as PoolExtended
 		) as PoolExtended[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getAllPools(): Promise<Pool[]> {
@@ -320,7 +320,7 @@ export class PremiaVoidnode {
 		}
 
 		const data = get(response, 'data.pools', []) as Pool[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getAllPoolsExtended(): Promise<PoolExtended[]> {
@@ -337,7 +337,7 @@ export class PremiaVoidnode {
 		const data = get(response, 'data.pools', []).map(
 			(pool: Omit<Pool, 'contract'>) => pool as PoolExtended
 		) as PoolExtended[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getPoolsForToken(
@@ -357,7 +357,7 @@ export class PremiaVoidnode {
 		const data = get(response, 'data.pools', []).map(
 			(pool: Omit<Pool, 'contract'>) => pool as Pool
 		) as Pool[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getPoolsExtendedForToken(
@@ -377,7 +377,7 @@ export class PremiaVoidnode {
 		const data = get(response, 'data.pools', []).map(
 			(pool: Omit<Pool, 'contract'>) => pool as PoolExtended
 		) as PoolExtended[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getPoolsForPairId(id: string): Promise<Pool[]> {
@@ -385,7 +385,7 @@ export class PremiaVoidnode {
 			query: PoolQuery.GetPoolsForPairId(this, id),
 		})
 		const data = get(response, 'data.pools', []) as Pool[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getPoolsForPair(
@@ -403,7 +403,7 @@ export class PremiaVoidnode {
 		}
 
 		const data = get(response, 'data.pools', []) as Pool[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getPoolsExtendedForPair(
@@ -425,7 +425,7 @@ export class PremiaVoidnode {
 		}
 
 		const data = get(response, 'data.pools', []) as PoolExtended[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getTicksForPool(poolAddress: string): Promise<Tick[]> {
@@ -439,7 +439,7 @@ export class PremiaVoidnode {
 			)
 		}
 		const data = get(response, 'data.ticks', []) as Tick[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getQuotePools(
@@ -458,7 +458,7 @@ export class PremiaVoidnode {
 			),
 		})
 		const data = get(response, 'data.pools', []) as PoolMinimal[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getTick(normalizedPrice: BigNumberish, poolAddress: string) {
@@ -472,7 +472,7 @@ export class PremiaVoidnode {
 			)
 		}
 		const data = get(response, 'data.tick', null) as Tick
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async spotPrice(address: string): Promise<bigint> {
@@ -490,7 +490,7 @@ export class PremiaVoidnode {
 			query: TokenQuery.GetToken(this, address),
 		})
 		const data = get(response, 'data.token') as Token
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getTokenExtended(address: string): Promise<TokenExtended> {
@@ -498,7 +498,7 @@ export class PremiaVoidnode {
 			query: TokenQuery.GetTokenExtended(this, address),
 		})
 		const data = get(response, 'data.token') as TokenExtended
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getTokens(tokens: string[]): Promise<Token[]> {
@@ -506,7 +506,7 @@ export class PremiaVoidnode {
 			query: TokenQuery.GetTokens(this, tokens),
 		})
 		const data = get(response, 'data.tokens') as Token[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getTokensExtended(tokens: string[]): Promise<TokenExtended[]> {
@@ -514,7 +514,7 @@ export class PremiaVoidnode {
 			query: TokenQuery.GetTokensExtended(this, tokens),
 		})
 		const data = get(response, 'data.tokens') as TokenExtended[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getAllTokens(): Promise<Token[]> {
@@ -522,7 +522,7 @@ export class PremiaVoidnode {
 			query: TokenQuery.GetAllTokens(this),
 		})
 		const data = get(response, 'data.tokens') as Token[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getAllTokensExtended(): Promise<TokenExtended[]> {
@@ -530,7 +530,7 @@ export class PremiaVoidnode {
 			query: TokenQuery.GetAllTokensExtended(this),
 		})
 		const data = get(response, 'data.tokens') as TokenExtended[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getTokenList(tokenList: TokenInfo[]): Promise<Token[]> {
@@ -538,7 +538,7 @@ export class PremiaVoidnode {
 			query: TokenQuery.GetTokenList(this, tokenList),
 		})
 		const data = get(response, 'data.tokens') as Token[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getTokenListExtended(tokenList: TokenInfo[]): Promise<TokenExtended[]> {
@@ -546,7 +546,7 @@ export class PremiaVoidnode {
 			query: TokenQuery.GetTokenListExtended(this, tokenList),
 		})
 		const data = get(response, 'data.tokens') as TokenExtended[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getPair(pair: TokenPairOrId): Promise<TokenPair> {
@@ -561,7 +561,7 @@ export class PremiaVoidnode {
 			throw new Error('Invalid pair. Pair was not found on voidnode.')
 		}
 
-		return convertAllBigDecimalToBigInt(tokenPair)
+		return transformToLegacyData(tokenPair)
 	}
 
 	async getPairExtended(pair: TokenPairOrId): Promise<TokenPairExtended> {
@@ -575,7 +575,7 @@ export class PremiaVoidnode {
 			throw new Error('Invalid pair. Pair was not found on voidnode.')
 		}
 
-		return convertAllBigDecimalToBigInt(tokenPair)
+		return transformToLegacyData(tokenPair)
 	}
 
 	async getPairs(pairs: TokenPairOrId[]): Promise<TokenPair[]> {
@@ -584,7 +584,7 @@ export class PremiaVoidnode {
 			query: TokenPairQuery.GetPairs(this, pairIds),
 		})
 		const data = get(response, 'data.tokenPairs') as TokenPair[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getPairsExtended(pairs: TokenPairOrId[]): Promise<TokenPairExtended[]> {
@@ -594,7 +594,7 @@ export class PremiaVoidnode {
 		})
 
 		const data = get(response, 'data.tokenPairs') as TokenPairExtended[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getAllPairs(): Promise<TokenPair[]> {
@@ -602,7 +602,7 @@ export class PremiaVoidnode {
 			query: TokenPairQuery.GetAllPairs(this),
 		})
 		const data = get(response, 'data.tokenPairs') as TokenPair[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getAllPairsExtended(): Promise<TokenPairExtended[]> {
@@ -611,7 +611,7 @@ export class PremiaVoidnode {
 		})
 
 		const data = get(response, 'data.tokenPairs') as TokenPairExtended[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getTransaction(hash: string): Promise<Transaction> {
@@ -619,7 +619,7 @@ export class PremiaVoidnode {
 			query: TransactionQuery.GetTransaction(this, hash),
 		})
 		const data = get(response, 'data.transaction') as Transaction
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getTransactions(
@@ -655,7 +655,7 @@ export class PremiaVoidnode {
 		})
 
 		const data = get(response, 'data.transactions') as Transaction[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getVaultTransaction(hash: string): Promise<VaultTransaction> {
@@ -663,7 +663,7 @@ export class PremiaVoidnode {
 			query: VaultTransactionQuery.GetVaultTransaction(this, hash),
 		})
 		const data = get(response, 'data.vaultTransaction') as VaultTransaction
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getVaultTransactions(
@@ -698,7 +698,7 @@ export class PremiaVoidnode {
 			),
 		})
 		const data = get(response, 'data.vaultTransactions') as VaultTransaction[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getOptionPSTransaction(hash: string): Promise<OptionPSTransaction> {
@@ -709,7 +709,7 @@ export class PremiaVoidnode {
 			response,
 			'data.optionPSTransaction'
 		) as OptionPSTransaction
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getOptionPSTransactions(
@@ -741,7 +741,7 @@ export class PremiaVoidnode {
 			response,
 			'data.optionPSTransactions'
 		) as OptionPSTransaction[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getTradingCompetitionUser(
@@ -754,7 +754,7 @@ export class PremiaVoidnode {
 			response,
 			'data.tradingCompetitionUser'
 		) as TradingCompetitionUser
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getUser(address: string): Promise<User> {
@@ -762,7 +762,7 @@ export class PremiaVoidnode {
 			query: UserQuery.GetUser(this, address),
 		})
 		const data = get(response, 'data.user') as User
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getUserExtended(address: string): Promise<UserExtended> {
@@ -770,7 +770,7 @@ export class PremiaVoidnode {
 			query: UserQuery.GetUserExtended(this, address),
 		})
 		const data = get(response, 'data.user') as UserExtended
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getUsers(addresses: string[]): Promise<User[]> {
@@ -778,7 +778,7 @@ export class PremiaVoidnode {
 			query: UserQuery.GetUsers(this, addresses),
 		})
 		const data = get(response, 'data.users', []) as User[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getUsersExtended(addresses: string[]): Promise<UserExtended[]> {
@@ -786,7 +786,7 @@ export class PremiaVoidnode {
 			query: UserQuery.GetUsersExtended(this, addresses),
 		})
 		const data = get(response, 'data.users', []) as UserExtended[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getUserSnapshot(
@@ -797,7 +797,7 @@ export class PremiaVoidnode {
 			query: UserQuery.GetUserSnapshot(this, address, timestamp),
 		})
 		const data = get(response, 'data.userSnapshot') as UserSnapshot
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getUserSnapshotExtended(
@@ -808,7 +808,7 @@ export class PremiaVoidnode {
 			query: UserQuery.GetUserSnapshotExtended(this, address, timestamp),
 		})
 		const data = get(response, 'data.userSnapshot') as UserSnapshotExtended
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getUserSnapshots(
@@ -833,7 +833,7 @@ export class PremiaVoidnode {
 			),
 		})
 		const data = get(response, 'data.userSnapshots', []) as UserSnapshot[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getUserSnapshotsExtended(
@@ -861,7 +861,7 @@ export class PremiaVoidnode {
 			'data.userSnapshots',
 			[]
 		) as UserSnapshotExtended[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getUserPortfolio(address: string): Promise<UserPortfolio> {
@@ -869,7 +869,7 @@ export class PremiaVoidnode {
 			query: UserQuery.GetUserPortfolio(this, address),
 		})
 		const data = get(response, 'data.user') as UserPortfolio
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getUserPortfolioExtended(
@@ -879,7 +879,7 @@ export class PremiaVoidnode {
 			query: UserQuery.GetUserPortfolioExtended(this, address),
 		})
 		const data = get(response, 'data.user') as UserPortfolioExtended
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getVault(address: string): Promise<Vault> {
@@ -887,7 +887,7 @@ export class PremiaVoidnode {
 			query: VaultQuery.GetVault(this, address),
 		})
 		const data = get(response, 'data.vault', null) as Vault
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getVaultExtended(address: string): Promise<VaultExtended> {
@@ -895,7 +895,7 @@ export class PremiaVoidnode {
 			query: VaultQuery.GetVaultExtended(this, address),
 		})
 		const data = get(response, 'data.vault', null) as VaultExtended
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getAllVaultsExtended(): Promise<VaultExtended[]> {
@@ -903,7 +903,7 @@ export class PremiaVoidnode {
 			query: VaultQuery.GetAllVaultsExtended(this),
 		})
 		const data = get(response, 'data.vaults', []) as VaultExtended[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getVaults(baseAddress: string): Promise<Vault[]> {
@@ -911,7 +911,7 @@ export class PremiaVoidnode {
 			query: VaultQuery.GetVaults(this, baseAddress),
 		})
 		const data = get(response, 'data.vaults', []) as Vault[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getVaultsExtended(baseAddress: string): Promise<VaultExtended[]> {
@@ -919,7 +919,7 @@ export class PremiaVoidnode {
 			query: VaultQuery.GetVaultsExtended(this, baseAddress),
 		})
 		const data = get(response, 'data.vaults', []) as VaultExtended[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getVaultsForToken(
@@ -930,7 +930,7 @@ export class PremiaVoidnode {
 			query: VaultQuery.GetVaultsForToken(this, token),
 		})
 		const data = get(response, 'data.vaults', []) as Vault[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getVaultsExtendedForToken(
@@ -941,7 +941,7 @@ export class PremiaVoidnode {
 			query: VaultQuery.GetVaultsExtendedForToken(this, token),
 		})
 		const data = get(response, 'data.vaults', []) as VaultExtended[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getVaultPositionsExtendedForUser(
@@ -955,7 +955,7 @@ export class PremiaVoidnode {
 			'data.vaultPositions',
 			[]
 		) as VaultPositionExtended[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getVaultPosition(
@@ -967,7 +967,7 @@ export class PremiaVoidnode {
 		})
 
 		const data = get(response, 'data.vaultPosition', null) as VaultPosition
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getVaultPositionExtended(
@@ -986,7 +986,7 @@ export class PremiaVoidnode {
 			'data.vaultPosition',
 			null
 		) as VaultPositionExtended
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getVaultVotes(
@@ -998,7 +998,7 @@ export class PremiaVoidnode {
 			query: VxPremiaQuery.GetVaultVotes(this, user, limit, skip),
 		})
 		const data = get(response, 'data.vaultVotes', []) as VaultVote[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getUserVaultVotesFromTimestamp(
@@ -1019,7 +1019,7 @@ export class PremiaVoidnode {
 			),
 		})
 		const data = get(response, 'data.vaultVotes', []) as VaultVote[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getAllLastVaultVotes(
@@ -1038,7 +1038,7 @@ export class PremiaVoidnode {
 			),
 		})
 		const data = get(response, 'data.vaultVotes', []) as VaultVote[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getVoteHistory(id: string): Promise<VoteHistory> {
@@ -1046,7 +1046,7 @@ export class PremiaVoidnode {
 			query: VxPremiaQuery.GetVoteHistoryFromId(this, id),
 		})
 		const data = get(response, 'data.voteHistory') as VoteHistory
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getLastUserStakes(): Promise<UserStake[]> {
@@ -1054,7 +1054,7 @@ export class PremiaVoidnode {
 			query: VxPremiaQuery.GetLastUserStakes(this),
 		})
 		const data = get(response, 'data.userStakes', []) as UserStake[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getUserStakes(
@@ -1067,7 +1067,7 @@ export class PremiaVoidnode {
 			query: VxPremiaQuery.GetUserStakes(this, startTime, user, limit, skip),
 		})
 		const data = get(response, 'data.userStakes', []) as UserStake[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getLastUserStakeFromTimestamp(
@@ -1078,7 +1078,7 @@ export class PremiaVoidnode {
 			query: VxPremiaQuery.GetLastUserStakeFromTimestamp(this, timestamp, user),
 		})
 		const data = get(response, 'data.userStakes', []) as UserStake[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getStakeHistory(id: string): Promise<StakeHistory> {
@@ -1086,7 +1086,7 @@ export class PremiaVoidnode {
 			query: VxPremiaQuery.GetStakeHistoryFromId(this, id),
 		})
 		const data = get(response, 'data.stakeHistory') as StakeHistory
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getStakeHistories(
@@ -1098,7 +1098,7 @@ export class PremiaVoidnode {
 			query: VxPremiaQuery.GetStakeHistories(this, startTime, limit, skip),
 		})
 		const data = get(response, 'data.stakeHistories', []) as StakeHistory[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getOptionPositionsExtendedForUser(
@@ -1118,7 +1118,7 @@ export class PremiaVoidnode {
 			'data.optionPositions',
 			[]
 		) as OptionPositionExtended[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getRewardOptionPositionsExtendedForUser(
@@ -1140,7 +1140,7 @@ export class PremiaVoidnode {
 			'data.optionPositions',
 			[]
 		) as OptionPositionExtended[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getLiquidityPositionsExtendedForUser(
@@ -1160,7 +1160,7 @@ export class PremiaVoidnode {
 			response,
 			'data.liquidityPositions'
 		) as LiquidityPositionExtended[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 
 	async getUserReferrals(
@@ -1172,7 +1172,7 @@ export class PremiaVoidnode {
 			query: ReferralQuery.GetUserReferrals(this, user, limit, skip),
 		})
 		const data = get(response, 'data.referrals', []) as Referral[]
-		return convertAllBigDecimalToBigInt(data)
+		return transformToLegacyData(data)
 	}
 }
 
