@@ -81,7 +81,7 @@ export function transformToLegacyData<T>(root: T) {
 			newRoot[key as keyof typeof newRoot] = value
 		}
 
-		if (key === '_id') {
+		if (key === 'id') {
 			newRoot['id' as keyof typeof newRoot] =
 				newRoot[key as keyof typeof newRoot]
 		}

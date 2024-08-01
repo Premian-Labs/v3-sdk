@@ -2,7 +2,7 @@ import { gql } from '@apollo/client/core'
 
 export const TickFragment = gql`
 	fragment Tick on Tick {
-		_id
+		id
 		createdAt
 		createdAtBlock
 		index

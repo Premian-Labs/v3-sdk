@@ -6,7 +6,7 @@ export const VaultPositionFragment = gql`
 	${VaultFragment}
 
 	fragment VaultPosition on VaultPosition {
-		_id
+		id
 		vault {
 			...Vault
 		}

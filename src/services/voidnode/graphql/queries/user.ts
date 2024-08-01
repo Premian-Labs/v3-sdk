@@ -140,7 +140,7 @@ export class UserQuery {
 
         {
             users(where: {
-                _id_in: [${addresses
+                id_in: [${addresses
 									.map((a) => `"${this.userId(a)}"`)
 									.join(', ')}],
             }) {
@@ -160,7 +160,7 @@ export class UserQuery {
 
         {
             users(where: {
-                _id_in: [${addresses
+                id_in: [${addresses
 									.map((a) => `"${this.userId(a)}"`)
 									.join(', ')}],
             }) {

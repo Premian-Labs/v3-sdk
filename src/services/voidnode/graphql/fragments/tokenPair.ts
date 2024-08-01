@@ -12,7 +12,7 @@ export const TokenPairMinimalFragment = gql`
 	${TokenMinimalFragment}
 
 	fragment TokenPairMinimal on TokenPair {
-		_id
+		id
 		name
 		quote {
 			...TokenMinimal
@@ -29,7 +29,7 @@ export const TokenPairFragment = gql`
 	${FactoryFragment}
 
 	fragment TokenPair on TokenPair {
-		_id
+		id
 		factory {
 			...Factory
 		}

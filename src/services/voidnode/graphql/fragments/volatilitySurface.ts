@@ -6,7 +6,7 @@ export const VolatilitySurfaceFragment = gql`
 	${TokenFragment}
 
 	fragment VolatilitySurface on VolatilitySurface {
-		_id
+		id
 		quote {
 			...Token
 		}
@@ -14,14 +14,14 @@ export const VolatilitySurfaceFragment = gql`
 			...Token
 		}
 		pair {
-			_id
+			id
 			priceOracleAddress
 		}
 
 		updatedAt
 
 		pools {
-			_id
+			id
 			address
 			strike
 			maturity

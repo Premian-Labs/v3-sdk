@@ -9,7 +9,7 @@ export const VaultFragment = gql`
 	${VaultRegistryFragment}
 
 	fragment Vault on Vault {
-		_id
+		id
 		chainId
 		address
 		registry {
@@ -115,7 +115,7 @@ export const VaultMinimalFragment = gql`
 	${TokenMinimalFragment}
 
 	fragment VaultMinimal on Vault {
-		_id
+		id
 		address
 		name
 		asset {

@@ -7,7 +7,7 @@ export const PoolDayDataFragment = gql`
 	${PoolFragment}
 
 	fragment PoolDayData on PoolDayData {
-		_id
+		id
 		periodStart
 		pool {
 			...Pool
@@ -74,7 +74,7 @@ export const PoolHourDataFragment = gql`
 	${PoolFragment}
 
 	fragment PoolHourData on PoolHourData {
-		_id
+		id
 		periodStart
 		pool {
 			...Pool
@@ -141,7 +141,7 @@ export const PoolDayOrderbookDataFragment = gql`
 	${PoolFragment}
 
 	fragment PoolDayOrderbookData on PoolDayData {
-		_id
+		id
 		periodStart
 		pool {
 			...Pool
@@ -172,7 +172,7 @@ export const VaultDayDataFragment = gql`
 	${VaultFragment}
 
 	fragment VaultDayData on VaultDayData {
-		_id
+		id
 		periodStart
 		vault {
 			...Vault

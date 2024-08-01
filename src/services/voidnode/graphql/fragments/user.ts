@@ -19,7 +19,7 @@ import { OptionPSTransactionFragment } from './optionPSTransaction'
 
 export const UserFragment = gql`
 	fragment User on User {
-		_id
+		id
 		address
 
 		claimableFeesETH
@@ -249,7 +249,7 @@ export const UserPortfolioExtendedFragment = gql`
 
 export const TradingCompetitionUserFragment = gql`
 	fragment TradingCompetitionUser on TradingCompetitionUser {
-		_id
+		id
 		address
 
 		optionDepositsETH

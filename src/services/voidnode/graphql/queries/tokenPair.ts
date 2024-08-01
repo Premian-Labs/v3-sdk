@@ -62,7 +62,7 @@ export class TokenPairQuery {
 
         {    
             tokenPairs(where: {
-                _id_in: [${pairIds.map((id) => `"${id}"`).join(', ')}]
+                id_in: [${pairIds.map((id) => `"${id}"`).join(', ')}]
             }) {
                 ...TokenPair
             }
@@ -80,7 +80,7 @@ export class TokenPairQuery {
 
         {    
             tokenPairs(where: {
-                _id_in: [${pairIds.map((id) => `"${id}"`).join(', ')}]
+                id_in: [${pairIds.map((id) => `"${id}"`).join(', ')}]
             }) {
                 ...TokenPairExtended
             }

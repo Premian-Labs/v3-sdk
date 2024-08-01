@@ -47,7 +47,7 @@ export class TokenQuery {
         
         {
             tokens(where: {
-                _id_in: [${tokens
+                id_in: [${tokens
 									.map((token) => `"${this.tokenId(token)}"`)
 									.join(', ')}]
             }) {
@@ -67,7 +67,7 @@ export class TokenQuery {
 
         {
             tokens(where: {
-                _id_in: [${tokens
+                id_in: [${tokens
 									.map((token) => `"${this.tokenId(token)}"`)
 									.join(', ')}]
             }) {
@@ -113,7 +113,7 @@ export class TokenQuery {
 
         {
             tokens(where: {
-                _id_in: [${tokens
+                id_in: [${tokens
 									.map((token) => `"${this.tokenId(token.address)}"`)
 									.join(', ')}]
             }) {
@@ -133,7 +133,7 @@ export class TokenQuery {
 
         {   
             tokens(where: {
-                _id_in: [${tokens
+                id_in: [${tokens
 									.map((token) => `"${this.tokenId(token.address)}"`)
 									.join(', ')}]
             }) {

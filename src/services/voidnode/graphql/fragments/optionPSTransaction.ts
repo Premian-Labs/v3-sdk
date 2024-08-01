@@ -8,7 +8,7 @@ export const OptionPSTransactionFragment = gql`
 	${TokenFragment}
 
 	fragment OptionPSTransaction on OptionPSTransaction {
-		_id
+		id
 		option {
 			...OptionPhysicallySettled
 		}

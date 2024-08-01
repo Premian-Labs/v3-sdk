@@ -8,7 +8,7 @@ export const VaultVoteFragment = gql`
 	${UserFragment}
 
 	fragment VaultVote on VaultVote {
-		_id
+		id
 		voter {
 			...User
 		}
@@ -25,7 +25,7 @@ export const VaultVoteFragment = gql`
 
 export const VoteHistoryFragment = gql`
 	fragment VoteHistory on VoteHistory {
-		_id
+		id
 		totalVotes
 		totalUsers
 		timestamp
@@ -36,7 +36,7 @@ export const UserStakeFragment = gql`
 	${UserFragment}
 
 	fragment UserStake on UserStake {
-		_id
+		id
 		amount
 		lockedAmount
 		lockPeriod
@@ -53,7 +53,7 @@ export const UserStakeFragment = gql`
 
 export const StakeHistoryFragment = gql`
 	fragment StakeHistory on StakeHistory {
-		_id
+		id
 		totalAmount
 		totalLockedAmount
 		totalLockPeriod

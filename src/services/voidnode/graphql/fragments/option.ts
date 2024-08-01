@@ -6,7 +6,7 @@ export const OptionPhysicallySettledFragment = gql`
 	${TokenFragment}
 
 	fragment OptionPhysicallySettled on OptionPhysicallySettled {
-		_id
+		id
 		address
 		name
 		base {
@@ -28,7 +28,7 @@ export const OptionPhysicallySettledFragment = gql`
 
 export const OptionRewardFragment = gql`
 	fragment OptionReward on OptionReward {
-		_id
+		id
 		option {
 			...OptionPhysicallySettled
 		}

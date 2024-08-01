@@ -2,7 +2,7 @@ import { gql } from '@apollo/client/core'
 
 export const VaultRegistryFragment = gql`
 	fragment VaultRegistry on VaultRegistry {
-		_id
+		id
 		chainId
 		address
 	}

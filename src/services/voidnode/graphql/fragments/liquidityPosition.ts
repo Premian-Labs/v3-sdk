@@ -7,7 +7,7 @@ export const LiquidityPositionFragment = gql`
 	${PoolFragment}
 
 	fragment LiquidityPosition on LiquidityPosition {
-		_id
+		id
 		pool {
 			...Pool
 		}
