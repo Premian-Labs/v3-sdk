@@ -1,11 +1,12 @@
 import { DocumentNode, gql } from '@apollo/client/core'
+import { getAddress } from 'ethers'
 
 import {
 	LiquidityPositionExtendedFragment,
 	LiquidityPositionFragment,
 } from '../fragments'
-import { addFields } from '../../../../utils/subgraph'
-import PremiaSubgraph from '../../index'
+import { addFields } from '../../../../utils/voidnode'
+import PremiaVoidnode from '../../index'
 import { OrderType } from '../../../../entities'
 
 export class LiquidityPositionQuery {
@@ -15,9 +16,9 @@ export class LiquidityPositionQuery {
 		tokenId: string
 	): string {
 		return (
-			owner.toLowerCase() +
+			getAddress(owner) +
 			':' +
-			poolAddress.toLowerCase() +
+			getAddress(poolAddress) +
 			'/' +
 			tokenId.toString()
 		)
@@ -25,7 +26,7 @@ export class LiquidityPositionQuery {
 
 	@addFields
 	static GetLiquidityPosition(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		owner: string,
 		poolAddress: string,
 		tokenId: string
@@ -47,7 +48,7 @@ export class LiquidityPositionQuery {
 
 	@addFields
 	static GetLiquidityPositionExtended(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		owner: string,
 		poolAddress: string,
 		tokenId: string
@@ -69,7 +70,7 @@ export class LiquidityPositionQuery {
 
 	@addFields
 	static GetLiquidityPositionsExtendedForUser(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		owner: string,
 		orderType?: OrderType,
 		isOpen?: boolean
@@ -79,18 +80,18 @@ export class LiquidityPositionQuery {
 			filter = ''
 		} else {
 			if (orderType === OrderType.LONG_COLLATERAL) {
-				filter = ', orderType: "LONG_COLLATERAL"'
+				filter = ', orderType: LONG_COLLATERAL'
 			} else if (orderType == OrderType.COLLATERAL_SHORT) {
-				filter = ', orderType: "COLLATERAL_SHORT"'
+				filter = ', orderType: COLLATERAL_SHORT'
 			} else if (orderType == OrderType.COLLATERAL_SHORT_USE_PREMIUMS) {
-				filter = ', orderType: "COLLATERAL_SHORT_USE_PREMIUMS"'
+				filter = ', orderType: COLLATERAL_SHORT_USE_PREMIUMS'
 			}
 		}
 
 		if (isOpen) {
 			filter += ', closedAt: null'
 		} else if (!isOpen && isOpen !== undefined) {
-			filter += ', closedAt_not: null'
+			filter += ', closedAt_ne: null'
 		}
 
 		return gql`
@@ -99,12 +100,14 @@ export class LiquidityPositionQuery {
 			{
 				liquidityPositions(
 					where: {
-						owner: "${owner.toLowerCase()}"
+						owner: "${getAddress(owner)}"
 						${filter}
 					},
-					first: 1000, 
-					orderBy: createdAt, 
-					orderDirection: desc
+					limit: 1000, 
+					orderBy: [{
+						field: createdAt, 
+						direction: DESC
+					}]
 				) {
 					...LiquidityPositionExtended
 				}

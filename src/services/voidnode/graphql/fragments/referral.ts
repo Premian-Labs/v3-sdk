@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client/core'
+
 import { TokenFragment } from './token'
 
 export const ReferralFragment = gql`

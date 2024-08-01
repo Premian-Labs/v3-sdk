@@ -9,14 +9,14 @@ import {
 	WAD_BI,
 } from '../../src'
 import { SupportedChainId } from '../../src/constants'
-import PremiaSubgraph from '../../src/services/subgraph'
+import PremiaVoidnode from '../../src/services/voidnode'
 
 async function getFirstPoolAddress(
-	subgraph: PremiaSubgraph,
+	voidnode: PremiaVoidnode,
 	pair: TokenPairOrId
 ): Promise<string> {
-	const _pairId = subgraph._parsePairId(pair)
-	let pools = await subgraph.getPoolsForPairId(_pairId)
+	const _pairId = voidnode._parsePairId(pair)
+	let pools = await voidnode.getPoolsForPairId(_pairId)
 	return pools[0].address
 }
 

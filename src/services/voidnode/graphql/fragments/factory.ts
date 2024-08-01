@@ -8,8 +8,6 @@ export const FactoryMinimalFragment = gql`
 `
 
 export const FactoryFragment = gql`
-	${FactoryMinimalFragment}
-
 	fragment Factory on Factory {
 		id
 		chainId

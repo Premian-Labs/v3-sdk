@@ -9,7 +9,7 @@ import {
 	QuoteOB,
 	OrderbookQuote,
 	WSFilterMessage,
-	WSRFQRequest,
+	WSRFQMessage,
 	QuoteSaltOptionalT,
 	QuoteWithSignature,
 	signData,
@@ -939,7 +939,7 @@ describe('OrderbookV1', () => {
 			`Subscribed to quotes:${webSocketFilter.body.chainId}:*:*:${ZeroAddress},quotes:${webSocketFilter.body.chainId}:*:*:${webSocketFilter.body.taker} channel.`
 		)
 
-		const rfqRequest: WSRFQRequest = {
+		const rfqRequest: WSRFQMessage = {
 			type: 'RFQ',
 			body: {
 				poolAddress: poolAddress,
@@ -1020,7 +1020,7 @@ describe('OrderbookV1', () => {
 			},
 		}
 		// params to broadcast rfq request
-		const rfqRequest: WSRFQRequest = {
+		const rfqRequest: WSRFQMessage = {
 			type: 'RFQ',
 			body: {
 				poolAddress: poolAddress,

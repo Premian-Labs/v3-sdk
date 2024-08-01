@@ -1,6 +1,8 @@
-import {BigNumberish, toBeHex, toBigInt, toNumber} from 'ethers'
+import { BigNumberish, toBeHex, toBigInt, toNumber } from 'ethers'
+import { Decimal } from 'decimal.js'
+
 import { MIN_TICK_DISTANCE, WAD_DECIMALS } from '../constants'
-import {TokenIdParams} from "./type";
+import { TokenIdParams } from './type'
 
 export function parseDate(value: BigNumberish): Date {
 	return new Date(Number(value) * 1000)
@@ -67,12 +69,16 @@ export function parseNumber(
 }
 
 export function parseTokenId(tokenId: BigNumberish): TokenIdParams {
-	tokenId = toBigInt(tokenId);
+	tokenId = toBigInt(tokenId)
 	return {
 		version: toNumber(tokenId >> 252n),
 		orderType: toNumber((tokenId >> 180n) & 0xfn), // 4 bits mask
 		operator: toBeHex((tokenId >> 20n) & toBigInt('0x' + 'ff'.repeat(20))), // 20 bits mask
-		upper: ((tokenId >> 10n) & 0x3ffn) * MIN_TICK_DISTANCE , // 10 bits mask
+		upper: ((tokenId >> 10n) & 0x3ffn) * MIN_TICK_DISTANCE, // 10 bits mask
 		lower: (tokenId & 0x3ffn) * MIN_TICK_DISTANCE, // 10 bits mask
 	}
+}
+
+export function parseBigDecimal(bd: Decimal | string): bigint {
+	return parseBigInt(new Decimal(bd).toFixed(18), 18)
 }

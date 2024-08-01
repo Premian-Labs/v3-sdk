@@ -1,26 +1,30 @@
 import { DocumentNode, gql } from '@apollo/client/core'
-import { addFields } from '../../../../utils/subgraph'
+import { getAddress } from 'ethers'
+
+import { addFields } from '../../../../utils/voidnode'
 import {
 	StakeHistoryFragment,
 	UserStakeFragment,
 	VaultVoteFragment,
 	VoteHistoryFragment,
 } from '../fragments'
-import PremiaSubgraph from '../../index'
+import PremiaVoidnode from '../../index'
 
 export class VxPremiaQuery {
 	@addFields
 	static GetVaultVotes(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		user: string,
-		first = 100,
+		limit = 100,
 		skip = 0
 	): DocumentNode {
 		return gql`
       ${VaultVoteFragment}
 
       query VaultVote {
-        vaultVotes(first: ${first}, skip: ${skip}, where: { voter: "${user.toLowerCase()}", isLast: true }) {
+        vaultVotes(limit: ${limit}, skip: ${skip}, where: { voter: "${getAddress(
+			user
+		)}", isLast: true }) {
           ...VaultVote
         }
       }
@@ -29,11 +33,11 @@ export class VxPremiaQuery {
 
 	@addFields
 	static GetUserVaultVotesFromTimestamp(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		user: string,
 		timestampFrom: number,
 		timestampTo: number,
-		first = 100,
+		limit = 100,
 		skip = 0
 	): DocumentNode {
 		return gql`
@@ -41,11 +45,15 @@ export class VxPremiaQuery {
 
       query VaultVote {
         vaultVotes(
-          first: ${first}
+          limit: ${limit}
           skip: ${skip}
-          where: { voter: "${user.toLowerCase()}", timestamp_lte: ${timestampTo}, timestamp_gte: ${timestampFrom} }
-          orderBy: timestamp
-          orderDirection: desc
+          where: { voter: "${getAddress(
+						user
+					)}", timestamp_lte: ${timestampTo}, timestamp_gte: ${timestampFrom} }
+          orderBy: [{
+			field: timestamp
+          	direction: DESC
+		  }]
         ) {
           ...VaultVote
         }
@@ -55,10 +63,10 @@ export class VxPremiaQuery {
 
 	@addFields
 	static GetAllLastVaultVotes(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		orderBy: string,
 		order: string,
-		first = 100,
+		limit = 100,
 		skip = 0
 	): DocumentNode {
 		return gql`
@@ -66,10 +74,12 @@ export class VxPremiaQuery {
 
       query VaultVote {
         vaultVotes(
-          first: ${first}
+          limit: ${limit}
           skip: ${skip}
-          orderBy: ${orderBy}
-          orderDirection: ${order}
+          orderBy: [{
+			field: ${orderBy},
+          	direction: ${order.toUpperCase()}
+		  }]
           where: { isLast: true, amount_gt: 0 }
         ) {
           ...VaultVote
@@ -80,7 +90,7 @@ export class VxPremiaQuery {
 
 	@addFields
 	static GetVoteHistoryFromId(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		id: string
 	): DocumentNode {
 		return gql`
@@ -95,15 +105,14 @@ export class VxPremiaQuery {
 	}
 
 	@addFields
-	static GetLastUserStakes(subgraph: PremiaSubgraph): DocumentNode {
+	static GetLastUserStakes(voidnode: PremiaVoidnode): DocumentNode {
 		return gql`
 			${UserStakeFragment}
 
 			query UserStake {
 				userStakes(
-					first: 14
-					orderBy: "amount"
-					orderDirection: "desc"
+					limit: 14
+					orderBy: [{ field: amount, direction: DESC }]
 					where: { isLast: true }
 				) {
 					...UserStake
@@ -114,10 +123,10 @@ export class VxPremiaQuery {
 
 	@addFields
 	static GetUserStakes(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		startTime: number,
 		user: string,
-		first = 100,
+		limit = 100,
 		skip = 0
 	): DocumentNode {
 		return gql`
@@ -125,11 +134,13 @@ export class VxPremiaQuery {
 
       query UserStake {
         userStakes(
-          first: ${first}
+          limit: ${limit}
           skip: ${skip}
-          orderBy: timestamp
-          orderDirection: asc
-          where: { timestamp_gte: ${startTime}, user: "${user.toLowerCase()}" }
+          orderBy: [{
+			field: timestamp,
+			direction: ASC
+		  }]
+          where: { timestamp_gte: ${startTime}, user: "${getAddress(user)}" }
         ) {
           ...UserStake
         }
@@ -139,7 +150,7 @@ export class VxPremiaQuery {
 
 	@addFields
 	static GetLastUserStakeFromTimestamp(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		timestamp: number,
 		user: string
 	): DocumentNode {
@@ -148,10 +159,12 @@ export class VxPremiaQuery {
 
       query UserStake {
         userStakes(
-          first: 1
-          orderBy: timestamp
-          orderDirection: desc
-          where: { timestamp_lte: ${timestamp}, user: "${user.toLowerCase()}" }
+          limit: 1
+          orderBy: [{
+			field: timestamp,
+          	direction: DESC
+		  }]
+          where: { timestamp_lte: ${timestamp}, user: "${getAddress(user)}" }
         ) {
           ...UserStake
         }
@@ -161,7 +174,7 @@ export class VxPremiaQuery {
 
 	@addFields
 	static GetStakeHistoryFromId(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		id: string
 	): DocumentNode {
 		return gql`
@@ -177,9 +190,9 @@ export class VxPremiaQuery {
 
 	@addFields
 	static GetStakeHistories(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		startTime: number,
-		first = 100,
+		limit = 100,
 		skip = 0
 	): DocumentNode {
 		return gql`
@@ -187,11 +200,13 @@ export class VxPremiaQuery {
 
       query StakeHistory {
         stakeHistories(
-          first: ${first}
+          limit: ${limit}
           skip: ${skip}
           where: { timestamp_gte: ${startTime} }
-          orderBy: timestamp
-          orderDirection: asc
+          orderBy: [{
+			field: timestamp,
+			direction: ASC
+		  }]
         ) {
           ...StakeHistory
         }

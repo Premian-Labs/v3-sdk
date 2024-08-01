@@ -1,8 +1,9 @@
 import { DocumentNode, gql } from '@apollo/client/core'
-import { BigNumberish } from 'ethers'
+import { BigNumberish, getAddress } from 'ethers'
+
 import { VaultTransactionFragment } from '../fragments'
-import { addFields } from '../../../../utils/subgraph'
-import PremiaSubgraph from '../../index'
+import { addFields } from '../../../../utils/voidnode'
+import PremiaVoidnode from '../../index'
 
 export class VaultTransactionQuery {
 	static vaultTransactionId(hash: string): string {
@@ -11,7 +12,7 @@ export class VaultTransactionQuery {
 
 	@addFields
 	static GetVaultTransaction(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		hash: string
 	): DocumentNode {
 		return gql`
@@ -27,12 +28,12 @@ export class VaultTransactionQuery {
 
 	@addFields
 	static GetVaultTransactions(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		filter: string,
 		search: string,
 		orderBy: string,
 		order: string,
-		first = 100,
+		limit = 100,
 		skip = 0,
 		type?: string,
 		vaultAddress?: string,
@@ -42,24 +43,29 @@ export class VaultTransactionQuery {
 		searchInput?: string
 	): DocumentNode {
 		const addressFilter = vaultAddress
-			? `vault: "${vaultAddress.toLowerCase()}",`
+			? `vault: "${getAddress(vaultAddress)}",`
 			: ''
 		const startFilter = startTime ? `timestamp_gte: ${Number(startTime)},` : ''
 		const endFilter = endTime ? `timestamp_lte: ${Number(endTime)},` : ''
 		const searchFilter = searchInput
 			? `description_contains: "${searchInput.toUpperCase()}",`
 			: ''
-		const accountFilter = account ? `user: "${account.toLowerCase()}",` : ''
+		const accountFilter = account ? `user: "${getAddress(account)}",` : ''
 
-		const containsName =
-			type === 'token' ? 'tokenSymbol_contains' : 'vaultName_contains'
-		const containsFilter = `${containsName}: "${search}",`
+		let containsFilter
+		if (search.length > 0) {
+			const containsName =
+				type === 'token' ? 'tokenSymbol_contains' : 'vaultName_contains'
+			containsFilter = `${containsName}: "${search}",`
+		} else {
+			containsFilter = ''
+		}
 
 		let transactionTypeFilter = ''
 		if (filter === 'add') {
-			transactionTypeFilter = 'type_in: ["VAULT_DEPOSIT"]'
+			transactionTypeFilter = 'type_in: [VAULT_DEPOSIT]'
 		} else if (filter == 'remove') {
-			transactionTypeFilter = 'type_in: ["VAULT_WITHDRAW"]'
+			transactionTypeFilter = 'type_in: [VAULT_WITHDRAW]'
 		}
 
 		return gql`
@@ -67,10 +73,12 @@ export class VaultTransactionQuery {
     
         query VaultTransaction {
             vaultTransactions(
-                first: ${first}
+                limit: ${limit}
                 skip: ${skip}
-                orderBy: "${orderBy}"
-                orderDirection: "${order}"
+                orderBy: [{
+					field: ${orderBy},
+                	direction: ${order.toUpperCase()}
+				}]
                 where: {
                     sizeUSD_gt: 0,
                     ${addressFilter}

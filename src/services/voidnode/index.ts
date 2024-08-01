@@ -1,15 +1,19 @@
-import fetch from 'cross-fetch'
-
 import {
 	ApolloClient,
 	HttpLink,
 	InMemoryCache,
 	NormalizedCacheObject,
 } from '@apollo/client/core'
+import { setContext } from '@apollo/client/link/context'
+import { TokenInfo } from '@premia/pair-lists/src/types'
+import { BigNumberish, getAddress, toBigInt } from 'ethers'
+import { get } from 'lodash'
+import fetch from 'cross-fetch'
 
 import {
 	LiquidityPositionExtended,
 	OptionPositionExtended,
+	OptionPSTransaction,
 	OptionType,
 	OrderType,
 	Pool,
@@ -41,9 +45,6 @@ import {
 	VaultVote,
 	VoteHistory,
 } from '../../entities'
-
-import { DefaultApolloClientOptions } from '../../constants'
-import { QueryParams } from '../../utils'
 import {
 	AnalyticsQuery,
 	LiquidityPositionQuery,
@@ -61,35 +62,37 @@ import {
 	ReferralQuery,
 	OptionPSTransactionQuery,
 } from './graphql'
-
-import { BigNumberish, toBigInt } from 'ethers'
-import { get } from 'lodash'
-import { TokenInfo } from '@premia/pair-lists/src/types'
+import { DefaultApolloClientOptions } from '../../constants'
+import { QueryParams, transformToLegacyData } from '../../utils'
 import { TokenOrAddress, TokenPairOrId } from '../../api'
-import { OptionPSTransaction } from '../../entities/optionPSTransaction'
+
+export interface VoidnodeAuthentication {
+	apiId: string
+	apiKey: string
+}
 
 /**
- * The PremiaSubgraph class is the entry point for interacting with the Premia V3 subgraph
- * to query on-chain and indexed data using various APIs and services
+ * The PremiaVoidnode class is the entry point for interacting with the Premia V3 voidnode server
+ * to query on-chain and indexed data using various APIs and services.
 
  *
  * @public @alpha
  */
-export class PremiaSubgraph {
+export class PremiaVoidnode {
 	/**
-	 * The subgraph URL to use for fetching indexed contract data.
+	 * The voidnode URL to use for fetching indexed contract data.
 	 */
 	uri: string
 
 	/**
-	 * The apollo subgraph client used to fetch data from the Premia subgraph.
+	 * The apollo voidnode client used to fetch data from the Premia voidnode server.
 	 *
 	 * @defaultValue {@link ApolloClient}
 	 */
 	client: ApolloClient<NormalizedCacheObject>
 
 	/**
-	 * The subgraph-specific parameters to be used for upcoming subgraph queries.
+	 * The voidnode-specific parameters to be used for upcoming voidnode queries.
 	 *
 	 * @defaultValue `{}` (empty object)
 	 */
@@ -102,11 +105,26 @@ export class PremiaSubgraph {
 	 * The SDK needs to be initialized before it can be used with
 	 * non-default parameters.
 	 */
-	constructor(uri: string) {
-		this.uri =
-			uri ?? 'https://api.thegraph.com/subgraphs/name/premiafinance/v3-goerli'
+	constructor(uri: string, authentication?: VoidnodeAuthentication) {
+		this.uri = uri ?? 'https://localhost:4000'
+
+		const httpLink = new HttpLink({ uri: this.uri, fetch })
+		const authLink = setContext((_, { headers }) => {
+			return {
+				headers: {
+					...headers,
+					...(authentication
+						? {
+								'x-api-id': authentication?.apiId,
+								authorization: `Bearer ${authentication?.apiKey}`,
+						  }
+						: {}),
+				},
+			}
+		})
+
 		this.client = new ApolloClient({
-			link: new HttpLink({ uri: this.uri, fetch }),
+			link: authLink.concat(httpLink),
 			cache: new InMemoryCache(),
 			defaultOptions: DefaultApolloClientOptions,
 		})
@@ -119,329 +137,6 @@ export class PremiaSubgraph {
 			this.queryParams.additionalFields =
 				queryParams.additionalFields ?? this.queryParams.additionalFields
 		}
-	}
-
-	async getVaultDayData(
-		vaultAddress: string,
-		startTime = 0,
-		first: number = 1000,
-		skip: number = 0
-	): Promise<VaultDayData[]> {
-		const response = await this.client.query({
-			query: AnalyticsQuery.GetVaultDayData(
-				this,
-				vaultAddress,
-				startTime,
-				first,
-				skip
-			),
-		})
-		return get(response, 'data.vaultDayDatas', []) as VaultDayData[]
-	}
-
-	async getPoolsOrderbookData(addresses: string[]): Promise<PoolDayData[]> {
-		const response = await this.client.query({
-			query: AnalyticsQuery.GetPoolsOrderbookData(this, addresses),
-		})
-		return get(response, 'data.poolDayDatas', []) as PoolDayData[]
-	}
-
-	async getPoolMinimal(address: string): Promise<PoolMinimal> {
-		const response = await this.client.query({
-			query: PoolQuery.GetPoolMinimal(this, address),
-		})
-
-		if (!response.data) {
-			throw new Error(
-				'Pool not found. If this pool has not yet been initialized, use the `basePoolFromKey` method.'
-			)
-		}
-
-		return get(response, 'data.pool') as PoolMinimal
-	}
-
-	async getPool(address: string): Promise<Pool> {
-		const response = await this.client.query({
-			query: PoolQuery.GetPool(this, address),
-		})
-
-		if (!response.data) {
-			throw new Error(
-				'Pool not found. If this pool has not yet been initialized, use the `basePoolFromKey` method.'
-			)
-		}
-
-		return get(response, 'data.pool') as Pool
-	}
-
-	async getPoolExtended(address: string): Promise<PoolExtended> {
-		const response = await this.client.query({
-			query: PoolQuery.GetPoolExtended(this, address),
-		})
-
-		if (!response.data) {
-			throw new Error(
-				'Pool not found. If this pool has not yet been initialized, use the `basePoolFromKey` method.'
-			)
-		}
-
-		return get(response, 'data.pool') as PoolExtended
-	}
-
-	async getPools(baseAddress: string, isExpired?: boolean): Promise<Pool[]> {
-		const response = await this.client.query({
-			query: PoolQuery.GetPools(this, baseAddress, isExpired),
-		})
-
-		if (!response.data) {
-			throw new Error(
-				'Pools not found. If no pools have been initialized, use the `basePoolFromKey` method.'
-			)
-		}
-
-		return get(response, 'data.pools', []) as Pool[]
-	}
-
-	async getPoolsExtended(
-		baseAddress: string,
-		isExpired?: boolean
-	): Promise<PoolExtended[]> {
-		const response = await this.client.query({
-			query: PoolQuery.GetPoolsExtended(this, baseAddress, isExpired),
-		})
-
-		if (!response.data) {
-			throw new Error(
-				'Pools not found. If no pools have been initialized, use the `basePoolFromKey` method.'
-			)
-		}
-
-		return get(response, 'data.pools', []).map(
-			(pool: Omit<Pool, 'contract'>) => pool as PoolExtended
-		) as PoolExtended[]
-	}
-
-	async getAllPools(): Promise<Pool[]> {
-		const response = await this.client.query({
-			query: PoolQuery.GetAllPools(this),
-		})
-
-		if (!response.data) {
-			throw new Error(
-				'Pools not found. If no pools have been initialized, use the `basePoolFromKey` method.'
-			)
-		}
-
-		return get(response, 'data.pools', []) as Pool[]
-	}
-
-	async getAllPoolsExtended(): Promise<PoolExtended[]> {
-		const response = await this.client.query({
-			query: PoolQuery.GetAllPoolsExtended(this),
-		})
-
-		if (!response.data) {
-			throw new Error(
-				'Pools not found. If no pools have been initialized, use the `basePoolFromKey` method.'
-			)
-		}
-
-		return get(response, 'data.pools', []).map(
-			(pool: Omit<Pool, 'contract'>) => pool as PoolExtended
-		) as PoolExtended[]
-	}
-
-	async getPoolsForToken(
-		token: Token,
-		isQuote: boolean = false
-	): Promise<Pool[]> {
-		const response = await this.client.query({
-			query: PoolQuery.GetPoolsForToken(this, token, isQuote),
-		})
-
-		if (!response.data) {
-			throw new Error(
-				'Pools not found. If no pools have been initialized, use the `basePoolFromKey` method.'
-			)
-		}
-
-		return get(response, 'data.pools', []).map(
-			(pool: Omit<Pool, 'contract'>) => pool as Pool
-		) as Pool[]
-	}
-
-	async getPoolsExtendedForToken(
-		token: Token,
-		isQuote: boolean = false
-	): Promise<PoolExtended[]> {
-		const response = await this.client.query({
-			query: PoolQuery.GetPoolsExtendedForToken(this, token, isQuote),
-		})
-
-		if (!response.data) {
-			throw new Error(
-				'Pools not found. If no pools have been initialized, use the `basePoolFromKey` method.'
-			)
-		}
-
-		return get(response, 'data.pools', []).map(
-			(pool: Omit<Pool, 'contract'>) => pool as PoolExtended
-		) as PoolExtended[]
-	}
-
-	async getPoolsForPairId(id: string): Promise<Pool[]> {
-		const response = await this.client.query({
-			query: PoolQuery.GetPoolsForPairId(this, id),
-		})
-		return get(response, 'data.pools', []) as Pool[]
-	}
-
-	async getPoolsForPair(
-		pair: TokenPairOrId,
-		isExpired?: boolean
-	): Promise<Pool[]> {
-		const response = await this.client.query({
-			query: PoolQuery.GetPoolsForPair(this, pair, isExpired),
-		})
-
-		if (!response.data) {
-			throw new Error(
-				'Pools not found. If no pools have been initialized, use the `basePoolFromKey` method.'
-			)
-		}
-
-		return get(response, 'data.pools', []) as Pool[]
-	}
-
-	async getPoolsExtendedForPair(
-		pair: TokenPairOrId,
-		options?: {
-			strike?: BigNumberish
-			maturity?: BigNumberish
-			isExpired?: boolean
-		}
-	): Promise<PoolExtended[]> {
-		const response = await this.client.query({
-			query: PoolQuery.GetPoolsExtendedForPair(this, pair, options),
-		})
-
-		if (!response.data) {
-			throw new Error(
-				'Pools not found. If no pools have been initialized, use the `basePoolFromKey` method.'
-			)
-		}
-
-		return get(response, 'data.pools', []) as PoolExtended[]
-	}
-
-	async getTicksForPool(poolAddress: string): Promise<Tick[]> {
-		const response = await this.client.query({
-			query: PoolQuery.GetTicks(this, poolAddress),
-		})
-
-		if (!get(response, 'data.ticks')) {
-			throw new Error(
-				'Ticks not found. If pool has not been initialized, use the `deployPool` method first.'
-			)
-		}
-		return get(response, 'data.ticks', []) as Tick[]
-	}
-
-	async getQuotePools(
-		tokenAddress: string,
-		strike: BigNumberish,
-		maturity: BigNumberish,
-		isCall: boolean
-	): Promise<PoolMinimal[]> {
-		const response = await this.client.query({
-			query: PoolQuery.GetQuotePools(
-				this,
-				tokenAddress,
-				strike.toString(),
-				maturity.toString(),
-				isCall ? OptionType.CALL : OptionType.PUT
-			),
-		})
-		return get(response, 'data.pools', []) as PoolMinimal[]
-	}
-
-	async getTick(normalizedPrice: BigNumberish, poolAddress: string) {
-		const response = await this.client.query({
-			query: TickQuery.GetTick(this, normalizedPrice, poolAddress),
-		})
-
-		if (!get(response, 'data.tick')) {
-			throw new Error(
-				'Tick not found. If pool has been initialized, use the `deployPool` method first.'
-			)
-		}
-		return get(response, 'data.tick', null) as Tick
-	}
-
-	async spotPrice(address: string): Promise<bigint> {
-		const token = await this.getToken(address)
-
-		if (!token.priceUSD) {
-			throw new Error(`Token price not found for token: ${address}`)
-		}
-
-		return toBigInt(token.priceUSD)
-	}
-
-	async getToken(address: string): Promise<Token> {
-		const response = await this.client.query({
-			query: TokenQuery.GetToken(this, address),
-		})
-		return get(response, 'data.token') as Token
-	}
-
-	async getTokenExtended(address: string): Promise<TokenExtended> {
-		const response = await this.client.query({
-			query: TokenQuery.GetTokenExtended(this, address),
-		})
-		return get(response, 'data.token') as TokenExtended
-	}
-
-	async getTokens(tokens: string[]): Promise<Token[]> {
-		const response = await this.client.query({
-			query: TokenQuery.GetTokens(this, tokens),
-		})
-		return get(response, 'data.tokens') as Token[]
-	}
-
-	async getTokensExtended(tokens: string[]): Promise<TokenExtended[]> {
-		const response = await this.client.query({
-			query: TokenQuery.GetTokensExtended(this, tokens),
-		})
-		return get(response, 'data.tokens') as TokenExtended[]
-	}
-
-	async getAllTokens(): Promise<Token[]> {
-		const response = await this.client.query({
-			query: TokenQuery.GetAllTokens(this),
-		})
-		return get(response, 'data.tokens') as Token[]
-	}
-
-	async getAllTokensExtended(): Promise<TokenExtended[]> {
-		const response = await this.client.query({
-			query: TokenQuery.GetAllTokensExtended(this),
-		})
-		return get(response, 'data.tokens') as TokenExtended[]
-	}
-
-	async getTokenList(tokenList: TokenInfo[]): Promise<Token[]> {
-		const response = await this.client.query({
-			query: TokenQuery.GetTokenList(this, tokenList),
-		})
-		return get(response, 'data.tokens') as Token[]
-	}
-
-	async getTokenListExtended(tokenList: TokenInfo[]): Promise<TokenExtended[]> {
-		const response = await this.client.query({
-			query: TokenQuery.GetTokenListExtended(this, tokenList),
-		})
-		return get(response, 'data.tokens') as TokenExtended[]
 	}
 
 	/**
@@ -457,7 +152,7 @@ export class PremiaSubgraph {
 		} else {
 			tokenAddress = token as string
 		}
-		return tokenAddress
+		return getAddress(tokenAddress)
 	}
 
 	_parsePairId(pair: TokenPairOrId): string {
@@ -498,6 +193,362 @@ export class PremiaSubgraph {
 		return _pair
 	}
 
+	tradeSide(isBuy: boolean): bigint {
+		return isBuy ? 0n : 1n
+	}
+
+	optionType(isCall: boolean): bigint {
+		return isCall ? 0n : 1n
+	}
+
+	async getVaultDayData(
+		vaultAddress: string,
+		startTime = 0,
+		limit: number = 1000,
+		skip: number = 0
+	): Promise<VaultDayData[]> {
+		const response = await this.client.query({
+			query: AnalyticsQuery.GetVaultDayData(
+				this,
+				vaultAddress,
+				startTime,
+				limit,
+				skip
+			),
+		})
+		const data = get(response, 'data.vaultDayDatas', []) as VaultDayData[]
+		return transformToLegacyData(data)
+	}
+
+	async getPoolsOrderbookData(addresses: string[]): Promise<PoolDayData[]> {
+		const response = await this.client.query({
+			query: AnalyticsQuery.GetPoolsOrderbookData(this, addresses),
+		})
+		const data = get(response, 'data.poolDayDatas', []) as PoolDayData[]
+		return transformToLegacyData(data)
+	}
+
+	async getPoolMinimal(address: string): Promise<PoolMinimal> {
+		const response = await this.client.query({
+			query: PoolQuery.GetPoolMinimal(this, address),
+		})
+
+		if (!response.data) {
+			throw new Error(
+				'Pool not found. If this pool has not yet been initialized, use the `basePoolFromKey` method.'
+			)
+		}
+
+		const data = get(response, 'data.pool') as PoolMinimal
+		return transformToLegacyData(data)
+	}
+
+	async getPool(address: string): Promise<Pool> {
+		const response = await this.client.query({
+			query: PoolQuery.GetPool(this, address),
+		})
+
+		if (!response.data) {
+			throw new Error(
+				'Pool not found. If this pool has not yet been initialized, use the `basePoolFromKey` method.'
+			)
+		}
+
+		const data = get(response, 'data.pool') as Pool
+		return transformToLegacyData(data)
+	}
+
+	async getPoolExtended(address: string): Promise<PoolExtended> {
+		const response = await this.client.query({
+			query: PoolQuery.GetPoolExtended(this, address),
+		})
+
+		if (!response.data) {
+			throw new Error(
+				'Pool not found. If this pool has not yet been initialized, use the `basePoolFromKey` method.'
+			)
+		}
+
+		const data = get(response, 'data.pool') as PoolExtended
+		return transformToLegacyData(data)
+	}
+
+	async getPools(baseAddress: string, isExpired?: boolean): Promise<Pool[]> {
+		const response = await this.client.query({
+			query: PoolQuery.GetPools(this, baseAddress, isExpired),
+		})
+
+		if (!response.data) {
+			throw new Error(
+				'Pools not found. If no pools have been initialized, use the `basePoolFromKey` method.'
+			)
+		}
+
+		const data = get(response, 'data.pools', []) as Pool[]
+		return transformToLegacyData(data)
+	}
+
+	async getPoolsExtended(
+		baseAddress: string,
+		isExpired?: boolean
+	): Promise<PoolExtended[]> {
+		const response = await this.client.query({
+			query: PoolQuery.GetPoolsExtended(this, baseAddress, isExpired),
+		})
+
+		if (!response.data) {
+			throw new Error(
+				'Pools not found. If no pools have been initialized, use the `basePoolFromKey` method.'
+			)
+		}
+
+		const data = get(response, 'data.pools', []).map(
+			(pool: Omit<Pool, 'contract'>) => pool as PoolExtended
+		) as PoolExtended[]
+		return transformToLegacyData(data)
+	}
+
+	async getAllPools(): Promise<Pool[]> {
+		const response = await this.client.query({
+			query: PoolQuery.GetAllPools(this),
+		})
+
+		if (!response.data) {
+			throw new Error(
+				'Pools not found. If no pools have been initialized, use the `basePoolFromKey` method.'
+			)
+		}
+
+		const data = get(response, 'data.pools', []) as Pool[]
+		return transformToLegacyData(data)
+	}
+
+	async getAllPoolsExtended(): Promise<PoolExtended[]> {
+		const response = await this.client.query({
+			query: PoolQuery.GetAllPoolsExtended(this),
+		})
+
+		if (!response.data) {
+			throw new Error(
+				'Pools not found. If no pools have been initialized, use the `basePoolFromKey` method.'
+			)
+		}
+
+		const data = get(response, 'data.pools', []).map(
+			(pool: Omit<Pool, 'contract'>) => pool as PoolExtended
+		) as PoolExtended[]
+		return transformToLegacyData(data)
+	}
+
+	async getPoolsForToken(
+		token: Token,
+		isQuote: boolean = false
+	): Promise<Pool[]> {
+		const response = await this.client.query({
+			query: PoolQuery.GetPoolsForToken(this, token, isQuote),
+		})
+
+		if (!response.data) {
+			throw new Error(
+				'Pools not found. If no pools have been initialized, use the `basePoolFromKey` method.'
+			)
+		}
+
+		const data = get(response, 'data.pools', []).map(
+			(pool: Omit<Pool, 'contract'>) => pool as Pool
+		) as Pool[]
+		return transformToLegacyData(data)
+	}
+
+	async getPoolsExtendedForToken(
+		token: Token,
+		isQuote: boolean = false
+	): Promise<PoolExtended[]> {
+		const response = await this.client.query({
+			query: PoolQuery.GetPoolsExtendedForToken(this, token, isQuote),
+		})
+
+		if (!response.data) {
+			throw new Error(
+				'Pools not found. If no pools have been initialized, use the `basePoolFromKey` method.'
+			)
+		}
+
+		const data = get(response, 'data.pools', []).map(
+			(pool: Omit<Pool, 'contract'>) => pool as PoolExtended
+		) as PoolExtended[]
+		return transformToLegacyData(data)
+	}
+
+	async getPoolsForPairId(id: string): Promise<Pool[]> {
+		const response = await this.client.query({
+			query: PoolQuery.GetPoolsForPairId(this, id),
+		})
+		const data = get(response, 'data.pools', []) as Pool[]
+		return transformToLegacyData(data)
+	}
+
+	async getPoolsForPair(
+		pair: TokenPairOrId,
+		isExpired?: boolean
+	): Promise<Pool[]> {
+		const response = await this.client.query({
+			query: PoolQuery.GetPoolsForPair(this, pair, isExpired),
+		})
+
+		if (!response.data) {
+			throw new Error(
+				'Pools not found. If no pools have been initialized, use the `basePoolFromKey` method.'
+			)
+		}
+
+		const data = get(response, 'data.pools', []) as Pool[]
+		return transformToLegacyData(data)
+	}
+
+	async getPoolsExtendedForPair(
+		pair: TokenPairOrId,
+		options?: {
+			strike?: BigNumberish
+			maturity?: BigNumberish
+			isExpired?: boolean
+		}
+	): Promise<PoolExtended[]> {
+		const response = await this.client.query({
+			query: PoolQuery.GetPoolsExtendedForPair(this, pair, options),
+		})
+
+		if (!response.data) {
+			throw new Error(
+				'Pools not found. If no pools have been initialized, use the `basePoolFromKey` method.'
+			)
+		}
+
+		const data = get(response, 'data.pools', []) as PoolExtended[]
+		return transformToLegacyData(data)
+	}
+
+	async getTicksForPool(poolAddress: string): Promise<Tick[]> {
+		const response = await this.client.query({
+			query: PoolQuery.GetTicks(this, poolAddress),
+		})
+
+		if (!get(response, 'data.ticks')) {
+			throw new Error(
+				'Ticks not found. If pool has not been initialized, use the `deployPool` method limit.'
+			)
+		}
+		const data = get(response, 'data.ticks', []) as Tick[]
+		return transformToLegacyData(data)
+	}
+
+	async getQuotePools(
+		tokenAddress: string,
+		strike: BigNumberish,
+		maturity: BigNumberish,
+		isCall: boolean
+	): Promise<PoolMinimal[]> {
+		const response = await this.client.query({
+			query: PoolQuery.GetQuotePools(
+				this,
+				tokenAddress,
+				strike.toString(),
+				maturity.toString(),
+				isCall ? OptionType.CALL : OptionType.PUT
+			),
+		})
+		const data = get(response, 'data.pools', []) as PoolMinimal[]
+		return transformToLegacyData(data)
+	}
+
+	async getTick(normalizedPrice: BigNumberish, poolAddress: string) {
+		const response = await this.client.query({
+			query: TickQuery.GetTick(this, normalizedPrice, poolAddress),
+		})
+
+		if (!get(response, 'data.tick')) {
+			throw new Error(
+				'Tick not found. If pool has been initialized, use the `deployPool` method limit.'
+			)
+		}
+		const data = get(response, 'data.tick', null) as Tick
+		return transformToLegacyData(data)
+	}
+
+	async spotPrice(address: string): Promise<bigint> {
+		const token = await this.getToken(address)
+
+		if (!token.priceUSD) {
+			throw new Error(`Token price not found for token: ${address}`)
+		}
+
+		return toBigInt(token.priceUSD)
+	}
+
+	async getToken(address: string): Promise<Token> {
+		const response = await this.client.query({
+			query: TokenQuery.GetToken(this, address),
+		})
+		const data = get(response, 'data.token') as Token
+		return transformToLegacyData(data)
+	}
+
+	async getTokenExtended(address: string): Promise<TokenExtended> {
+		const response = await this.client.query({
+			query: TokenQuery.GetTokenExtended(this, address),
+		})
+		const data = get(response, 'data.token') as TokenExtended
+		return transformToLegacyData(data)
+	}
+
+	async getTokens(tokens: string[]): Promise<Token[]> {
+		const response = await this.client.query({
+			query: TokenQuery.GetTokens(this, tokens),
+		})
+		const data = get(response, 'data.tokens') as Token[]
+		return transformToLegacyData(data)
+	}
+
+	async getTokensExtended(tokens: string[]): Promise<TokenExtended[]> {
+		const response = await this.client.query({
+			query: TokenQuery.GetTokensExtended(this, tokens),
+		})
+		const data = get(response, 'data.tokens') as TokenExtended[]
+		return transformToLegacyData(data)
+	}
+
+	async getAllTokens(): Promise<Token[]> {
+		const response = await this.client.query({
+			query: TokenQuery.GetAllTokens(this),
+		})
+		const data = get(response, 'data.tokens') as Token[]
+		return transformToLegacyData(data)
+	}
+
+	async getAllTokensExtended(): Promise<TokenExtended[]> {
+		const response = await this.client.query({
+			query: TokenQuery.GetAllTokensExtended(this),
+		})
+		const data = get(response, 'data.tokens') as TokenExtended[]
+		return transformToLegacyData(data)
+	}
+
+	async getTokenList(tokenList: TokenInfo[]): Promise<Token[]> {
+		const response = await this.client.query({
+			query: TokenQuery.GetTokenList(this, tokenList),
+		})
+		const data = get(response, 'data.tokens') as Token[]
+		return transformToLegacyData(data)
+	}
+
+	async getTokenListExtended(tokenList: TokenInfo[]): Promise<TokenExtended[]> {
+		const response = await this.client.query({
+			query: TokenQuery.GetTokenListExtended(this, tokenList),
+		})
+		const data = get(response, 'data.tokens') as TokenExtended[]
+		return transformToLegacyData(data)
+	}
+
 	async getPair(pair: TokenPairOrId): Promise<TokenPair> {
 		const pairId = this._parsePairId(pair)
 		const response = await this.client.query({
@@ -507,10 +558,10 @@ export class PremiaSubgraph {
 		const tokenPair = get(response, 'data.tokenPair') as TokenPair
 
 		if (!tokenPair.base || !tokenPair.quote) {
-			throw new Error('Invalid pair. Pair was not found on subgraph.')
+			throw new Error('Invalid pair. Pair was not found on voidnode.')
 		}
 
-		return tokenPair
+		return transformToLegacyData(tokenPair)
 	}
 
 	async getPairExtended(pair: TokenPairOrId): Promise<TokenPairExtended> {
@@ -521,10 +572,10 @@ export class PremiaSubgraph {
 		const tokenPair = get(response, 'data.tokenPair') as TokenPairExtended
 
 		if (!tokenPair.base || !tokenPair.quote) {
-			throw new Error('Invalid pair. Pair was not found on subgraph.')
+			throw new Error('Invalid pair. Pair was not found on voidnode.')
 		}
 
-		return tokenPair
+		return transformToLegacyData(tokenPair)
 	}
 
 	async getPairs(pairs: TokenPairOrId[]): Promise<TokenPair[]> {
@@ -532,7 +583,8 @@ export class PremiaSubgraph {
 		const response = await this.client.query({
 			query: TokenPairQuery.GetPairs(this, pairIds),
 		})
-		return get(response, 'data.tokenPairs') as TokenPair[]
+		const data = get(response, 'data.tokenPairs') as TokenPair[]
+		return transformToLegacyData(data)
 	}
 
 	async getPairsExtended(pairs: TokenPairOrId[]): Promise<TokenPairExtended[]> {
@@ -541,14 +593,16 @@ export class PremiaSubgraph {
 			query: TokenPairQuery.GetPairsExtended(this, _pairIds),
 		})
 
-		return get(response, 'data.tokenPairs') as TokenPairExtended[]
+		const data = get(response, 'data.tokenPairs') as TokenPairExtended[]
+		return transformToLegacyData(data)
 	}
 
 	async getAllPairs(): Promise<TokenPair[]> {
 		const response = await this.client.query({
 			query: TokenPairQuery.GetAllPairs(this),
 		})
-		return get(response, 'data.tokenPairs') as TokenPair[]
+		const data = get(response, 'data.tokenPairs') as TokenPair[]
+		return transformToLegacyData(data)
 	}
 
 	async getAllPairsExtended(): Promise<TokenPairExtended[]> {
@@ -556,22 +610,24 @@ export class PremiaSubgraph {
 			query: TokenPairQuery.GetAllPairsExtended(this),
 		})
 
-		return get(response, 'data.tokenPairs') as TokenPairExtended[]
+		const data = get(response, 'data.tokenPairs') as TokenPairExtended[]
+		return transformToLegacyData(data)
 	}
 
 	async getTransaction(hash: string): Promise<Transaction> {
 		const response = await this.client.query({
 			query: TransactionQuery.GetTransaction(this, hash),
 		})
-		return get(response, 'data.transaction') as Transaction
+		const data = get(response, 'data.transaction') as Transaction
+		return transformToLegacyData(data)
 	}
 
 	async getTransactions(
 		filter: string,
 		search: string,
 		orderBy: string = 'timestamp',
-		order: string = 'asc',
-		first: number = 100,
+		order: string = 'ASC',
+		limit: number = 100,
 		skip: number = 0,
 		type?: string,
 		poolAddress?: string,
@@ -587,7 +643,7 @@ export class PremiaSubgraph {
 				search,
 				orderBy,
 				order,
-				first,
+				limit,
 				skip,
 				type,
 				poolAddress,
@@ -598,22 +654,24 @@ export class PremiaSubgraph {
 			),
 		})
 
-		return get(response, 'data.transactions') as Transaction[]
+		const data = get(response, 'data.transactions') as Transaction[]
+		return transformToLegacyData(data)
 	}
 
 	async getVaultTransaction(hash: string): Promise<VaultTransaction> {
 		const response = await this.client.query({
 			query: VaultTransactionQuery.GetVaultTransaction(this, hash),
 		})
-		return get(response, 'data.vaultTransaction') as VaultTransaction
+		const data = get(response, 'data.vaultTransaction') as VaultTransaction
+		return transformToLegacyData(data)
 	}
 
 	async getVaultTransactions(
 		filter: string,
 		search: string,
 		orderBy: string = 'timestamp',
-		order: string = 'asc',
-		first: number = 100,
+		order: string = 'ASC',
+		limit: number = 100,
 		skip: number = 0,
 		type?: string,
 		vaultAddress?: string,
@@ -629,7 +687,7 @@ export class PremiaSubgraph {
 				search,
 				orderBy,
 				order,
-				first,
+				limit,
 				skip,
 				type,
 				vaultAddress,
@@ -639,21 +697,26 @@ export class PremiaSubgraph {
 				searchInput
 			),
 		})
-		return get(response, 'data.vaultTransactions') as VaultTransaction[]
+		const data = get(response, 'data.vaultTransactions') as VaultTransaction[]
+		return transformToLegacyData(data)
 	}
 
 	async getOptionPSTransaction(hash: string): Promise<OptionPSTransaction> {
 		const response = await this.client.query({
 			query: OptionPSTransactionQuery.GetOptionPSTransaction(this, hash),
 		})
-		return get(response, 'data.optionPSTransaction') as OptionPSTransaction
+		const data = get(
+			response,
+			'data.optionPSTransaction'
+		) as OptionPSTransaction
+		return transformToLegacyData(data)
 	}
 
 	async getOptionPSTransactions(
 		search: string,
 		orderBy: string = 'timestamp',
-		order: string = 'asc',
-		first: number = 100,
+		order: string = 'ASC',
+		limit: number = 100,
 		skip: number = 0,
 		account?: string,
 		startTime?: number,
@@ -666,7 +729,7 @@ export class PremiaSubgraph {
 				search,
 				orderBy,
 				order,
-				first,
+				limit,
 				skip,
 				account,
 				startTime,
@@ -674,7 +737,11 @@ export class PremiaSubgraph {
 				searchInput
 			),
 		})
-		return get(response, 'data.optionPSTransactions') as OptionPSTransaction[]
+		const data = get(
+			response,
+			'data.optionPSTransactions'
+		) as OptionPSTransaction[]
+		return transformToLegacyData(data)
 	}
 
 	async getTradingCompetitionUser(
@@ -683,38 +750,43 @@ export class PremiaSubgraph {
 		const response = await this.client.query({
 			query: UserQuery.GetTradingCompetitionUser(this, address),
 		})
-		return get(
+		const data = get(
 			response,
 			'data.tradingCompetitionUser'
 		) as TradingCompetitionUser
+		return transformToLegacyData(data)
 	}
 
 	async getUser(address: string): Promise<User> {
 		const response = await this.client.query({
 			query: UserQuery.GetUser(this, address),
 		})
-		return get(response, 'data.user') as User
+		const data = get(response, 'data.user') as User
+		return transformToLegacyData(data)
 	}
 
 	async getUserExtended(address: string): Promise<UserExtended> {
 		const response = await this.client.query({
 			query: UserQuery.GetUserExtended(this, address),
 		})
-		return get(response, 'data.user') as UserExtended
+		const data = get(response, 'data.user') as UserExtended
+		return transformToLegacyData(data)
 	}
 
 	async getUsers(addresses: string[]): Promise<User[]> {
 		const response = await this.client.query({
 			query: UserQuery.GetUsers(this, addresses),
 		})
-		return get(response, 'data.users', []) as User[]
+		const data = get(response, 'data.users', []) as User[]
+		return transformToLegacyData(data)
 	}
 
 	async getUsersExtended(addresses: string[]): Promise<UserExtended[]> {
 		const response = await this.client.query({
 			query: UserQuery.GetUsersExtended(this, addresses),
 		})
-		return get(response, 'data.users', []) as UserExtended[]
+		const data = get(response, 'data.users', []) as UserExtended[]
+		return transformToLegacyData(data)
 	}
 
 	async getUserSnapshot(
@@ -724,7 +796,8 @@ export class PremiaSubgraph {
 		const response = await this.client.query({
 			query: UserQuery.GetUserSnapshot(this, address, timestamp),
 		})
-		return get(response, 'data.userSnapshot') as UserSnapshot
+		const data = get(response, 'data.userSnapshot') as UserSnapshot
+		return transformToLegacyData(data)
 	}
 
 	async getUserSnapshotExtended(
@@ -734,7 +807,8 @@ export class PremiaSubgraph {
 		const response = await this.client.query({
 			query: UserQuery.GetUserSnapshotExtended(this, address, timestamp),
 		})
-		return get(response, 'data.userSnapshot') as UserSnapshotExtended
+		const data = get(response, 'data.userSnapshot') as UserSnapshotExtended
+		return transformToLegacyData(data)
 	}
 
 	async getUserSnapshots(
@@ -742,8 +816,8 @@ export class PremiaSubgraph {
 		startTime: BigNumberish,
 		endTime: BigNumberish,
 		orderBy: string = 'timestamp',
-		order: string = 'asc',
-		first: number = 100,
+		order: string = 'ASC',
+		limit: number = 100,
 		skip: number = 0
 	): Promise<UserSnapshot[]> {
 		const response = await this.client.query({
@@ -754,11 +828,12 @@ export class PremiaSubgraph {
 				endTime,
 				orderBy,
 				order,
-				first,
+				limit,
 				skip
 			),
 		})
-		return get(response, 'data.userSnapshots', []) as UserSnapshot[]
+		const data = get(response, 'data.userSnapshots', []) as UserSnapshot[]
+		return transformToLegacyData(data)
 	}
 
 	async getUserSnapshotsExtended(
@@ -766,8 +841,8 @@ export class PremiaSubgraph {
 		startTime: BigNumberish,
 		endTime: BigNumberish,
 		orderBy: string = 'timestamp',
-		order: string = 'asc',
-		first: number = 100,
+		order: string = 'ASC',
+		limit: number = 100,
 		skip: number = 0
 	): Promise<UserSnapshotExtended[]> {
 		const response = await this.client.query({
@@ -777,18 +852,24 @@ export class PremiaSubgraph {
 				endTime,
 				orderBy,
 				order,
-				first,
+				limit,
 				skip
 			),
 		})
-		return get(response, 'data.userSnapshots', []) as UserSnapshotExtended[]
+		const data = get(
+			response,
+			'data.userSnapshots',
+			[]
+		) as UserSnapshotExtended[]
+		return transformToLegacyData(data)
 	}
 
 	async getUserPortfolio(address: string): Promise<UserPortfolio> {
 		const response = await this.client.query({
 			query: UserQuery.GetUserPortfolio(this, address),
 		})
-		return get(response, 'data.user') as UserPortfolio
+		const data = get(response, 'data.user') as UserPortfolio
+		return transformToLegacyData(data)
 	}
 
 	async getUserPortfolioExtended(
@@ -797,50 +878,48 @@ export class PremiaSubgraph {
 		const response = await this.client.query({
 			query: UserQuery.GetUserPortfolioExtended(this, address),
 		})
-		return get(response, 'data.user') as UserPortfolioExtended
-	}
-
-	tradeSide(isBuy: boolean): bigint {
-		return isBuy ? 0n : 1n
-	}
-
-	optionType(isCall: boolean): bigint {
-		return isCall ? 0n : 1n
+		const data = get(response, 'data.user') as UserPortfolioExtended
+		return transformToLegacyData(data)
 	}
 
 	async getVault(address: string): Promise<Vault> {
 		const response = await this.client.query({
 			query: VaultQuery.GetVault(this, address),
 		})
-		return get(response, 'data.vault', null) as Vault
+		const data = get(response, 'data.vault', null) as Vault
+		return transformToLegacyData(data)
 	}
 
 	async getVaultExtended(address: string): Promise<VaultExtended> {
 		const response = await this.client.query({
 			query: VaultQuery.GetVaultExtended(this, address),
 		})
-		return get(response, 'data.vault', null) as VaultExtended
+		const data = get(response, 'data.vault', null) as VaultExtended
+		return transformToLegacyData(data)
 	}
 
 	async getAllVaultsExtended(): Promise<VaultExtended[]> {
 		const response = await this.client.query({
 			query: VaultQuery.GetAllVaultsExtended(this),
 		})
-		return get(response, 'data.vaults', []) as VaultExtended[]
+		const data = get(response, 'data.vaults', []) as VaultExtended[]
+		return transformToLegacyData(data)
 	}
 
 	async getVaults(baseAddress: string): Promise<Vault[]> {
 		const response = await this.client.query({
 			query: VaultQuery.GetVaults(this, baseAddress),
 		})
-		return get(response, 'data.vaults', []) as Vault[]
+		const data = get(response, 'data.vaults', []) as Vault[]
+		return transformToLegacyData(data)
 	}
 
 	async getVaultsExtended(baseAddress: string): Promise<VaultExtended[]> {
 		const response = await this.client.query({
 			query: VaultQuery.GetVaultsExtended(this, baseAddress),
 		})
-		return get(response, 'data.vaults', []) as VaultExtended[]
+		const data = get(response, 'data.vaults', []) as VaultExtended[]
+		return transformToLegacyData(data)
 	}
 
 	async getVaultsForToken(
@@ -850,7 +929,8 @@ export class PremiaSubgraph {
 		const response = await this.client.query({
 			query: VaultQuery.GetVaultsForToken(this, token),
 		})
-		return get(response, 'data.vaults', []) as Vault[]
+		const data = get(response, 'data.vaults', []) as Vault[]
+		return transformToLegacyData(data)
 	}
 
 	async getVaultsExtendedForToken(
@@ -860,7 +940,8 @@ export class PremiaSubgraph {
 		const response = await this.client.query({
 			query: VaultQuery.GetVaultsExtendedForToken(this, token),
 		})
-		return get(response, 'data.vaults', []) as VaultExtended[]
+		const data = get(response, 'data.vaults', []) as VaultExtended[]
+		return transformToLegacyData(data)
 	}
 
 	async getVaultPositionsExtendedForUser(
@@ -869,7 +950,12 @@ export class PremiaSubgraph {
 		const response = await this.client.query({
 			query: VaultPositionQuery.GetVaultPositionsExtendedForUser(this, owner),
 		})
-		return get(response, 'data.vaultPositions', []) as VaultPositionExtended[]
+		const data = get(
+			response,
+			'data.vaultPositions',
+			[]
+		) as VaultPositionExtended[]
+		return transformToLegacyData(data)
 	}
 
 	async getVaultPosition(
@@ -880,7 +966,8 @@ export class PremiaSubgraph {
 			query: VaultPositionQuery.GetVaultPosition(this, owner, vaultAddress),
 		})
 
-		return get(response, 'data.vaultPosition', null) as VaultPosition
+		const data = get(response, 'data.vaultPosition', null) as VaultPosition
+		return transformToLegacyData(data)
 	}
 
 	async getVaultPositionExtended(
@@ -894,25 +981,31 @@ export class PremiaSubgraph {
 				vaultAddress
 			),
 		})
-		return get(response, 'data.vaultPosition', null) as VaultPositionExtended
+		const data = get(
+			response,
+			'data.vaultPosition',
+			null
+		) as VaultPositionExtended
+		return transformToLegacyData(data)
 	}
 
 	async getVaultVotes(
 		user: string,
-		first: number = 100,
+		limit: number = 100,
 		skip: number = 0
 	): Promise<VaultVote[]> {
 		const response = await this.client.query({
-			query: VxPremiaQuery.GetVaultVotes(this, user, first, skip),
+			query: VxPremiaQuery.GetVaultVotes(this, user, limit, skip),
 		})
-		return get(response, 'data.vaultVotes', []) as VaultVote[]
+		const data = get(response, 'data.vaultVotes', []) as VaultVote[]
+		return transformToLegacyData(data)
 	}
 
 	async getUserVaultVotesFromTimestamp(
 		user: string,
 		timestampFrom: number,
 		timestampTo: number,
-		first: number = 100,
+		limit: number = 100,
 		skip: number = 0
 	): Promise<VaultVote[]> {
 		const response = await this.client.query({
@@ -921,17 +1014,18 @@ export class PremiaSubgraph {
 				user,
 				timestampFrom,
 				timestampTo,
-				first,
+				limit,
 				skip
 			),
 		})
-		return get(response, 'data.vaultVotes', []) as VaultVote[]
+		const data = get(response, 'data.vaultVotes', []) as VaultVote[]
+		return transformToLegacyData(data)
 	}
 
 	async getAllLastVaultVotes(
 		orderBy: string,
 		order: string,
-		first: number = 100,
+		limit: number = 100,
 		skip: number = 0
 	): Promise<VaultVote[]> {
 		const response = await this.client.query({
@@ -939,37 +1033,41 @@ export class PremiaSubgraph {
 				this,
 				orderBy,
 				order,
-				first,
+				limit,
 				skip
 			),
 		})
-		return get(response, 'data.vaultVotes', []) as VaultVote[]
+		const data = get(response, 'data.vaultVotes', []) as VaultVote[]
+		return transformToLegacyData(data)
 	}
 
 	async getVoteHistory(id: string): Promise<VoteHistory> {
 		const response = await this.client.query({
 			query: VxPremiaQuery.GetVoteHistoryFromId(this, id),
 		})
-		return get(response, 'data.voteHistory') as VoteHistory
+		const data = get(response, 'data.voteHistory') as VoteHistory
+		return transformToLegacyData(data)
 	}
 
 	async getLastUserStakes(): Promise<UserStake[]> {
 		const response = await this.client.query({
 			query: VxPremiaQuery.GetLastUserStakes(this),
 		})
-		return get(response, 'data.userStakes', []) as UserStake[]
+		const data = get(response, 'data.userStakes', []) as UserStake[]
+		return transformToLegacyData(data)
 	}
 
 	async getUserStakes(
 		startTime: number,
 		user: string,
-		first: number = 100,
+		limit: number = 100,
 		skip: number = 0
 	): Promise<UserStake[]> {
 		const response = await this.client.query({
-			query: VxPremiaQuery.GetUserStakes(this, startTime, user, first, skip),
+			query: VxPremiaQuery.GetUserStakes(this, startTime, user, limit, skip),
 		})
-		return get(response, 'data.userStakes', []) as UserStake[]
+		const data = get(response, 'data.userStakes', []) as UserStake[]
+		return transformToLegacyData(data)
 	}
 
 	async getLastUserStakeFromTimestamp(
@@ -979,25 +1077,28 @@ export class PremiaSubgraph {
 		const response = await this.client.query({
 			query: VxPremiaQuery.GetLastUserStakeFromTimestamp(this, timestamp, user),
 		})
-		return get(response, 'data.userStakes', []) as UserStake[]
+		const data = get(response, 'data.userStakes', []) as UserStake[]
+		return transformToLegacyData(data)
 	}
 
 	async getStakeHistory(id: string): Promise<StakeHistory> {
 		const response = await this.client.query({
 			query: VxPremiaQuery.GetStakeHistoryFromId(this, id),
 		})
-		return get(response, 'data.stakeHistory') as StakeHistory
+		const data = get(response, 'data.stakeHistory') as StakeHistory
+		return transformToLegacyData(data)
 	}
 
 	async getStakeHistories(
 		startTime: number,
-		first: number = 100,
+		limit: number = 100,
 		skip: number = 0
 	): Promise<StakeHistory[]> {
 		const response = await this.client.query({
-			query: VxPremiaQuery.GetStakeHistories(this, startTime, first, skip),
+			query: VxPremiaQuery.GetStakeHistories(this, startTime, limit, skip),
 		})
-		return get(response, 'data.stakeHistories', []) as StakeHistory[]
+		const data = get(response, 'data.stakeHistories', []) as StakeHistory[]
+		return transformToLegacyData(data)
 	}
 
 	async getOptionPositionsExtendedForUser(
@@ -1012,7 +1113,12 @@ export class PremiaSubgraph {
 			),
 		})
 
-		return get(response, 'data.optionPositions', []) as OptionPositionExtended[]
+		const data = get(
+			response,
+			'data.optionPositions',
+			[]
+		) as OptionPositionExtended[]
+		return transformToLegacyData(data)
 	}
 
 	async getRewardOptionPositionsExtendedForUser(
@@ -1029,7 +1135,12 @@ export class PremiaSubgraph {
 			),
 		})
 
-		return get(response, 'data.optionPositions', []) as OptionPositionExtended[]
+		const data = get(
+			response,
+			'data.optionPositions',
+			[]
+		) as OptionPositionExtended[]
+		return transformToLegacyData(data)
 	}
 
 	async getLiquidityPositionsExtendedForUser(
@@ -1045,22 +1156,24 @@ export class PremiaSubgraph {
 				isOpen
 			),
 		})
-		return get(
+		const data = get(
 			response,
 			'data.liquidityPositions'
 		) as LiquidityPositionExtended[]
+		return transformToLegacyData(data)
 	}
 
 	async getUserReferrals(
 		user: string,
-		first: number = 1000,
+		limit: number = 1000,
 		skip: number = 0
 	): Promise<Referral[]> {
 		const response = await this.client.query({
-			query: ReferralQuery.GetUserReferrals(this, user, first, skip),
+			query: ReferralQuery.GetUserReferrals(this, user, limit, skip),
 		})
-		return get(response, 'data.referrals', []) as Referral[]
+		const data = get(response, 'data.referrals', []) as Referral[]
+		return transformToLegacyData(data)
 	}
 }
 
-export default PremiaSubgraph
+export default PremiaVoidnode

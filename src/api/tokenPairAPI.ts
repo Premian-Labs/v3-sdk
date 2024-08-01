@@ -18,7 +18,7 @@ export type TokenPairOrInfo = PairInfo | TokenPair | TokenPairMinimal
 export type TokenPairOrId = TokenPairOrInfo | string
 
 /**
- * Represents a class for handling `TokenPair` operations related to the subgraph.
+ * Represents a class for handling `TokenPair` operations related to the voidnode server.
  *
  * @class TokenPairAPI
  * @extends {BaseAPI}
@@ -36,7 +36,7 @@ export class TokenPairAPI extends BaseAPI {
 		pair: TokenPairOrId,
 		provider?: Provider
 	): Promise<bigint> {
-		const _pair = this.premia.subgraph._parsePair(pair)
+		const _pair = this.premia.voidnode._parsePair(pair)
 		const oracleAdapter = await this.premia.contracts.getOracleAdapterContract(
 			_pair.priceOracleAddress,
 			provider ?? this.premia.multicallProvider
@@ -61,7 +61,7 @@ export class TokenPairAPI extends BaseAPI {
 	}
 
 	/**
-	 * Fetches data for a token pair from the subgraph.
+	 * Fetches data for a token pair from the voidnode server.
 	 * Uses caching with a one-day time-to-live.
 	 *
 	 * @param {TokenPairOrId} pair - The token pair or id to fetch the data for.
@@ -69,7 +69,7 @@ export class TokenPairAPI extends BaseAPI {
 	 * @returns {Promise<TokenPair>} The data for the token pair.
 	 */
 	async getPair(pair: TokenPairOrId): Promise<TokenPair> {
-		return this.premia.subgraph.getPair(pair)
+		return this.premia.voidnode.getPair(pair)
 	}
 
 	/**
@@ -81,7 +81,7 @@ export class TokenPairAPI extends BaseAPI {
 	 * @returns {Promise<TokenPairExtended>} The extended information for the token pair.
 	 */
 	async getPairExtended(pair: TokenPairOrId): Promise<TokenPairExtended> {
-		return this.premia.subgraph.getPairExtended(pair)
+		return this.premia.voidnode.getPairExtended(pair)
 	}
 
 	/**
@@ -93,7 +93,7 @@ export class TokenPairAPI extends BaseAPI {
 	 * @returns {Promise<TokenPair[]>} The data for the specified token pairs.
 	 */
 	async getPairs(pairs: TokenPairOrId[]): Promise<TokenPair[]> {
-		return this.premia.subgraph.getPairs(pairs)
+		return this.premia.voidnode.getPairs(pairs)
 	}
 
 	/**
@@ -105,6 +105,6 @@ export class TokenPairAPI extends BaseAPI {
 	 * @returns {Promise<TokenPairExtended[]>} The extended information for the specified token pairs.
 	 */
 	async getPairsExtended(pairs: TokenPairOrId[]): Promise<TokenPairExtended[]> {
-		return this.premia.subgraph.getPairsExtended(pairs)
+		return this.premia.voidnode.getPairsExtended(pairs)
 	}
 }

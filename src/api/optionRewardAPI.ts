@@ -3,7 +3,7 @@ import { BaseAPI } from './baseAPI'
 import { TransactionData } from '../entities'
 
 /**
- * Represents a class for handling pool operations related to the subgraph and the pool contracts.
+ * Represents a class for handling pool operations related to the voidnode server and the pool contracts.
  *
  * @class OptionRewardAPI
  * @extends {BaseAPI}

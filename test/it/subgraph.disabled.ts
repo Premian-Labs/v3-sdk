@@ -1,4 +1,4 @@
-import PremiaSubgraph from '../../src/services/subgraph'
+import PremiaVoidnode from '../../src/services/voidnode'
 import {
 	Addresses,
 	OrderType,
@@ -13,18 +13,18 @@ import dayjs from 'dayjs'
 import { get } from 'lodash'
 
 async function getFirstPoolAddress(
-	subgraph: PremiaSubgraph,
+	voidnode: PremiaVoidnode,
 	pair: TokenPairOrId
 ): Promise<string> {
-	const _pairId = subgraph._parsePairId(pair)
-	let pools = await subgraph.getPoolsForPairId(_pairId)
+	const _pairId = voidnode._parsePairId(pair)
+	let pools = await voidnode.getPoolsForPairId(_pairId)
 	return pools[0].address
 }
 
-describe('PremiaSubgraph', function (this: any) {
+describe('PremiaVoidnode', function (this: any) {
 	this.timeout(15000)
 
-	let subgraph: PremiaSubgraph
+	let voidnode: PremiaVoidnode
 
 	const fakeAddress = '0x04Ab08f3F0dec1021930C649760158c4e02589B2'
 	const defaultUser = '0x252f5ef0771ebb83a7efd51644c0dc16b1e429f6'
@@ -110,23 +110,23 @@ describe('PremiaSubgraph', function (this: any) {
 	}
 
 	beforeEach(async () => {
-		subgraph = new PremiaSubgraph(
-			'https://api.thegraph.com/subgraphs/name/premian-labs/premia-blue'
+		voidnode = new PremiaVoidnode(
+			'https://api.thegraph.com/voidnodes/name/premian-labs/premia-blue'
 		)
 	})
 
 	describe('AnalyticsQuery', () => {
 		it('#getPoolsOrderbookData', async () => {
 			// WETH-USDC:CHAINLINK
-			const _pairId = subgraph._parsePairId(pair)
+			const _pairId = voidnode._parsePairId(pair)
 
-			let pools = await subgraph.getPoolsForPairId(_pairId)
+			let pools = await voidnode.getPoolsForPairId(_pairId)
 
 			pools = pools.filter((pool) => pool.isCall === true)
 
 			const addresses = pools.map((pool) => pool.address)
 
-			const dayData = await subgraph.getPoolsOrderbookData(addresses)
+			const dayData = await voidnode.getPoolsOrderbookData(addresses)
 
 			expect(dayData.length).to.be.greaterThan(0)
 		})
@@ -134,148 +134,148 @@ describe('PremiaSubgraph', function (this: any) {
 
 	describe('PoolQuery', () => {
 		it('#getPoolMinimal', async () => {
-			const poolAddress = await getFirstPoolAddress(subgraph, pair)
+			const poolAddress = await getFirstPoolAddress(voidnode, pair)
 
-			let pool = await subgraph.getPoolMinimal(poolAddress)
+			let pool = await voidnode.getPoolMinimal(poolAddress)
 			expect(pool).to.not.be.null
 			expect(pool).to.not.be.undefined
 
-			pool = await subgraph.getPoolMinimal(fakeAddress)
+			pool = await voidnode.getPoolMinimal(fakeAddress)
 			expect(pool).to.be.null
 		})
 
 		it('#getPool', async () => {
-			const poolAddress = await getFirstPoolAddress(subgraph, pair)
+			const poolAddress = await getFirstPoolAddress(voidnode, pair)
 
-			let pool = await subgraph.getPool(poolAddress)
+			let pool = await voidnode.getPool(poolAddress)
 			expect(pool).to.not.be.null
 			expect(pool).to.not.be.undefined
 
-			pool = await subgraph.getPool(fakeAddress)
+			pool = await voidnode.getPool(fakeAddress)
 			expect(pool).to.be.null
 		})
 
 		it('#getPoolExtended', async () => {
-			const poolAddress = await getFirstPoolAddress(subgraph, pair)
+			const poolAddress = await getFirstPoolAddress(voidnode, pair)
 
-			let pool = await subgraph.getPoolExtended(poolAddress)
+			let pool = await voidnode.getPoolExtended(poolAddress)
 			expect(pool).to.not.be.null
 			expect(pool).to.not.be.undefined
 
-			pool = await subgraph.getPoolExtended(fakeAddress)
+			pool = await voidnode.getPoolExtended(fakeAddress)
 			expect(pool).to.be.null
 		})
 
 		it('#getPools', async () => {
-			let pools = await subgraph.getPools(pair.base.address)
+			let pools = await voidnode.getPools(pair.base.address)
 			expect(pools.length).to.be.greaterThan(0)
 
-			pools = await subgraph.getPools(fakeAddress)
+			pools = await voidnode.getPools(fakeAddress)
 			expect(pools.length).to.be.eq(0)
 		})
 
 		it('#getPoolsExtended', async () => {
-			let pools = await subgraph.getPoolsExtended(pair.base.address)
+			let pools = await voidnode.getPoolsExtended(pair.base.address)
 			expect(pools.length).to.be.greaterThan(0)
 
-			pools = await subgraph.getPoolsExtended(fakeAddress)
+			pools = await voidnode.getPoolsExtended(fakeAddress)
 			expect(pools.length).to.be.eq(0)
 		})
 
 		it('#getPoolsForToken', async () => {
-			let pools = await subgraph.getPoolsForToken(token)
+			let pools = await voidnode.getPoolsForToken(token)
 			expect(pools.length).to.be.greaterThan(0)
 
-			pools = await subgraph.getPoolsForToken(fakeToken)
+			pools = await voidnode.getPoolsForToken(fakeToken)
 			expect(pools.length).to.be.eq(0)
 		})
 
 		it('#getPoolsExtendedForToken', async () => {
-			let pools = await subgraph.getPoolsExtendedForToken(token)
+			let pools = await voidnode.getPoolsExtendedForToken(token)
 			expect(pools.length).to.be.greaterThan(0)
 
-			pools = await subgraph.getPoolsExtendedForToken(fakeToken)
+			pools = await voidnode.getPoolsExtendedForToken(fakeToken)
 			expect(pools.length).to.be.eq(0)
 		})
 
 		it('#getPoolsForPairId', async () => {
-			const _pairId = subgraph._parsePairId(pair)
-			const pools = await subgraph.getPoolsForPairId(_pairId)
+			const _pairId = voidnode._parsePairId(pair)
+			const pools = await voidnode.getPoolsForPairId(_pairId)
 
 			expect(pools.length).to.be.greaterThan(0)
 		})
 
 		it('#getPoolsForPair', async () => {
-			const pools = await subgraph.getPoolsForPair(minimalPair)
+			const pools = await voidnode.getPoolsForPair(minimalPair)
 
 			expect(pools.length).to.be.greaterThan(0)
 		})
 
 		it('#getPoolsExtendedForPair', async () => {
-			const pools = await subgraph.getPoolsExtendedForPair(minimalPair)
+			const pools = await voidnode.getPoolsExtendedForPair(minimalPair)
 
 			expect(pools.length).to.be.greaterThan(0)
 		})
 
 		it('#getTicksForPool', async () => {
-			const poolAddress = await getFirstPoolAddress(subgraph, pair)
+			const poolAddress = await getFirstPoolAddress(voidnode, pair)
 
-			let ticks = await subgraph.getTicksForPool(poolAddress)
+			let ticks = await voidnode.getTicksForPool(poolAddress)
 			expect(ticks.length).to.be.greaterThan(0)
 
-			ticks = await subgraph.getTicksForPool(fakeAddress)
+			ticks = await voidnode.getTicksForPool(fakeAddress)
 			expect(ticks.length).to.be.eq(0)
 		})
 
 		it('#getQuotePools', async () => {
-			const poolAddress = await getFirstPoolAddress(subgraph, pair)
+			const poolAddress = await getFirstPoolAddress(voidnode, pair)
 
-			let ticks = await subgraph.getTicksForPool(poolAddress)
+			let ticks = await voidnode.getTicksForPool(poolAddress)
 			expect(ticks.length).to.be.greaterThan(0)
 
-			ticks = await subgraph.getTicksForPool(fakeAddress)
+			ticks = await voidnode.getTicksForPool(fakeAddress)
 			expect(ticks.length).to.be.eq(0)
 		})
 	})
 
 	describe('TokenQuery', () => {
 		it('#getToken', async () => {
-			let _token = await subgraph.getToken(token.address)
+			let _token = await voidnode.getToken(token.address)
 			expect(_token).to.not.be.null
 			expect(_token).to.not.be.undefined
 
-			_token = await subgraph.getToken(fakeToken.address)
+			_token = await voidnode.getToken(fakeToken.address)
 			expect(_token).to.be.null
 		})
 
 		it('#getTokenExtended', async () => {
-			let _token = await subgraph.getTokenExtended(token.address)
+			let _token = await voidnode.getTokenExtended(token.address)
 			expect(_token).to.not.be.null
 			expect(_token).to.not.be.undefined
 
-			_token = await subgraph.getTokenExtended(fakeToken.address)
+			_token = await voidnode.getTokenExtended(fakeToken.address)
 			expect(_token).to.be.null
 		})
 
 		it('#getTokens', async () => {
-			let tokens = await subgraph.getTokens([
+			let tokens = await voidnode.getTokens([
 				pair.base.address,
 				pair.quote.address,
 			])
 			expect(tokens.length).to.be.eq(2)
 
-			tokens = await subgraph.getTokens([pair.base.address, fakeToken.address])
+			tokens = await voidnode.getTokens([pair.base.address, fakeToken.address])
 			expect(tokens.length).to.be.eq(1)
 		})
 
 		it('#getTokensExtended', async () => {
-			let tokens = await subgraph.getTokensExtended([
+			let tokens = await voidnode.getTokensExtended([
 				pair.base.address,
 				pair.quote.address,
 			])
 			expect(tokens.length).to.be.eq(2)
 
-			tokens = await subgraph.getTokensExtended([
+			tokens = await voidnode.getTokensExtended([
 				pair.base.address,
 				fakeToken.address,
 			])
@@ -283,90 +283,90 @@ describe('PremiaSubgraph', function (this: any) {
 		})
 
 		it('#getTokenList', async () => {
-			let tokens = await subgraph.getTokenList([pair.base, pair.quote])
+			let tokens = await voidnode.getTokenList([pair.base, pair.quote])
 			expect(tokens.length).to.be.eq(2)
 
-			tokens = await subgraph.getTokenList([pair.base, fakeToken])
+			tokens = await voidnode.getTokenList([pair.base, fakeToken])
 			expect(tokens.length).to.be.eq(1)
 		})
 
 		it('#getTokenListExtended', async () => {
-			let tokens = await subgraph.getTokenListExtended([pair.base, pair.quote])
+			let tokens = await voidnode.getTokenListExtended([pair.base, pair.quote])
 			expect(tokens.length).to.be.eq(2)
 
-			tokens = await subgraph.getTokenListExtended([pair.base, fakeToken])
+			tokens = await voidnode.getTokenListExtended([pair.base, fakeToken])
 			expect(tokens.length).to.be.eq(1)
 		})
 	})
 
 	describe('TokenPairQuery', () => {
 		it('#getPair', async () => {
-			const tokenPair = await subgraph.getPair(minimalPair)
+			const tokenPair = await voidnode.getPair(minimalPair)
 			expect(tokenPair).to.not.be.null
 			expect(tokenPair).to.not.be.undefined
 		})
 
 		it('#getPairExtended', async () => {
-			const tokenPair = await subgraph.getPairExtended(minimalPair)
+			const tokenPair = await voidnode.getPairExtended(minimalPair)
 			expect(tokenPair).to.not.be.null
 			expect(tokenPair).to.not.be.undefined
 		})
 
 		it('#getPairs', async () => {
-			const tokenPairs = await subgraph.getPairs([minimalPair])
+			const tokenPairs = await voidnode.getPairs([minimalPair])
 			expect(tokenPairs.length).to.eq(1)
 		})
 
 		it('#getPairsExtended', async () => {
-			const tokenPairs = await subgraph.getPairsExtended([minimalPair])
+			const tokenPairs = await voidnode.getPairsExtended([minimalPair])
 			expect(tokenPairs.length).to.eq(1)
 		})
 	})
 
 	describe('UserQuery', () => {
 		it('#getUser', async () => {
-			let user = await subgraph.getUser(defaultUser)
+			let user = await voidnode.getUser(defaultUser)
 			expect(user).to.not.be.null
 			expect(user).to.not.be.undefined
 
-			user = await subgraph.getUser(fakeAddress)
+			user = await voidnode.getUser(fakeAddress)
 			expect(user).to.be.null
 		})
 
 		it('#getUserExtended', async () => {
-			let user = await subgraph.getUserExtended(defaultUser)
+			let user = await voidnode.getUserExtended(defaultUser)
 			expect(user).to.not.be.null
 			expect(user).to.not.be.undefined
 
-			user = await subgraph.getUserExtended(fakeAddress)
+			user = await voidnode.getUserExtended(fakeAddress)
 			expect(user).to.be.undefined
 		})
 
 		it('#getUsers', async () => {
-			let users = await subgraph.getUsers([defaultUser])
+			let users = await voidnode.getUsers([defaultUser])
 			expect(users.length).to.eq(1)
 
-			users = await subgraph.getUsers([defaultUser, fakeAddress])
+			users = await voidnode.getUsers([defaultUser, fakeAddress])
 			expect(users.length).to.eq(1)
 		})
 
 		it('#getUsersExtended', async () => {
-			let users = await subgraph.getUsersExtended([defaultUser])
+			let users = await voidnode.getUsersExtended([defaultUser])
 			expect(users.length).to.eq(1)
 
-			users = await subgraph.getUsersExtended([defaultUser, fakeAddress])
+			users = await voidnode.getUsersExtended([defaultUser, fakeAddress])
 			expect(users.length).to.eq(1)
 		})
 
 		it('#getUserSnapshots', async () => {
 			const now = dayjs().utcOffset(0).valueOf()
-			const snapshots = await subgraph.getUserSnapshots(defaultUser, 0, now)
+			const snapshots = await voidnode.getUserSnapshots(defaultUser, 0, now)
 			expect(snapshots.length).to.be.greaterThan(0)
 		})
 
 		it('#getUserSnapshotsExtended', async () => {
 			const now = dayjs().utcOffset(0).valueOf()
-			const snapshots = await subgraph.getUserSnapshotsExtended(
+			const snapshots = await voidnode.getUserSnapshotsExtended(
 				defaultUser,
 				0,
 				now
@@ -375,28 +375,28 @@ describe('PremiaSubgraph', function (this: any) {
 		})
 
 		it('#getUserPortfolio', async () => {
-			let portfolio = await subgraph.getUserPortfolio(defaultUser)
+			let portfolio = await voidnode.getUserPortfolio(defaultUser)
 			expect(portfolio).to.not.be.null
 			expect(portfolio).to.not.be.undefined
 
-			portfolio = await subgraph.getUserPortfolio(fakeAddress)
+			portfolio = await voidnode.getUserPortfolio(fakeAddress)
 			expect(portfolio).to.be.undefined
 		})
 
 		it('#getUserPortfolioExtended', async () => {
-			let portfolio = await subgraph.getUserPortfolioExtended(defaultUser)
+			let portfolio = await voidnode.getUserPortfolioExtended(defaultUser)
 			expect(portfolio).to.not.be.null
 			expect(portfolio).to.not.be.undefined
 
-			portfolio = await subgraph.getUserPortfolioExtended(fakeAddress)
+			portfolio = await voidnode.getUserPortfolioExtended(fakeAddress)
 			expect(portfolio).to.be.undefined
 		})
 
 		it('#getUserSnapshot', async () => {
 			const now = dayjs().utcOffset(0).valueOf()
-			const snapshots = await subgraph.getUserSnapshots(defaultUser, 0, now)
+			const snapshots = await voidnode.getUserSnapshots(defaultUser, 0, now)
 
-			const snapshot = await subgraph.getUserSnapshot(
+			const snapshot = await voidnode.getUserSnapshot(
 				defaultUser,
 				snapshots[0].timestamp
 			)
@@ -406,9 +406,9 @@ describe('PremiaSubgraph', function (this: any) {
 
 		it('#getUserSnapshotExtended', async () => {
 			const now = dayjs().utcOffset(0).valueOf()
-			const snapshots = await subgraph.getUserSnapshots(defaultUser, 0, now)
+			const snapshots = await voidnode.getUserSnapshots(defaultUser, 0, now)
 
-			let snapshot = await subgraph.getUserSnapshotExtended(
+			let snapshot = await voidnode.getUserSnapshotExtended(
 				defaultUser,
 				snapshots[0].timestamp
 			)
@@ -419,11 +419,11 @@ describe('PremiaSubgraph', function (this: any) {
 
 	xdescribe('TransactionQuery', () => {
 		it('#getTransactions', async () => {
-			const transactions = await subgraph.getTransactions(
+			const transactions = await voidnode.getTransactions(
 				'add',
 				'TESTWETH/USDC',
 				'timestamp',
-				'asc',
+				'ASC',
 				10,
 				0,
 				'pool'
@@ -433,18 +433,18 @@ describe('PremiaSubgraph', function (this: any) {
 		})
 
 		it('#getTransaction', async () => {
-			const transactions = await subgraph.getTransactions(
+			const transactions = await voidnode.getTransactions(
 				'add',
 				'TESTWETH/USDC',
 				'timestamp',
-				'asc',
+				'ASC',
 				10,
 				0,
 				'pool'
 			)
 			const hash = get(transactions[0], 'id', '')
 
-			const tx = await subgraph.getTransaction(hash)
+			const tx = await voidnode.getTransaction(hash)
 			expect(tx).to.not.be.null
 			expect(tx).to.not.be.undefined
 		})
@@ -453,11 +453,11 @@ describe('PremiaSubgraph', function (this: any) {
 	// TODO: requires similar setup to cloud apps integration test (generating on-chain events)
 	xdescribe('VaultTransactionQuery', async () => {
 		it('#getVaultTransactions', async () => {
-			const transactions = await subgraph.getVaultTransactions(
+			const transactions = await voidnode.getVaultTransactions(
 				'add',
 				'ETH',
 				'timestamp',
-				'asc',
+				'ASC',
 				10,
 				0,
 				'token'
@@ -466,18 +466,18 @@ describe('PremiaSubgraph', function (this: any) {
 		})
 
 		it('#getVaultTransaction', async () => {
-			const transactions = await subgraph.getVaultTransactions(
+			const transactions = await voidnode.getVaultTransactions(
 				'add',
 				'ETH',
 				'timestamp',
-				'asc',
+				'ASC',
 				10,
 				0,
 				'token'
 			)
 			const hash = get(transactions[0], 'id', '')
 
-			const tx = await subgraph.getVaultTransaction(hash)
+			const tx = await voidnode.getVaultTransaction(hash)
 			expect(tx).to.not.be.null
 			expect(tx).to.not.be.undefined
 		})
@@ -486,7 +486,7 @@ describe('PremiaSubgraph', function (this: any) {
 	describe('OptionPositionQuery', async () => {
 		it('#getOptionPositionsExtendedForUser', async () => {
 			let owner = '0x9e600587b9035a8c1254e8256f4e588cc33b8467'
-			let positions = await subgraph.getOptionPositionsExtendedForUser(owner)
+			let positions = await voidnode.getOptionPositionsExtendedForUser(owner)
 
 			expect(positions.length).to.be.greaterThan(0)
 		})
@@ -495,11 +495,11 @@ describe('PremiaSubgraph', function (this: any) {
 	describe('LiquidityPositionQuery', async () => {
 		it('#getLiquidityPositionsExtendedForUser', async () => {
 			let owner = '0x9e600587b9035a8c1254e8256f4e588cc33b8467'
-			let positions = await subgraph.getLiquidityPositionsExtendedForUser(owner)
+			let positions = await voidnode.getLiquidityPositionsExtendedForUser(owner)
 
 			expect(positions.length).to.be.greaterThan(0)
 
-			positions = await subgraph.getLiquidityPositionsExtendedForUser(
+			positions = await voidnode.getLiquidityPositionsExtendedForUser(
 				owner,
 				OrderType.LONG_COLLATERAL
 			)
@@ -507,7 +507,7 @@ describe('PremiaSubgraph', function (this: any) {
 			expect(positions.length).to.be.greaterThan(0)
 			expect(positions[0].orderType).to.eq('LONG_COLLATERAL')
 
-			positions = await subgraph.getLiquidityPositionsExtendedForUser(
+			positions = await voidnode.getLiquidityPositionsExtendedForUser(
 				owner,
 				OrderType.COLLATERAL_SHORT
 			)
@@ -519,24 +519,24 @@ describe('PremiaSubgraph', function (this: any) {
 
 	describe('VaultQuery', async () => {
 		it('#getAllVaultsExtended', async () => {
-			const vaults = await subgraph.getAllVaultsExtended()
+			const vaults = await voidnode.getAllVaultsExtended()
 
 			expect(vaults.length).to.be.greaterThan(0)
 		})
 
 		it('#getVault', async () => {
-			const vaults = await subgraph.getAllVaultsExtended()
+			const vaults = await voidnode.getAllVaultsExtended()
 			const vaultAddress = vaults[0].address
-			const vault = await subgraph.getVault(vaultAddress)
+			const vault = await voidnode.getVault(vaultAddress)
 
 			expect(vault).to.not.be.null
 			expect(vault).to.not.be.undefined
 		})
 
 		it('#getVaultExtended', async () => {
-			const vaults = await subgraph.getAllVaultsExtended()
+			const vaults = await voidnode.getAllVaultsExtended()
 			const vaultAddress = vaults[0].address
-			const vault = await subgraph.getVaultExtended(vaultAddress)
+			const vault = await voidnode.getVaultExtended(vaultAddress)
 
 			expect(vault).to.not.be.null
 			expect(vault).to.not.be.undefined
@@ -544,14 +544,14 @@ describe('PremiaSubgraph', function (this: any) {
 
 		it('#getVaults', async () => {
 			const tokenAddress = Addresses[SupportedChainId.ARBITRUM_GOERLI].TEST_WETH
-			const vaults = await subgraph.getVaults(tokenAddress)
+			const vaults = await voidnode.getVaults(tokenAddress)
 
 			expect(vaults.length).to.be.greaterThan(0)
 		})
 
 		it('#getVaultsExtended', async () => {
 			const tokenAddress = Addresses[SupportedChainId.ARBITRUM_GOERLI].TEST_WETH
-			const vaults = await subgraph.getVaultsExtended(tokenAddress)
+			const vaults = await voidnode.getVaultsExtended(tokenAddress)
 
 			expect(vaults.length).to.be.greaterThan(0)
 		})
@@ -566,7 +566,7 @@ describe('PremiaSubgraph', function (this: any) {
 				isNative: false,
 				isWrappedNative: false,
 			}
-			const vaults = await subgraph.getVaultsForToken(token)
+			const vaults = await voidnode.getVaultsForToken(token)
 
 			expect(vaults.length).to.be.greaterThan(0)
 		})
@@ -581,7 +581,7 @@ describe('PremiaSubgraph', function (this: any) {
 				isNative: false,
 				isWrappedNative: false,
 			}
-			const vaults = await subgraph.getVaultsExtendedForToken(token)
+			const vaults = await voidnode.getVaultsExtendedForToken(token)
 
 			expect(vaults.length).to.be.greaterThan(0)
 		})

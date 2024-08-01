@@ -10,7 +10,9 @@ export const VaultPositionFragment = gql`
 		vault {
 			...Vault
 		}
-		owner
+		owner {
+			address
+		}
 
 		createdAt
 		createdAtBlock

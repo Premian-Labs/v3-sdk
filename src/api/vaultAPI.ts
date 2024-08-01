@@ -381,7 +381,7 @@ export class VaultAPI extends BaseAPI {
 	 *                                   the vault at the specified address.
 	 */
 	async getVault(address: string): Promise<Vault> {
-		return this.premia.subgraph.getVault(address)
+		return this.premia.voidnode.getVault(address)
 	}
 
 	/**
@@ -393,7 +393,7 @@ export class VaultAPI extends BaseAPI {
 	 *                                   detailed information about the vault at the specified address.
 	 */
 	async getVaultExtended(address: string): Promise<VaultExtended> {
-		return this.premia.subgraph.getVaultExtended(address)
+		return this.premia.voidnode.getVaultExtended(address)
 	}
 
 	/**
@@ -403,7 +403,7 @@ export class VaultAPI extends BaseAPI {
 	 *                             about a vault.
 	 */
 	async getAllVaultsExtended(): Promise<VaultExtended[]> {
-		return this.premia.subgraph.getAllVaultsExtended()
+		return this.premia.voidnode.getAllVaultsExtended()
 	}
 
 	/**
@@ -415,7 +415,7 @@ export class VaultAPI extends BaseAPI {
 	 *                             about a vault associated with the given base address.
 	 */
 	async getVaults(tokenAddress: string): Promise<Vault[]> {
-		return this.premia.subgraph.getVaultsExtended(tokenAddress)
+		return this.premia.voidnode.getVaultsExtended(tokenAddress)
 	}
 
 	/**
@@ -427,7 +427,7 @@ export class VaultAPI extends BaseAPI {
 	 *                                     detailed information about a vault associated with the given base address.
 	 */
 	async getVaultsExtended(tokenAddress: string): Promise<VaultExtended[]> {
-		return this.premia.subgraph.getVaultsExtended(tokenAddress)
+		return this.premia.voidnode.getVaultsExtended(tokenAddress)
 	}
 
 	/**
@@ -443,7 +443,7 @@ export class VaultAPI extends BaseAPI {
 		token: TokenOrAddress,
 		isQuote: boolean = false
 	): Promise<Vault[]> {
-		return this.premia.subgraph.getVaultsForToken(token, isQuote)
+		return this.premia.voidnode.getVaultsForToken(token, isQuote)
 	}
 
 	/**
@@ -459,7 +459,7 @@ export class VaultAPI extends BaseAPI {
 		token: TokenOrAddress,
 		isQuote: boolean = false
 	): Promise<VaultExtended[]> {
-		return this.premia.subgraph.getVaultsExtendedForToken(token, isQuote)
+		return this.premia.voidnode.getVaultsExtendedForToken(token, isQuote)
 	}
 
 	/**
@@ -473,7 +473,7 @@ export class VaultAPI extends BaseAPI {
 		owner: string,
 		vaultAddress: string
 	): Promise<VaultPosition> {
-		return this.premia.subgraph.getVaultPosition(owner, vaultAddress)
+		return this.premia.voidnode.getVaultPosition(owner, vaultAddress)
 	}
 
 	/**
@@ -487,7 +487,7 @@ export class VaultAPI extends BaseAPI {
 		owner: string,
 		vaultAddress: string
 	): Promise<VaultPositionExtended> {
-		return this.premia.subgraph.getVaultPositionExtended(owner, vaultAddress)
+		return this.premia.voidnode.getVaultPositionExtended(owner, vaultAddress)
 	}
 
 	/**
@@ -500,7 +500,7 @@ export class VaultAPI extends BaseAPI {
 	async getVaultPositionsExtendedForUser(
 		owner: string
 	): Promise<VaultPositionExtended[]> {
-		return this.premia.subgraph.getVaultPositionsExtendedForUser(owner)
+		return this.premia.voidnode.getVaultPositionsExtendedForUser(owner)
 	}
 
 	/**

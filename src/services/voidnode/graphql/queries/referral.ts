@@ -1,14 +1,16 @@
 import { DocumentNode, gql } from '@apollo/client/core'
-import { addFields } from '../../../../utils/subgraph'
-import PremiaSubgraph from '../../index'
+import { getAddress } from 'ethers'
+
+import { addFields } from '../../../../utils/voidnode'
+import PremiaVoidnode from '../../index'
 import { ReferralFragment } from '../fragments/referral'
 
 export class ReferralQuery {
 	@addFields
 	static GetUserReferrals(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		user: string,
-		first = 1000,
+		limit = 1000,
 		skip = 0
 	): DocumentNode {
 		return gql`
@@ -16,8 +18,8 @@ export class ReferralQuery {
 
       query Referral {
         referrals(
-          where: { user: "${user.toLowerCase()}"}
-          first: ${first}
+          where: { user: "${getAddress(user)}"}
+          limit: ${limit}
           skip: ${skip}
         ) {
           ...Referral

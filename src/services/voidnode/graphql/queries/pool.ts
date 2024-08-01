@@ -1,33 +1,33 @@
 import { DocumentNode, gql } from '@apollo/client/core'
-import { BigNumberish } from 'ethers'
+import { BigNumberish, getAddress } from 'ethers'
+
+import PremiaVoidnode from '../../index'
 import {
 	PoolExtendedFragment,
 	PoolFragment,
 	PoolMinimalFragment,
 	TickFragment,
 } from '../fragments'
-import { OptionType, Token, TokenPairMinimal } from '../../../../entities'
-import { addFields } from '../../../../utils/subgraph'
-import { TokenQuery } from './token'
-import PremiaSubgraph from '../../index'
+import { OptionType, Token } from '../../../../entities'
+import { addFields } from '../../../../utils/voidnode'
 import { TokenPairOrId } from '../../../..'
+import { TokenQuery } from './token'
 
 export class PoolQuery {
 	static poolId(address: string): string {
-		return address.toLowerCase()
+		return getAddress(address)
 	}
 
 	@addFields
 	static GetPoolMinimal(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		address: string
 	): DocumentNode {
 		return gql`
         ${PoolMinimalFragment}
 
         {
-            pool(id: "${this.poolId(address)}",
-			subgraphError: allow) {
+            pool(id: "${this.poolId(address)}") {
                 ...PoolMinimal
             }
         }
@@ -35,13 +35,12 @@ export class PoolQuery {
 	}
 
 	@addFields
-	static GetPool(subgraph: PremiaSubgraph, address: string): DocumentNode {
+	static GetPool(voidnode: PremiaVoidnode, address: string): DocumentNode {
 		return gql`
         ${PoolFragment}
 
         {
-            pool(id: "${this.poolId(address)}",
-			subgraphError: allow) {
+            pool(id: "${this.poolId(address)}") {
                 ...Pool
             }
         }
@@ -50,15 +49,14 @@ export class PoolQuery {
 
 	@addFields
 	static GetPoolExtended(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		address: string
 	): DocumentNode {
 		return gql`
         ${PoolExtendedFragment}
 
         {
-            pool(id: "${this.poolId(address)}",
-			subgraphError: allow) {
+            pool(id: "${this.poolId(address)}") {
                 ...PoolExtended
             }
         }
@@ -67,7 +65,7 @@ export class PoolQuery {
 
 	@addFields
 	static GetPools(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		tokenAddress: string,
 		isExpired?: boolean
 	): DocumentNode {
@@ -85,13 +83,14 @@ export class PoolQuery {
         {
             pools(
             	where: {
-					base: "${tokenAddress.toLowerCase()}"
+					base: "${getAddress(tokenAddress)}"
 					${filter}
 				}, 
-            	first: 1000, 
-            	orderBy: createdAt, 
-            	orderDirection: desc,
-				subgraphError: allow
+            	limit: 1000, 
+            	orderBy: [{
+					field: createdAt, 
+					direction: DESC
+				}]
             ) {
                 ...Pool
             }
@@ -101,7 +100,7 @@ export class PoolQuery {
 
 	@addFields
 	static GetPoolsExtended(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		tokenAddress: string,
 		isExpired?: boolean
 	): DocumentNode {
@@ -119,13 +118,14 @@ export class PoolQuery {
         {
             pools(
             	where: {
-					base: "${tokenAddress.toLowerCase()}"
+					base: "${getAddress(tokenAddress)}"
 					${filter}
 				},
-            	first: 1000, 
-				orderBy: createdAt, 
-				orderDirection: desc,
-				subgraphError: allow
+            	limit: 1000, 
+				orderBy: [{
+					field: createdAt, 
+					direction: DESC
+				}]
             ) {
                 ...PoolExtended
             }
@@ -134,12 +134,12 @@ export class PoolQuery {
 	}
 
 	@addFields
-	static GetAllPools(subgraph: PremiaSubgraph): DocumentNode {
+	static GetAllPools(voidnode: PremiaVoidnode): DocumentNode {
 		return gql`
 			${PoolFragment}
 
 			{
-				pools(first: 1000, orderBy: createdAt, orderDirection: desc) {
+				pools(limit: 1000, orderBy: [{ field: createdAt, direction: DESC }]) {
 					...Pool
 				}
 			}
@@ -147,12 +147,12 @@ export class PoolQuery {
 	}
 
 	@addFields
-	static GetAllPoolsExtended(subgraph: PremiaSubgraph): DocumentNode {
+	static GetAllPoolsExtended(voidnode: PremiaVoidnode): DocumentNode {
 		return gql`
 			${PoolExtendedFragment}
 
 			{
-				pools(first: 1000, orderBy: createdAt, orderDirection: desc) {
+				pools(limit: 1000, orderBy: [{ field: createdAt, direction: DESC }]) {
 					...PoolExtended
 				}
 			}
@@ -161,7 +161,7 @@ export class PoolQuery {
 
 	@addFields
 	static GetQuotePools(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		tokenAddress: string,
 		strike: BigNumberish,
 		maturity: BigNumberish,
@@ -173,15 +173,16 @@ export class PoolQuery {
         {
             pools(
             	where: { 
-            		base: "${tokenAddress.toLowerCase()}", 
+            		base: "${getAddress(tokenAddress)}", 
             		strike: "${strike}", 
             		maturity: "${maturity}", 
             		optionType: "${optionType}" 
             	},
-            	first: 1000, 
-				orderBy: createdAt, 
-				orderDirection: desc,
-				subgraphError: allow
+            	limit: 1000, 
+				orderBy: [{
+					field: createdAt, 
+					direction: DESC
+				}]
             ) {
                 ...PoolMinimal
             }
@@ -191,7 +192,7 @@ export class PoolQuery {
 
 	@addFields
 	static GetPoolsForToken(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		token: Token,
 		isQuote: boolean = false
 	): DocumentNode {
@@ -203,10 +204,11 @@ export class PoolQuery {
             	where: { ${isQuote ? 'quote' : 'base'}: "${TokenQuery.tokenId(
 			token.address
 		)}" },
-            	first: 1000, 
-				orderBy: createdAt, 
-				orderDirection: desc,
-				subgraphError: allow
+            	limit: 1000, 
+				orderBy: [{
+					field: createdAt, 
+					direction: DESC
+				}]
 			) {
                 ...Pool
             }
@@ -216,7 +218,7 @@ export class PoolQuery {
 
 	@addFields
 	static GetPoolsExtendedForToken(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		token: Token,
 		isQuote: boolean = false
 	): DocumentNode {
@@ -235,11 +237,11 @@ export class PoolQuery {
 
 	@addFields
 	static GetPoolsForPair(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		pair: TokenPairOrId,
 		isExpired?: boolean
 	): DocumentNode {
-		const pairId = subgraph._parsePairId(pair)
+		const pairId = voidnode._parsePairId(pair)
 		let filter = ''
 
 		if (isExpired) {
@@ -252,14 +254,16 @@ export class PoolQuery {
         ${PoolFragment}
 
         {
-            pools(where: {
-				pair: "${pairId}",
-				${filter}
-			},
-			first: 1000, 
-			orderBy: createdAt, 
-			orderDirection: desc,
-			subgraphError: allow
+            pools(
+				where: {
+					pair: "${pairId}",
+					${filter}
+				},
+				limit: 1000, 
+				orderBy: [{
+					field: createdAt, 
+					direction: DESC
+				}]
 			) {
                 ...Pool
             }
@@ -269,7 +273,7 @@ export class PoolQuery {
 
 	@addFields
 	static GetPoolsExtendedForPair(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		pair: TokenPairOrId,
 		options?: {
 			strike?: BigNumberish
@@ -277,7 +281,7 @@ export class PoolQuery {
 			isExpired?: boolean
 		}
 	): DocumentNode {
-		const pairId = subgraph._parsePairId(pair)
+		const pairId = voidnode._parsePairId(pair)
 		let filter = ''
 
 		if (options?.strike) {
@@ -302,14 +306,16 @@ export class PoolQuery {
         ${PoolExtendedFragment}
 
         {
-            pools(where: {
-				pair: "${pairId}",
-				${filter}
-			},
-			first: 1000, 
-			orderBy: createdAt, 
-			orderDirection: desc,
-			subgraphError: allow
+            pools(
+				where: {
+					pair: "${pairId}",
+					${filter}
+				},
+				limit: 1000, 
+				orderBy: [{
+					field: createdAt, 
+					direction: DESC
+				}]
 			) {
                 ...PoolExtended
             }
@@ -319,7 +325,7 @@ export class PoolQuery {
 
 	@addFields
 	static GetPoolsForPairId(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		_pairId: string
 	): DocumentNode {
 		return gql`
@@ -327,11 +333,12 @@ export class PoolQuery {
 
         {
             pools(
-            	where: { pair: "${_pairId.toLowerCase()}" },
-            	first: 1000, 
-				orderBy: createdAt, 
-				orderDirection: desc,
-				subgraphError: allow
+            	where: { pair: "${voidnode._parsePairId(_pairId)}" },
+            	limit: 1000, 
+				orderBy: [{
+					field: createdAt, 
+					direction: DESC
+				}]
             ) {
                 ...Pool
             }
@@ -341,7 +348,7 @@ export class PoolQuery {
 
 	@addFields
 	static GetPoolsExtendedForPairId(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		_pairId: string
 	): DocumentNode {
 		return gql`
@@ -349,11 +356,12 @@ export class PoolQuery {
 
         {
             pools(
-            	where: { pair: "${_pairId.toLowerCase()}" }
-            	first: 1000, 
-				orderBy: createdAt, 
-				orderDirection: desc,
-				subgraphError: allow
+            	where: { pair: "${voidnode._parsePairId(_pairId)}" }
+            	limit: 1000, 
+				orderBy: [{
+					field: createdAt, 
+					direction: DESC
+				}]
             ) {
                 ...PoolExtended
             }
@@ -363,14 +371,14 @@ export class PoolQuery {
 
 	@addFields
 	static GetTicks(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		_poolAddress: string
 	): DocumentNode {
 		return gql`
         ${TickFragment}
 
         {
-            ticks(where: { pool: "${_poolAddress.toLowerCase()}" }) {
+            ticks(where: { pool: "${getAddress(_poolAddress)}" }) {
                 ...Tick
             }
         }

@@ -1,20 +1,21 @@
 import { DocumentNode, gql } from '@apollo/client/core'
+import { getAddress } from 'ethers'
 
 import {
 	OptionPositionExtendedFragment,
 	OptionPositionFragment,
 } from '../fragments'
-import { addFields } from '../../../../utils/subgraph'
-import PremiaSubgraph from '../../index'
+import { addFields } from '../../../../utils/voidnode'
+import PremiaVoidnode from '../../index'
 
 export class OptionPositionQuery {
 	static optionPositionId(owner: string, poolAddress: string): string {
-		return owner.toLowerCase() + ':' + poolAddress.toLowerCase()
+		return getAddress(owner) + ':' + getAddress(poolAddress)
 	}
 
 	@addFields
 	static GetOptionPosition(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		owner: string,
 		poolAddress: string
 	): DocumentNode {
@@ -22,8 +23,7 @@ export class OptionPositionQuery {
         ${OptionPositionFragment}
 
         {
-            optionPosition(id: "${this.optionPositionId(owner, poolAddress)}",
-			subgraphError: allow) {
+            optionPosition(id: "${this.optionPositionId(owner, poolAddress)}") {
                 ...OptionPosition
             }
         }
@@ -32,7 +32,7 @@ export class OptionPositionQuery {
 
 	@addFields
 	static GetOptionPositionExtended(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		owner: string,
 		poolAddress: string
 	): DocumentNode {
@@ -40,8 +40,7 @@ export class OptionPositionQuery {
         ${OptionPositionExtendedFragment}
 
         { 
-            optionPosition(id: "${this.optionPositionId(owner, poolAddress)}",
-			subgraphError: allow) {
+            optionPosition(id: "${this.optionPositionId(owner, poolAddress)}") {
                 ...OptionPositionExtended
             }
         }
@@ -50,7 +49,7 @@ export class OptionPositionQuery {
 
 	@addFields
 	static GetOptionPositionsExtendedForUser(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		owner: string,
 		isOpen?: boolean
 	): DocumentNode {
@@ -59,8 +58,8 @@ export class OptionPositionQuery {
 			filter = ''
 		} else {
 			filter = isOpen
-				? ', { closedAt: null }, { or: [{ pool_: { isExpiredOTM: false } }, { option_not: null }, { isBuy: false }] }'
-				: ', { or: [{ closedAt_not: null }, { pool_: { isExpiredOTM: true }, isBuy: true }] }'
+				? ', { closedAt: null }, { or: [{ pool_: { isExpiredOTM: false } }, { option_ne: null }, { isBuy: false }] }'
+				: ', { or: [{ closedAt_ne: null }, { pool_: { isExpiredOTM: true }, isBuy: true }] }'
 		}
 
 		return gql`
@@ -70,14 +69,15 @@ export class OptionPositionQuery {
 				optionPositions(
 					where: { 
 						and: [
-							{ owner: "${owner.toLowerCase()}" }
+							{ owner: "${getAddress(owner)}" }
 							${filter}
 						]
 					},
-					first: 1000, 
-					orderBy: createdAt, 
-					orderDirection: desc,
-					subgraphError: allow
+					limit: 1000, 
+					orderBy: [{
+						field: createdAt, 
+						direction: DESC
+					}]
 				) {
 					...OptionPositionExtended
 				}
@@ -87,14 +87,14 @@ export class OptionPositionQuery {
 
 	@addFields
 	static GetRewardOptionPositionsExtendedForUser(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		owner: string,
 		timestamp?: number,
 		isOpen?: boolean
 	): DocumentNode {
-		let filter = `owner: "${owner.toLowerCase()}", option_not: null`
+		let filter = `owner: "${getAddress(owner)}", option_ne: null`
 		if (isOpen !== undefined) {
-			filter += isOpen ? ', closedAt: null' : ', closedAt_not: null'
+			filter += isOpen ? ', closedAt: null' : ', closedAt_ne: null'
 		}
 		if (timestamp) {
 			filter += `, maturity_lte: ${timestamp}`
@@ -106,10 +106,11 @@ export class OptionPositionQuery {
 					where: { 
 						 ${filter}
 					},
-					first: 1000, 
-					orderBy: createdAt, 
-					orderDirection: desc,
-					subgraphError: allow
+					limit: 1000, 
+					orderBy: [{
+						field: createdAt, 
+						direction: DESC
+					}]
 				) {
 					...OptionPositionExtended
 				}

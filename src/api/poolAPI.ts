@@ -54,7 +54,7 @@ export interface ValidQuoteResponse {
 }
 
 /**
- * Represents a class for handling pool operations related to the subgraph and the pool contracts.
+ * Represents a class for handling pool operations related to the voidnode server and the pool contracts.
  *
  * @class PoolAPI
  * @extends {BaseAPI}
@@ -808,7 +808,7 @@ export class PoolAPI extends BaseAPI {
 	 * @returns {Promise<PoolMinimal>} Promise containing PoolMinimal.
 	 */
 	async getPoolMinimal(address: string): Promise<PoolMinimal> {
-		return this.premia.subgraph.getPoolMinimal(address)
+		return this.premia.voidnode.getPoolMinimal(address)
 	}
 
 	/**
@@ -818,7 +818,7 @@ export class PoolAPI extends BaseAPI {
 	 * @returns {Promise<Pool>} A promise that resolves to a `Pool` object.
 	 */
 	async getPool(address: string): Promise<Pool> {
-		return this.premia.subgraph.getPool(address)
+		return this.premia.voidnode.getPool(address)
 	}
 
 	/**
@@ -828,7 +828,7 @@ export class PoolAPI extends BaseAPI {
 	 * @returns {Promise<PoolExtended>} A promise that resolves to a `PoolExtended` objects.
 	 */
 	async getPoolExtended(address: string): Promise<PoolExtended> {
-		return this.premia.subgraph.getPoolExtended(address)
+		return this.premia.voidnode.getPoolExtended(address)
 	}
 
 	/**
@@ -839,7 +839,7 @@ export class PoolAPI extends BaseAPI {
 	 * @returns {Promise<Pool[]>} A promise that resolves to an array of `Pool` objects.
 	 */
 	async getPools(baseAddress: string, isExpired?: boolean): Promise<Pool[]> {
-		return this.premia.subgraph.getPools(baseAddress, isExpired)
+		return this.premia.voidnode.getPools(baseAddress, isExpired)
 	}
 
 	/**
@@ -853,7 +853,7 @@ export class PoolAPI extends BaseAPI {
 		baseAddress: string,
 		isExpired?: boolean
 	): Promise<PoolExtended[]> {
-		return this.premia.subgraph.getPoolsExtended(baseAddress, isExpired)
+		return this.premia.voidnode.getPoolsExtended(baseAddress, isExpired)
 	}
 
 	/**
@@ -867,7 +867,7 @@ export class PoolAPI extends BaseAPI {
 		token: Token,
 		isQuote: boolean = false
 	): Promise<Pool[]> {
-		return this.premia.subgraph.getPoolsForToken(token, isQuote)
+		return this.premia.voidnode.getPoolsForToken(token, isQuote)
 	}
 
 	/**
@@ -881,7 +881,7 @@ export class PoolAPI extends BaseAPI {
 		token: Token,
 		isQuote: boolean = false
 	): Promise<PoolExtended[]> {
-		return this.premia.subgraph.getPoolsExtendedForToken(token, isQuote)
+		return this.premia.voidnode.getPoolsExtendedForToken(token, isQuote)
 	}
 
 	/**
@@ -895,7 +895,7 @@ export class PoolAPI extends BaseAPI {
 		pair: TokenPairOrId,
 		isExpired?: boolean
 	): Promise<Pool[]> {
-		return this.premia.subgraph.getPoolsForPair(pair, isExpired)
+		return this.premia.voidnode.getPoolsForPair(pair, isExpired)
 	}
 
 	/**
@@ -909,7 +909,7 @@ export class PoolAPI extends BaseAPI {
 		pair: TokenPairOrId,
 		isExpired?: boolean
 	): Promise<PoolExtended[]> {
-		return this.premia.subgraph.getPoolsExtendedForPair(pair, { isExpired })
+		return this.premia.voidnode.getPoolsExtendedForPair(pair, { isExpired })
 	}
 
 	/**

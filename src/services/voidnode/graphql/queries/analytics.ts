@@ -1,21 +1,22 @@
 import { DocumentNode, gql } from '@apollo/client/core'
+import { getAddress } from 'ethers'
 
-import { addFields } from '../../../../utils/subgraph'
+import { addFields } from '../../../../utils/voidnode'
 import {
 	PoolDayDataFragment,
 	PoolDayOrderbookDataFragment,
 	PoolHourDataFragment,
 	VaultDayDataFragment,
 } from '../fragments'
-import PremiaSubgraph from '../../index'
+import PremiaVoidnode from '../../index'
 
 export class AnalyticsQuery {
 	@addFields
 	static GetPoolDayData(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		poolAddress: string,
 		startTime = 0,
-		first = 1000,
+		limit = 1000,
 		skip = 0
 	): DocumentNode {
 		return gql`
@@ -23,11 +24,15 @@ export class AnalyticsQuery {
 
       query PoolDayData {
         poolDayDatas(
-          where: { pool: "${poolAddress.toLowerCase()}", periodStart_gt: ${startTime} }
-          first: ${first}
+          where: { pool: "${getAddress(
+						poolAddress
+					)}", periodStart_gt: ${startTime} }
+          limit: ${limit}
           skip: ${skip}
-          orderBy: periodStart
-          orderDirection: asc
+          orderBy: [{
+            field: periodStart
+            direction: ASC
+          }]
         ) {
           ...PoolDayData
         }
@@ -37,10 +42,10 @@ export class AnalyticsQuery {
 
 	@addFields
 	static GetPoolHourData(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		poolAddress: string,
 		startTime = 0,
-		first = 1000,
+		limit = 1000,
 		skip = 0
 	): DocumentNode {
 		return gql`
@@ -48,11 +53,15 @@ export class AnalyticsQuery {
 
       query PoolHourData {
         poolHourDatas(
-          where: { pool: "${poolAddress.toLowerCase()}", periodStart_gt: ${startTime} }
-          first: ${first}
+          where: { pool: "${getAddress(
+						poolAddress
+					)}", periodStart_gt: ${startTime} }
+          limit: ${limit}
           skip: ${skip}
-          orderBy: periodStart
-          orderDirection: asc
+          orderBy: [{
+            field: periodStart
+            direction: ASC
+          }]
         ) {
           ...PoolHourData
         }
@@ -62,9 +71,9 @@ export class AnalyticsQuery {
 
 	@addFields
 	static GetPoolsOrderbookData(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		poolAddresses: string[],
-		first = poolAddresses.length,
+		limit = poolAddresses.length,
 		skip = 0
 	): DocumentNode {
 		return gql`
@@ -73,12 +82,14 @@ export class AnalyticsQuery {
       query OrderbookData {
         poolDayDatas(
           where: { pool_in: [${poolAddresses
-						.map((address) => `"${address.toLowerCase()}"`)
+						.map((address) => `"${getAddress(address)}"`)
 						.toString()}] }
-          first: ${first}
+          limit: ${limit}
           skip: ${skip}
-          orderBy: periodStart
-          orderDirection: desc
+          orderBy: [{
+            field: periodStart
+            direction: ASC
+          }]
         ) {
           ...PoolDayOrderbookData
         }
@@ -88,10 +99,10 @@ export class AnalyticsQuery {
 
 	@addFields
 	static GetVaultDayData(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		vaultAddress: string,
 		startTime = 0,
-		first = 1000,
+		limit = 1000,
 		skip = 0
 	): DocumentNode {
 		return gql`
@@ -99,11 +110,15 @@ export class AnalyticsQuery {
 
       query VaultDayData {
         vaultDayDatas(
-          where: { vault: "${vaultAddress.toLowerCase()}", periodStart_gt: ${startTime} }
-          first: ${first}
+          where: { vault: "${getAddress(
+						vaultAddress
+					)}", periodStart_gt: ${startTime} }
+          limit: ${limit}
           skip: ${skip}
-          orderBy: periodStart
-          orderDirection: asc
+          orderBy: [{
+            field: periodStart
+            direction: ASC
+          }]
         ) {
           ...VaultDayData
         }

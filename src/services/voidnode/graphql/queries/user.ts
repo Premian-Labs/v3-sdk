@@ -1,4 +1,6 @@
 import { DocumentNode, gql } from '@apollo/client/core'
+import { BigNumberish, getAddress } from 'ethers'
+
 import {
 	UserExtendedFragment,
 	UserFragment,
@@ -8,22 +10,21 @@ import {
 	UserSnapshotFragment,
 	TradingCompetitionUserFragment,
 } from '../fragments'
-import { addFields } from '../../../../utils/subgraph'
-import { BigNumberish } from 'ethers'
-import PremiaSubgraph from '../../index'
+import { addFields } from '../../../../utils/voidnode'
+import PremiaVoidnode from '../../index'
 
 export class UserQuery {
 	static userId(address: string): string {
-		return address.toLowerCase()
+		return getAddress(address)
 	}
 
 	static snapshotId(address: string, timestamp: BigNumberish): string {
-		return address.toLowerCase() + ':' + timestamp.toString()
+		return getAddress(address) + ':' + timestamp.toString()
 	}
 
 	@addFields
 	static GetTradingCompetitionUser(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		address: string
 	): DocumentNode {
 		return gql`
@@ -38,7 +39,7 @@ export class UserQuery {
 	}
 
 	@addFields
-	static GetUser(subgraph: PremiaSubgraph, address: string): DocumentNode {
+	static GetUser(voidnode: PremiaVoidnode, address: string): DocumentNode {
 		return gql`
         ${UserFragment}
 
@@ -52,7 +53,7 @@ export class UserQuery {
 
 	@addFields
 	static GetUserExtended(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		address: string
 	): DocumentNode {
 		return gql`
@@ -68,7 +69,7 @@ export class UserQuery {
 
 	@addFields
 	static GetUserSnapshot(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		address: string,
 		timestamp: BigNumberish
 	): DocumentNode {
@@ -85,7 +86,7 @@ export class UserQuery {
 
 	@addFields
 	static GetUserSnapshotExtended(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		address: string,
 		timestamp: BigNumberish
 	): DocumentNode {
@@ -102,7 +103,7 @@ export class UserQuery {
 
 	@addFields
 	static GetUserPortfolio(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		address: string
 	): DocumentNode {
 		return gql`
@@ -118,7 +119,7 @@ export class UserQuery {
 
 	@addFields
 	static GetUserPortfolioExtended(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		address: string
 	): DocumentNode {
 		return gql`
@@ -133,7 +134,7 @@ export class UserQuery {
 	}
 
 	@addFields
-	static GetUsers(subgraph: PremiaSubgraph, addresses: string[]): DocumentNode {
+	static GetUsers(voidnode: PremiaVoidnode, addresses: string[]): DocumentNode {
 		return gql`
         ${UserFragment}
 
@@ -151,7 +152,7 @@ export class UserQuery {
 
 	@addFields
 	static GetUsersExtended(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		addresses: string[]
 	): DocumentNode {
 		return gql`
@@ -171,13 +172,13 @@ export class UserQuery {
 
 	@addFields
 	static GetUserSnapshots(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		address: string,
 		startTime: BigNumberish,
 		endTime: BigNumberish,
 		orderBy: string = 'timestamp',
-		order: string = 'asc',
-		first = 100,
+		order: string = 'ASC',
+		limit = 100,
 		skip = 0
 	): DocumentNode {
 		return gql`
@@ -185,12 +186,14 @@ export class UserQuery {
 
         {  
 			userSnapshots(
-				first: ${first}
+				limit: ${limit}
 				skip: ${skip}
-				orderBy: "${orderBy}"
-				orderDirection: "${order}"
+				orderBy: [{
+					field: ${orderBy},
+					direction: ${order.toUpperCase()}
+				}]
 				where: {
-					user: "${address.toLowerCase()}",
+					user: "${getAddress(address)}",
 					timestamp_gte: ${Number(startTime)},
 					timestamp_lte: ${Number(endTime)},
 				}
@@ -207,8 +210,8 @@ export class UserQuery {
 		startTime: BigNumberish,
 		endTime: BigNumberish,
 		orderBy: string = 'timestamp',
-		order: string = 'asc',
-		first = 100,
+		order: string = 'ASC',
+		limit = 100,
 		skip = 0
 	): DocumentNode {
 		return gql`
@@ -216,12 +219,14 @@ export class UserQuery {
 
         {
 			userSnapshots(
-				first: ${first}
+				limit: ${limit}
 				skip: ${skip}
-				orderBy: "${orderBy}"
-				orderDirection: "${order}"
+				orderBy: [{
+					field: ${orderBy},
+					direction: ${order.toUpperCase()}
+				}]
 				where: {
-					user: "${address.toLowerCase()}",
+					user: "${getAddress(address)}",
 					timestamp_gte: ${Number(startTime)},
 					timestamp_lte: ${Number(endTime)},
 				}

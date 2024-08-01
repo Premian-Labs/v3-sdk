@@ -56,7 +56,6 @@ export const TokenPairExtendedFragment = gql`
 
 	fragment TokenPairExtended on TokenPair {
 		...TokenPair
-		...VolatilitySurface
 
 		quotePricingPath {
 			...TokenPriceNode

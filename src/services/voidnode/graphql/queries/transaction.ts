@@ -1,8 +1,9 @@
 import { DocumentNode, gql } from '@apollo/client/core'
-import { BigNumberish } from 'ethers'
+import { BigNumberish, getAddress } from 'ethers'
+
 import { TransactionFragment } from '../fragments'
-import { addFields } from '../../../../utils/subgraph'
-import PremiaSubgraph from '../../index'
+import { addFields } from '../../../../utils/voidnode'
+import PremiaVoidnode from '../../index'
 
 export class TransactionQuery {
 	static transactionId(hash: string): string {
@@ -10,7 +11,7 @@ export class TransactionQuery {
 	}
 
 	@addFields
-	static GetTransaction(subgraph: PremiaSubgraph, hash: string): DocumentNode {
+	static GetTransaction(voidnode: PremiaVoidnode, hash: string): DocumentNode {
 		return gql`
         ${TransactionFragment}
 
@@ -24,12 +25,12 @@ export class TransactionQuery {
 
 	@addFields
 	static GetTransactions(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		filter: string,
 		search: string,
 		orderBy: string = 'timestamp',
-		order: string = 'asc',
-		first = 100,
+		order: string = 'ASC',
+		limit = 100,
 		skip = 0,
 		type?: string,
 		poolAddress?: string,
@@ -39,14 +40,14 @@ export class TransactionQuery {
 		searchInput?: string
 	): DocumentNode {
 		const addressFilter = poolAddress
-			? `pool: "${poolAddress.toLowerCase()}",`
+			? `pool: "${getAddress(poolAddress)}",`
 			: ''
 		const startFilter = startTime ? `timestamp_gte: ${Number(startTime)}` : ''
 		const endFilter = endTime ? `timestamp_lte: ${Number(endTime)}` : ''
 		const searchInputFilter = searchInput
 			? `description_contains: "${searchInput.toUpperCase()}"`
 			: ''
-		const accountFilter = account ? `user: "${account.toLowerCase()}"` : ''
+		const accountFilter = account ? `user: "${getAddress(account)}"` : ''
 		const containsName =
 			type === 'token'
 				? 'tokenSymbol_contains'
@@ -62,10 +63,12 @@ export class TransactionQuery {
       
         query Transaction {
           transactions(
-            first: ${first}
+            limit: ${limit}
             skip: ${skip}
-            orderBy: ${orderBy}
-            orderDirection: ${order}
+            orderBy: [{
+				field: ${orderBy},
+            	direction: ${order.toUpperCase()}
+			}]
             where: { 
             	sizeUSD_gt: 0, 
 				${addressFilter}

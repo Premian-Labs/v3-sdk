@@ -1,8 +1,9 @@
 import { DocumentNode, gql } from '@apollo/client/core'
-import { BigNumberish } from 'ethers'
+import { BigNumberish, getAddress } from 'ethers'
+
 import { OptionPSTransactionFragment } from '../fragments'
-import { addFields } from '../../../../utils/subgraph'
-import PremiaSubgraph from '../../index'
+import { addFields } from '../../../../utils/voidnode'
+import PremiaVoidnode from '../../index'
 
 export class OptionPSTransactionQuery {
 	static optionPSTransactionId(hash: string): string {
@@ -11,7 +12,7 @@ export class OptionPSTransactionQuery {
 
 	@addFields
 	static GetOptionPSTransaction(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		hash: string
 	): DocumentNode {
 		return gql`
@@ -27,11 +28,11 @@ export class OptionPSTransactionQuery {
 
 	@addFields
 	static GetOptionPSTransactions(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		search: string,
 		orderBy: string,
 		order: string,
-		first = 100,
+		limit = 100,
 		skip = 0,
 		account?: string,
 		startTime?: BigNumberish,
@@ -43,7 +44,7 @@ export class OptionPSTransactionQuery {
 		const searchFilter = searchInput
 			? `description_contains: "${searchInput.toUpperCase()}",`
 			: ''
-		const accountFilter = account ? `user: "${account.toLowerCase()}",` : ''
+		const accountFilter = account ? `user: "${getAddress(account)}",` : ''
 
 		const containsName = 'tokenSymbol_contains'
 		const containsFilter = `${containsName}: "${search}",`
@@ -53,10 +54,12 @@ export class OptionPSTransactionQuery {
     
         query OptionPSTransaction {
             optionPSTransactions(
-                first: ${first}
+                limit: ${limit}
                 skip: ${skip}
-                orderBy: "${orderBy}"
-                orderDirection: "${order}"
+                orderBy: [{
+					field: ${orderBy},
+                	direction: ${order.toUpperCase()}
+				}]
                 where: {
                     sizeUSD_gt: 0,
                     ${startFilter}

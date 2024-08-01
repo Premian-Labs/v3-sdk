@@ -10,14 +10,14 @@ import {
 	TokenPairOrId,
 } from '../../src'
 import { parseEther } from 'ethers'
-import PremiaSubgraph from '../../src/services/subgraph'
+import PremiaVoidnode from '../../src/services/voidnode'
 
 async function getFirstPoolAddress(
-	subgraph: PremiaSubgraph,
+	voidnode: PremiaVoidnode,
 	pair: TokenPairOrId
 ): Promise<string> {
-	const _pairId = subgraph._parsePairId(pair)
-	let pools = await subgraph.getPoolsForPairId(_pairId)
+	const _pairId = voidnode._parsePairId(pair)
+	let pools = await voidnode.getPoolsForPairId(_pairId)
 	return pools[0].address
 }
 
@@ -113,7 +113,7 @@ describe('Pool API', async function (this: any) {
 	})
 
 	it('should be able to get the market price for a pool', async () => {
-		const poolAddress = await getFirstPoolAddress(sdk.subgraph, pair)
+		const poolAddress = await getFirstPoolAddress(sdk.voidnode, pair)
 		const marketPrice = await sdk.pools.marketPrice(poolAddress)
 
 		expect(marketPrice).to.not.be.undefined

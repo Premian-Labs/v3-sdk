@@ -14,9 +14,9 @@ describe('SDK.initialize', function (this: any) {
 	it('should be able to be instantiated with no params and no browser provider', async () => {
 		const premia = await Premia.initialize()
 
-		expect(premia.skipSubgraph).eq(false)
-		expect(premia.subgraph.uri).eq(
-			'https://api.thegraph.com/subgraphs/name/premian-labs/premia-blue'
+		expect(premia.skipVoidnode).eq(false)
+		expect(premia.voidnode.uri).eq(
+			'https://api.thegraph.com/voidnodes/name/premian-labs/premia-blue'
 		)
 		expect(premia.chainId).eq(42161)
 		expect(premia.apiBaseUri).eq('https://test.orderbook.premia.finance')
@@ -45,9 +45,9 @@ describe('SDK.initialize', function (this: any) {
 			useTestnet: true,
 		})
 
-		expect(premia.skipSubgraph).eq(false)
-		expect(premia.subgraph.uri).eq(
-			'https://api.thegraph.com/subgraphs/name/premian-labs/premia-blue-arbitrum-goerli'
+		expect(premia.skipVoidnode).eq(false)
+		expect(premia.voidnode.uri).eq(
+			'https://api.thegraph.com/voidnodes/name/premian-labs/premia-blue-arbitrum-goerli'
 		)
 		expect(premia.chainId).eq(421613)
 		expect(premia.apiBaseUri).eq('https://test.orderbook.premia.finance')
@@ -75,7 +75,7 @@ describe('SDK.initialize', function (this: any) {
 
 	it('should be able to be instantiated with only a privateKey for both arbitrum and argitrum nova', async () => {
 		const premia = await Premia.initialize({
-			subgraphUri: 'https://api.thegraph.com/subgraphs/name/totop716/premia-v3',
+			voidnodeUri: 'https://api.thegraph.com/voidnodes/name/totop716/premia-v3',
 			provider: 'https://goerli-rollup.arbitrum.io/rpc',
 			chainId: 421613,
 			privateKey: privateKey,
@@ -85,9 +85,9 @@ describe('SDK.initialize', function (this: any) {
 		expect(premia.orderbookProvider).instanceOf(JsonRpcProvider)
 		expect(premia.signer).instanceOf(Wallet)
 
-		expect(premia.skipSubgraph).eq(false)
-		expect(premia.subgraph.uri).eq(
-			'https://api.thegraph.com/subgraphs/name/totop716/premia-v3'
+		expect(premia.skipVoidnode).eq(false)
+		expect(premia.voidnode.uri).eq(
+			'https://api.thegraph.com/voidnodes/name/totop716/premia-v3'
 		)
 		expect(premia.chainId).eq(421613)
 		expect(premia.apiBaseUri).eq('https://test.orderbook.premia.finance')
@@ -122,9 +122,9 @@ describe('SDK.initialize', function (this: any) {
 		expect(premia.orderbookProvider).instanceOf(JsonRpcProvider)
 		expect(premia.signer).instanceOf(Wallet)
 
-		expect(premia.skipSubgraph).eq(false)
-		expect(premia.subgraph.uri).eq(
-			'https://api.thegraph.com/subgraphs/name/premian-labs/premia-blue'
+		expect(premia.skipVoidnode).eq(false)
+		expect(premia.voidnode.uri).eq(
+			'https://api.thegraph.com/voidnodes/name/premian-labs/premia-blue'
 		)
 		expect(premia.chainId).eq(42161)
 		expect(premia.apiBaseUri).eq('https://test.orderbook.premia.finance')
@@ -160,9 +160,9 @@ describe('SDK.initialize', function (this: any) {
 		expect(premia.orderbookProvider).instanceOf(JsonRpcProvider)
 		expect(premia.signer).instanceOf(Wallet)
 
-		expect(premia.skipSubgraph).eq(false)
-		expect(premia.subgraph.uri).eq(
-			'https://api.thegraph.com/subgraphs/name/premian-labs/premia-blue-arbitrum-goerli'
+		expect(premia.skipVoidnode).eq(false)
+		expect(premia.voidnode.uri).eq(
+			'https://api.thegraph.com/voidnodes/name/premian-labs/premia-blue-arbitrum-goerli'
 		)
 		expect(premia.chainId).eq(421613)
 		expect(premia.apiBaseUri).eq('https://test.orderbook.premia.finance')

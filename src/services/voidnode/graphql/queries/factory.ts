@@ -1,7 +1,8 @@
 import { DocumentNode, gql } from '@apollo/client/core'
+
 import { FactoryExtendedFragment, FactoryFragment } from '../fragments'
-import { addFields } from '../../../../utils/subgraph'
-import PremiaSubgraph from '../../index'
+import { addFields } from '../../../../utils/voidnode'
+import PremiaVoidnode from '../../index'
 
 export class FactoryQuery {
 	static factoryId(address: string): string {
@@ -9,7 +10,7 @@ export class FactoryQuery {
 	}
 
 	@addFields
-	static GetFactory(subgraph: PremiaSubgraph, address: string): DocumentNode {
+	static GetFactory(voidnode: PremiaVoidnode, address: string): DocumentNode {
 		return gql`
         ${FactoryFragment}
 
@@ -23,7 +24,7 @@ export class FactoryQuery {
 
 	@addFields
 	static GetFactoryExtended(
-		subgraph: PremiaSubgraph,
+		voidnode: PremiaVoidnode,
 		address: string
 	): DocumentNode {
 		return gql`

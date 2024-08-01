@@ -37,16 +37,16 @@ export class VxPremiaAPI extends BaseAPI {
 	 * Retrieves vault votes for a given user.
 	 *
 	 * @param {string} user - The user's address.
-	 * @param {number} [first=100] - The maximum number of records to retrieve.
+	 * @param {number} [limit=100] - The maximum number of records to retrieve.
 	 * @param {number} [skip=0] - The number of records to skip.
 	 * @returns {Promise<VaultVote[]>} A promise that resolves to an array of vault votes.
 	 */
 	async getVaultVotes(
 		user: string,
-		first: number = 100,
+		limit: number = 100,
 		skip: number = 0
 	): Promise<VaultVote[]> {
-		return this.premia.subgraph.getVaultVotes(user, first, skip)
+		return this.premia.voidnode.getVaultVotes(user, limit, skip)
 	}
 
 	/**
@@ -55,7 +55,7 @@ export class VxPremiaAPI extends BaseAPI {
 	 * @param {string} user - The user's address.
 	 * @param {number} timestampFrom - The start timestamp for the range.
 	 * @param {number} timestampTo - The end timestamp for the range.
-	 * @param {number} [first=100] - The maximum number of records to retrieve.
+	 * @param {number} [limit=100] - The maximum number of records to retrieve.
 	 * @param {number} [skip=0] - The number of records to skip.
 	 * @returns {Promise<VaultVote[]>} A promise that resolves to an array of vault votes.
 	 */
@@ -63,14 +63,14 @@ export class VxPremiaAPI extends BaseAPI {
 		user: string,
 		timestampFrom: number,
 		timestampTo: number,
-		first: number = 100,
+		limit: number = 100,
 		skip: number = 0
 	): Promise<VaultVote[]> {
-		return this.premia.subgraph.getUserVaultVotesFromTimestamp(
+		return this.premia.voidnode.getUserVaultVotesFromTimestamp(
 			user,
 			timestampFrom,
 			timestampTo,
-			first,
+			limit,
 			skip
 		)
 	}
@@ -79,21 +79,21 @@ export class VxPremiaAPI extends BaseAPI {
 	 * Retrieves all the last vault votes.
 	 *
 	 * @param {string} orderBy - The field to order the results by.
-	 * @param {string} order - The order direction ('asc' or 'desc').
-	 * @param {number} [first=100] - The maximum number of records to retrieve.
+	 * @param {string} order - The order direction ('ASC' or 'DESC').
+	 * @param {number} [limit=100] - The maximum number of records to retrieve.
 	 * @param {number} [skip=0] - The number of records to skip.
 	 * @returns {Promise<VaultVote[]>} A promise that resolves to an array of vault votes.
 	 */
 	async getAllLastVaultVotes(
 		orderBy: string,
 		order: string,
-		first: number = 100,
+		limit: number = 100,
 		skip: number = 0
 	): Promise<VaultVote[]> {
-		return this.premia.subgraph.getAllLastVaultVotes(
+		return this.premia.voidnode.getAllLastVaultVotes(
 			orderBy,
 			order,
-			first,
+			limit,
 			skip
 		)
 	}
@@ -105,7 +105,7 @@ export class VxPremiaAPI extends BaseAPI {
 	 * @returns {Promise<VoteHistory>} A promise that resolves to the vote history.
 	 */
 	async getVoteHistory(id: string): Promise<VoteHistory> {
-		return this.premia.subgraph.getVoteHistory(id)
+		return this.premia.voidnode.getVoteHistory(id)
 	}
 
 	/**
@@ -114,7 +114,7 @@ export class VxPremiaAPI extends BaseAPI {
 	 * @returns {Promise<UserStake[]>} A promise that resolves to an array of user stakes.
 	 */
 	async getLastUserStakes(): Promise<UserStake[]> {
-		return this.premia.subgraph.getLastUserStakes()
+		return this.premia.voidnode.getLastUserStakes()
 	}
 
 	/**
@@ -122,17 +122,17 @@ export class VxPremiaAPI extends BaseAPI {
 	 *
 	 * @param {number} startTime - The start time for retrieving stakes.
 	 * @param {string} user - The user's address.
-	 * @param {number} [first=100] - The maximum number of records to retrieve.
+	 * @param {number} [limit=100] - The maximum number of records to retrieve.
 	 * @param {number} [skip=0] - The number of records to skip.
 	 * @returns {Promise<UserStake[]>} A promise that resolves to an array of user stakes.
 	 */
 	async getUserStakes(
 		startTime: number,
 		user: string,
-		first: number = 100,
+		limit: number = 100,
 		skip: number = 0
 	): Promise<UserStake[]> {
-		return this.premia.subgraph.getUserStakes(startTime, user, first, skip)
+		return this.premia.voidnode.getUserStakes(startTime, user, limit, skip)
 	}
 
 	/**
@@ -146,7 +146,7 @@ export class VxPremiaAPI extends BaseAPI {
 		timestamp: number,
 		user: string
 	): Promise<UserStake[]> {
-		return this.premia.subgraph.getLastUserStakeFromTimestamp(timestamp, user)
+		return this.premia.voidnode.getLastUserStakeFromTimestamp(timestamp, user)
 	}
 
 	/**
@@ -156,23 +156,23 @@ export class VxPremiaAPI extends BaseAPI {
 	 * @returns {Promise<StakeHistory>} A promise that resolves to the stake history.
 	 */
 	async getStakeHistory(id: string): Promise<StakeHistory> {
-		return this.premia.subgraph.getStakeHistory(id)
+		return this.premia.voidnode.getStakeHistory(id)
 	}
 
 	/**
 	 * Retrieves stake histories for a given start time.
 	 *
 	 * @param {number} startTime - The start time for retrieving stake histories.
-	 * @param {number} [first=100] - The maximum number of records to retrieve.
+	 * @param {number} [limit=100] - The maximum number of records to retrieve.
 	 * @param {number} [skip=0] - The number of records to skip.
 	 * @returns {Promise<StakeHistory[]>} A promise that resolves to an array of stake histories.
 	 */
 	async getStakeHistories(
 		startTime: number,
-		first: number = 100,
+		limit: number = 100,
 		skip: number = 0
 	): Promise<StakeHistory[]> {
-		return this.premia.subgraph.getStakeHistories(startTime, first, skip)
+		return this.premia.voidnode.getStakeHistories(startTime, limit, skip)
 	}
 
 	/**
